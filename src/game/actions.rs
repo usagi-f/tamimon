@@ -27,11 +27,12 @@ pub struct ActionResult {
     pub reaction_text: String,
 }
 
-pub fn perform_action(
+/// アクションのステータス効果のみ適用（リアクションテキストは別途）
+pub fn apply_action_effects(
     action: Action,
     pet: &mut PetData,
     rng: &mut impl Rng,
-) -> ActionResult {
+) {
     match action {
         Action::Talk => {
             pet.nakayoshi = (pet.nakayoshi + 5.0 + rng.gen_range(-3.0..8.0)).clamp(0.0, 100.0);
@@ -56,17 +57,10 @@ pub fn perform_action(
     }
 
     pet.weight = pet.weight.max(0.1);
-
-    let mood = crate::game::pet::mood_level(pet.kimochi);
-    let reaction_text = select_reaction(action, mood, rng);
-
-    ActionResult {
-        action,
-        reaction_text,
-    }
 }
 
-fn select_reaction(action: Action, mood: MoodLevel, rng: &mut impl Rng) -> String {
+/// Stage1用の汎用リアクション（Phase1互換）
+pub fn select_generic_reaction(action: Action, mood: MoodLevel, rng: &mut impl Rng) -> String {
     let pool = match (action, mood) {
         (Action::Talk, MoodLevel::High) => &[
             "「あ、きた！きた！」",

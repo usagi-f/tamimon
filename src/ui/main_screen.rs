@@ -171,6 +171,30 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
         )));
     }
 
+    if let Some(ref evolved) = info.evolved_species {
+        lines.push(Line::from(""));
+        let evo_msg = if let Some(ref pet) = state.save_data.pet {
+            let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+            format!("  ✨ {}が進化した！ → {}", name, evolved)
+        } else {
+            format!("  ✨ 進化した！ → {}", evolved)
+        };
+        lines.push(Line::from(Span::styled(
+            evo_msg,
+            Style::default().fg(Color::Magenta),
+        )));
+    }
+
+    if !info.event_messages.is_empty() {
+        lines.push(Line::from(""));
+        for msg in &info.event_messages {
+            lines.push(Line::from(Span::styled(
+                format!("  {}", msg),
+                Style::default().fg(Color::Yellow),
+            )));
+        }
+    }
+
     if info.rollback_detected {
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(

@@ -8,13 +8,21 @@ use ratatui::{
 
 use crate::ui::ascii_art;
 
-pub fn render_naming(f: &mut Frame, input: &str, is_first_launch: bool) {
+pub fn render_naming_with_farewell(f: &mut Frame, input: &str, is_first_launch: bool, farewell_name: Option<&str>) {
     let egg = ascii_art::egg_art();
 
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(""));
 
-    if !is_first_launch {
+    if let Some(name) = farewell_name {
+        lines.push(Line::from(Span::styled(
+            format!("  さよなら、{}。", name),
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        )));
+        lines.push(Line::from(""));
+        lines.push(Line::from("  ───────────────────────────────"));
+        lines.push(Line::from(""));
+    } else if !is_first_launch {
         lines.push(Line::from(""));
         lines.push(Line::from("  ───────────────────────────────"));
         lines.push(Line::from(""));

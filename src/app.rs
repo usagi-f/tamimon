@@ -13,17 +13,23 @@ use rand::Rng;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::game::actions::{Action, ActionResult};
+use crate::game::events;
+use crate::game::evolution;
 use crate::game::pet;
 use crate::game::time;
+use crate::game::voice;
 use crate::save;
-use crate::save::schema::SaveData;
-use crate::ui::{ascii_art, main_screen, naming};
+use crate::save::schema::{AlbumEntry, SaveData};
+use crate::ui::{album, ascii_art, main_screen, naming};
 
 pub enum AppMode {
     Startup,
-    Naming { input: String, is_first_launch: bool },
+    Naming { input: String, farewell_name: Option<String> },
     Main,
     ActionReaction,
+    Album,
+    Death,
+    Evolution,
 }
 
 pub struct StartupInfo {
@@ -32,7 +38,10 @@ pub struct StartupInfo {
     pub elapsed_ticks: u64,
     pub elapsed_display: String,
     pub hatched_species: Option<String>,
+    pub evolved_species: Option<String>,
     pub rollback_detected: bool,
+    pub event_messages: Vec<String>,
+    pub death_message: Option<String>,
 }
 
 pub struct AppState {
@@ -43,6 +52,9 @@ pub struct AppState {
     pub speech_text: String,
     pub startup_info: Option<StartupInfo>,
     pub action_result: Option<ActionResult>,
+    pub death_message: Option<String>,
+    pub evolution_message: Option<String>,
+    pub album_state: album::AlbumState,
     pub rng: ThreadRng,
 }
 
@@ -69,12 +81,33 @@ pub async fn run() -> Result<()> {
             let elapsed = time::calculate_elapsed_ticks(data.last_check_time, time_result.now);
             let mut rng = rand::thread_rng();
             let mut hatched_species = None;
+            let mut evolved_species = None;
+            let mut event_messages = Vec::new();
+            let mut death_message = None;
 
             if !elapsed.rollback_detected {
                 if let Some(ref mut p) = data.pet {
                     pet::apply_decay(p, elapsed.ticks, &mut rng);
+
+                    // Check hatching (egg → stage 1)
                     if let Some(hatch) = pet::check_hatching(p, &mut rng) {
                         hatched_species = Some(hatch.new_species);
+                    }
+
+                    // Check evolution (stage 1→2, 2→3, 3→4)
+                    if let Some(evo) = evolution::check_evolution(p, &mut rng) {
+                        evolved_species = Some(evo.new_species);
+                    }
+
+                    // Process random events (includes accident/death check)
+                    let event_results = events::process_offline_events(p, elapsed.ticks, &mut rng);
+                    for er in event_results {
+                        if er.is_death {
+                            death_message = Some(er.message.clone());
+                            // record_deathはDeath画面のキー押下時に実行する
+                            // （render_deathがペット情報を参照するため）
+                        }
+                        event_messages.push(er.message);
                     }
                 }
                 data.last_check_time = time_result.now;
@@ -87,7 +120,10 @@ pub async fn run() -> Result<()> {
                 elapsed_ticks: elapsed.ticks,
                 elapsed_display: time::format_elapsed_short(elapsed.ticks),
                 hatched_species,
+                evolved_species,
                 rollback_detected: elapsed.rollback_detected,
+                event_messages,
+                death_message,
             };
 
             (AppMode::Startup, data, Some(info))
@@ -97,7 +133,7 @@ pub async fn run() -> Result<()> {
             (
                 AppMode::Naming {
                     input: String::new(),
-                    is_first_launch: true,
+                    farewell_name: None,
                 },
                 data,
                 None,
@@ -115,6 +151,9 @@ pub async fn run() -> Result<()> {
         speech_text,
         startup_info,
         action_result: None,
+        death_message: None,
+        evolution_message: None,
+        album_state: album::AlbumState::new(),
         rng: rand::thread_rng(),
     };
 
@@ -174,8 +213,8 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         AppMode::Startup => {
             main_screen::render_startup(f, state);
         }
-        AppMode::Naming { input, is_first_launch } => {
-            naming::render_naming(f, input, *is_first_launch);
+        AppMode::Naming { input, farewell_name } => {
+            naming::render_naming_with_farewell(f, input, farewell_name.is_none(), farewell_name.as_deref());
         }
         AppMode::Main => {
             main_screen::render_main(f, state);
@@ -183,7 +222,117 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         AppMode::ActionReaction => {
             main_screen::render_action_reaction(f, state);
         }
+        AppMode::Album => {
+            album::render_album(f, &state.save_data, &state.album_state);
+        }
+        AppMode::Death => {
+            render_death(f, state);
+        }
+        AppMode::Evolution => {
+            render_evolution(f, state);
+        }
     }
+}
+
+fn render_death(f: &mut ratatui::Frame, state: &AppState) {
+    use ratatui::style::{Color, Modifier, Style};
+    use ratatui::text::{Line, Span};
+    let msg = state.death_message.as_deref().unwrap_or("…");
+
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(""));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        format!("  {}", msg),
+        Style::default().fg(Color::Yellow),
+    )));
+    lines.push(Line::from(""));
+    lines.push(Line::from(""));
+
+    // Show farewell ASCII art
+    lines.push(Line::from("        ．．．"));
+    lines.push(Line::from(""));
+    lines.push(Line::from(""));
+
+    if let Some(ref pet) = state.save_data.pet {
+        let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+        lines.push(Line::from(Span::styled(
+            format!("  さよなら、{}。", name),
+            Style::default().add_modifier(Modifier::BOLD),
+        )));
+    }
+
+    // Check record
+    if let Some(ref pet) = state.save_data.pet {
+        if pet.age_ticks > state.save_data.records.longest_survival_ticks {
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(
+                "  🏆 最長生存記録を更新した！",
+                Style::default().fg(Color::Cyan),
+            )));
+        }
+    }
+
+    lines.push(Line::from(""));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        "  Press any key...",
+        Style::default().fg(Color::DarkGray),
+    )));
+
+    let paragraph = ratatui::widgets::Paragraph::new(lines);
+    f.render_widget(paragraph, f.area());
+}
+
+fn render_evolution(f: &mut ratatui::Frame, state: &AppState) {
+    use ratatui::style::{Color, Modifier, Style};
+    use ratatui::text::{Line, Span};
+
+    let msg = state.evolution_message.as_deref().unwrap_or("");
+
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(""));
+
+    if let Some(ref pet) = state.save_data.pet {
+        let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+        lines.push(Line::from(Span::styled(
+            format!("  {}が、なにかに気づいたような顔をした。", name),
+            Style::default().add_modifier(Modifier::BOLD),
+        )));
+        lines.push(Line::from(""));
+        lines.push(Line::from("  ……"));
+        lines.push(Line::from(""));
+        lines.push(Line::from("  （しばらく、動かなかった）"));
+        lines.push(Line::from(""));
+
+        lines.push(Line::from(Span::styled(
+            format!("  {}の様子が変わった。", name),
+            Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+        )));
+        lines.push(Line::from(""));
+
+        // Show new species art
+        let mood = pet::mood_level(pet.kimochi);
+        let art = ascii_art::get_art(&pet.species, mood, state.animation_frame);
+        for line in art {
+            lines.push(Line::from(format!("        {}", line)));
+        }
+
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            format!("  → {} に進化した！", msg),
+            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+        )));
+    }
+
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        "  Press any key...",
+        Style::default().fg(Color::DarkGray),
+    )));
+
+    let paragraph = ratatui::widgets::Paragraph::new(lines);
+    f.render_widget(paragraph, f.area());
 }
 
 enum InputResult {
@@ -194,8 +343,26 @@ enum InputResult {
 fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
     match &mut state.mode {
         AppMode::Startup => {
-            // Any key → transition to Main
-            state.startup_info = None;
+            let startup = state.startup_info.take();
+
+            // If death happened during startup, show death screen
+            if let Some(ref info) = startup {
+                if let Some(ref death_msg) = info.death_message {
+                    state.death_message = Some(death_msg.clone());
+                    state.mode = AppMode::Death;
+                    return Ok(InputResult::Continue);
+                }
+            }
+
+            // If pet is dead (from startup events), go to naming
+            if state.save_data.pet.is_none() {
+                state.mode = AppMode::Naming {
+                    input: String::new(),
+                    farewell_name: None,
+                };
+                return Ok(InputResult::Continue);
+            }
+
             state.mode = AppMode::Main;
             state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
         }
@@ -219,7 +386,6 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                     state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
                 }
                 KeyCode::Char(c) => {
-                    // Safety: reconstruct mutable ref
                     if let AppMode::Naming { input, .. } = &mut state.mode {
                         if input.chars().count() < 20 {
                             input.push(c);
@@ -247,6 +413,10 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             KeyCode::Char('e') | KeyCode::Char('E') => {
                 do_action(Action::Relax, state)?;
             }
+            KeyCode::Char('a') | KeyCode::Char('A') => {
+                state.album_state = album::AlbumState::new();
+                state.mode = AppMode::Album;
+            }
             KeyCode::Char('q') | KeyCode::Char('Q') => {
                 return Ok(InputResult::Quit);
             }
@@ -255,6 +425,48 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         AppMode::ActionReaction => {
             // Any key → back to Main
             state.action_result = None;
+            state.mode = AppMode::Main;
+            state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+        }
+        AppMode::Album => match key {
+            KeyCode::Up => {
+                state.album_state.scroll_up();
+            }
+            KeyCode::Down => {
+                let total = album::total_species_count() + 1; // +1 for mystery line
+                state.album_state.scroll_down(total, 20);
+            }
+            KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc => {
+                state.mode = AppMode::Main;
+                state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+            }
+            _ => {}
+        },
+        AppMode::Death => {
+            // Process death: record to album, clear pet, go to naming
+            let farewell = if let Some(ref pet) = state.save_data.pet {
+                let name = if pet.nickname.is_empty() { "なまえなし".to_string() } else { pet.nickname.clone() };
+                Some(name)
+            } else {
+                None
+            };
+
+            // Actually finalize the death
+            if state.save_data.pet.is_some() {
+                let death_msg = state.death_message.take().unwrap_or_default();
+                record_death(&mut state.save_data, &death_msg);
+                save::save(&state.save_data)?;
+            }
+
+            state.death_message = None;
+            state.mode = AppMode::Naming {
+                input: String::new(),
+                farewell_name: farewell,
+            };
+        }
+        AppMode::Evolution => {
+            // Any key → back to Main
+            state.evolution_message = None;
             state.mode = AppMode::Main;
             state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
         }
@@ -278,6 +490,14 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             // Hatching happened! Will be visible on next render
         }
 
+        // Check evolution
+        if let Some(evo) = evolution::check_evolution(pet_data, &mut state.rng) {
+            state.evolution_message = Some(evo.new_species);
+            state.mode = AppMode::Evolution;
+            save::save(&state.save_data)?;
+            return Ok(());
+        }
+
         // Egg stage: ignore actions (prevent type score accumulation before hatching)
         if pet_data.stage == 0 {
             state.action_result = Some(ActionResult {
@@ -288,10 +508,21 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             return Ok(());
         }
 
-        // Perform the action
-        let result = crate::game::actions::perform_action(action, pet_data, &mut state.rng);
+        // Perform the action with voice-type-aware reactions
+        let mood = pet::mood_level(pet_data.kimochi);
+        crate::game::actions::apply_action_effects(action, pet_data, &mut state.rng);
 
-        state.action_result = Some(result);
+        let reaction_text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+            voice::get_reaction(vt, action, mood, &mut state.rng)
+        } else {
+            // Stage1 fallback: use Phase1 generic reactions
+            crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
+        };
+
+        state.action_result = Some(ActionResult {
+            action,
+            reaction_text,
+        });
         state.mode = AppMode::ActionReaction;
 
         // Save after every action
@@ -301,9 +532,44 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     Ok(())
 }
 
+/// 死亡時のアルバム記録
+fn record_death(save_data: &mut SaveData, death_message: &str) {
+    if let Some(pet) = save_data.pet.take() {
+        let days_lived = (pet.age_ticks as f64 / 1440.0).ceil() as u32;
+        let weight_label = pet::weight_label(&pet.species, pet.weight).to_string();
+
+        // Update records
+        if pet.age_ticks > save_data.records.longest_survival_ticks {
+            save_data.records.longest_survival_ticks = pet.age_ticks;
+        }
+
+        let entry = AlbumEntry {
+            nickname: if pet.nickname.is_empty() { "なまえなし".to_string() } else { pet.nickname },
+            species: pet.species,
+            days_lived,
+            weight_kg: pet.weight,
+            weight_label,
+            cause_of_death: death_message.to_string(),
+            evolution_line: pet.evolution_line,
+            reached_stage4: pet.stage >= 4,
+            date: Utc::now().format("%Y-%m-%d").to_string(),
+        };
+
+        save_data.album.push(entry);
+        save_data.pet = None;
+    }
+}
+
 fn pick_idle_speech(save_data: &SaveData, rng: &mut impl Rng) -> String {
     if let Some(ref pet) = save_data.pet {
         let mood = pet::mood_level(pet.kimochi);
+
+        // Stage2以降は口調タイプ別のアイドルセリフ
+        if let Some(vt) = evolution::get_voice_type(&pet.species) {
+            return voice::get_idle_speech(vt, mood, rng);
+        }
+
+        // Stage1はPhase1の汎用セリフ
         let pool = ascii_art::get_idle_speech(&pet.species, mood);
         if pool.is_empty() {
             return String::new();

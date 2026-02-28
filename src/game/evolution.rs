@@ -1,0 +1,533 @@
+use rand::Rng;
+
+use crate::save::schema::PetData;
+
+// --- 進化タイミング定数 ---
+const STAGE2_TICKS: u64 = 360;   // 6時間
+const STAGE3_TICKS: u64 = 1440;  // 24時間
+const STAGE4_INTERVAL: u64 = 1440; // 24時間ごとに判定
+const STAGE4_CHANCE: f64 = 0.25;   // 25%
+
+// --- 進化タイプ ---
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EvoType {
+    Chikara,
+    Odayaka,
+    Bouken,
+    Normal,
+    Wild,
+}
+
+// --- Stage2 種族定義 ---
+pub struct Stage2Species {
+    pub name: &'static str,
+    pub evo_type: EvoType,
+    pub standard_weight: f64,
+    pub voice_type: VoiceType,
+}
+
+// --- Stage3 種族定義 ---
+pub struct Stage3Species {
+    pub name: &'static str,
+    pub allowed_from: &'static [&'static str], // Stage2の進化元
+    pub vector: [f64; 5], // [chikara, odayaka, bouken, nakayoshi, frequency]
+    pub standard_weight: f64,
+    pub voice_type: VoiceType,
+}
+
+// --- Stage4 種族定義 ---
+pub struct Stage4Species {
+    pub name: &'static str,
+    pub allowed_from: &'static [&'static str], // Stage3の進化元
+    pub standard_weight: f64,
+    pub voice_type: VoiceType,
+}
+
+// --- 口調タイプ ---
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VoiceType {
+    Tameguchi,   // タメ口
+    Keigo,       // 敬語
+    Gal,         // ギャル
+    Oyaji,       // オヤジ
+    Tetsugaku,   // 哲学者
+    Taiiku,      // 体育会系
+    Negative,    // ネガティブ
+    Tennen,      // 天然
+    Mukuchi,     // 無口
+    Kajou,       // 過剰
+    Kansai,      // 関西弁
+    Kogo,        // 古語
+}
+
+// ===== Stage2 全40種 (5タイプ × 8種) =====
+pub const STAGE2_SPECIES: &[Stage2Species] = &[
+    // --- チカラ系 (8種) ---
+    Stage2Species { name: "ドタン",       evo_type: EvoType::Chikara, standard_weight: 25.0, voice_type: VoiceType::Taiiku },
+    Stage2Species { name: "ガシャ",       evo_type: EvoType::Chikara, standard_weight: 30.0, voice_type: VoiceType::Tameguchi },
+    Stage2Species { name: "ズンズン",     evo_type: EvoType::Chikara, standard_weight: 35.0, voice_type: VoiceType::Oyaji },
+    Stage2Species { name: "デカオ",       evo_type: EvoType::Chikara, standard_weight: 40.0, voice_type: VoiceType::Kajou },
+    Stage2Species { name: "ゴツモリ",     evo_type: EvoType::Chikara, standard_weight: 28.0, voice_type: VoiceType::Kansai },
+    Stage2Species { name: "ドンガメ",     evo_type: EvoType::Chikara, standard_weight: 32.0, voice_type: VoiceType::Kogo },
+    Stage2Species { name: "グイグイ",     evo_type: EvoType::Chikara, standard_weight: 22.0, voice_type: VoiceType::Taiiku },
+    Stage2Species { name: "バキバキ",     evo_type: EvoType::Chikara, standard_weight: 38.0, voice_type: VoiceType::Tameguchi },
+
+    // --- おだやか系 (8種) ---
+    Stage2Species { name: "ヒョロン",     evo_type: EvoType::Odayaka, standard_weight: 12.0, voice_type: VoiceType::Keigo },
+    Stage2Species { name: "フワモン",     evo_type: EvoType::Odayaka, standard_weight: 8.0,  voice_type: VoiceType::Tennen },
+    Stage2Species { name: "ユラリ",       evo_type: EvoType::Odayaka, standard_weight: 10.0, voice_type: VoiceType::Tetsugaku },
+    Stage2Species { name: "ネムタ",       evo_type: EvoType::Odayaka, standard_weight: 15.0, voice_type: VoiceType::Mukuchi },
+    Stage2Species { name: "ポワン",       evo_type: EvoType::Odayaka, standard_weight: 11.0, voice_type: VoiceType::Tennen },
+    Stage2Species { name: "ホワモコ",     evo_type: EvoType::Odayaka, standard_weight: 14.0, voice_type: VoiceType::Keigo },
+    Stage2Species { name: "ウトウト",     evo_type: EvoType::Odayaka, standard_weight: 13.0, voice_type: VoiceType::Negative },
+    Stage2Species { name: "モヤモヤ",     evo_type: EvoType::Odayaka, standard_weight: 9.0,  voice_type: VoiceType::Tetsugaku },
+
+    // --- ぼうけん系 (8種) ---
+    Stage2Species { name: "クルル",       evo_type: EvoType::Bouken, standard_weight: 18.0, voice_type: VoiceType::Gal },
+    Stage2Species { name: "トゲたろう",   evo_type: EvoType::Bouken, standard_weight: 20.0, voice_type: VoiceType::Tameguchi },
+    Stage2Species { name: "ハネオ",       evo_type: EvoType::Bouken, standard_weight: 15.0, voice_type: VoiceType::Kajou },
+    Stage2Species { name: "ビョーン",     evo_type: EvoType::Bouken, standard_weight: 16.0, voice_type: VoiceType::Kansai },
+    Stage2Species { name: "ダッシュ",     evo_type: EvoType::Bouken, standard_weight: 17.0, voice_type: VoiceType::Taiiku },
+    Stage2Species { name: "グルグル",     evo_type: EvoType::Bouken, standard_weight: 14.0, voice_type: VoiceType::Tennen },
+    Stage2Species { name: "ノゾキ",       evo_type: EvoType::Bouken, standard_weight: 13.0, voice_type: VoiceType::Tameguchi },
+    Stage2Species { name: "ピョコ",       evo_type: EvoType::Bouken, standard_weight: 12.0, voice_type: VoiceType::Gal },
+
+    // --- ふつう型 (8種) ---
+    Stage2Species { name: "ペタ",         evo_type: EvoType::Normal, standard_weight: 20.0, voice_type: VoiceType::Keigo },
+    Stage2Species { name: "ノホホ",       evo_type: EvoType::Normal, standard_weight: 18.0, voice_type: VoiceType::Tennen },
+    Stage2Species { name: "マジメ",       evo_type: EvoType::Normal, standard_weight: 22.0, voice_type: VoiceType::Keigo },
+    Stage2Species { name: "フツウ",       evo_type: EvoType::Normal, standard_weight: 19.0, voice_type: VoiceType::Tameguchi },
+    Stage2Species { name: "ナミナミ",     evo_type: EvoType::Normal, standard_weight: 17.0, voice_type: VoiceType::Kansai },
+    Stage2Species { name: "テキトー",     evo_type: EvoType::Normal, standard_weight: 21.0, voice_type: VoiceType::Oyaji },
+    Stage2Species { name: "ソコソコ",     evo_type: EvoType::Normal, standard_weight: 16.0, voice_type: VoiceType::Negative },
+    Stage2Species { name: "ホドホド",     evo_type: EvoType::Normal, standard_weight: 20.0, voice_type: VoiceType::Mukuchi },
+
+    // --- 野生型 (8種) ---
+    Stage2Species { name: "メダマ",       evo_type: EvoType::Wild, standard_weight: 8.0,  voice_type: VoiceType::Mukuchi },
+    Stage2Species { name: "ケモノ",       evo_type: EvoType::Wild, standard_weight: 25.0, voice_type: VoiceType::Tameguchi },
+    Stage2Species { name: "ヌシ",         evo_type: EvoType::Wild, standard_weight: 50.0, voice_type: VoiceType::Kogo },
+    Stage2Species { name: "カゲ",         evo_type: EvoType::Wild, standard_weight: 5.0,  voice_type: VoiceType::Mukuchi },
+    Stage2Species { name: "ザワザワ",     evo_type: EvoType::Wild, standard_weight: 15.0, voice_type: VoiceType::Tetsugaku },
+    Stage2Species { name: "ヒトダマ",     evo_type: EvoType::Wild, standard_weight: 3.0,  voice_type: VoiceType::Negative },
+    Stage2Species { name: "ウロウロ",     evo_type: EvoType::Wild, standard_weight: 12.0, voice_type: VoiceType::Tennen },
+    Stage2Species { name: "ドロリ",       evo_type: EvoType::Wild, standard_weight: 20.0, voice_type: VoiceType::Kajou },
+];
+
+// ===== Stage3 全100種 =====
+// vector: [chikara, odayaka, bouken, nakayoshi, frequency(action_count)]
+pub const STAGE3_SPECIES: &[Stage3Species] = &[
+    // --- チカラ系から進化 (20種) ---
+    Stage3Species { name: "ドドン",       allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [9.0,1.0,3.0,4.0,6.0], standard_weight: 80.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "タワーン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,4.0,2.0,8.0,8.0], standard_weight: 60.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "ゴウケン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [10.0,0.0,2.0,3.0,5.0], standard_weight: 90.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "テッカイ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [8.0,2.0,4.0,2.0,4.0], standard_weight: 100.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "ブンブン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [8.0,1.0,5.0,5.0,7.0], standard_weight: 55.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "ガンテツ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [9.0,3.0,1.0,6.0,3.0], standard_weight: 120.0, voice_type: VoiceType::Oyaji },
+    Stage3Species { name: "ドスコイ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,2.0,1.0,7.0,9.0], standard_weight: 150.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "バリバリ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [8.0,0.0,6.0,3.0,8.0], standard_weight: 65.0, voice_type: VoiceType::Kajou },
+    Stage3Species { name: "メガトン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [10.0,1.0,1.0,5.0,5.0], standard_weight: 200.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "グランド",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,3.0,3.0,7.0,7.0], standard_weight: 85.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "イカヅチ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [9.0,0.0,5.0,2.0,6.0], standard_weight: 70.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "ゴリラン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [8.0,2.0,3.0,8.0,4.0], standard_weight: 95.0, voice_type: VoiceType::Oyaji },
+    Stage3Species { name: "ダイガン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [10.0,2.0,2.0,1.0,3.0], standard_weight: 130.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "ゴロゴロ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [6.0,4.0,2.0,6.0,6.0], standard_weight: 75.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "カチワリ",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [9.0,1.0,4.0,4.0,9.0], standard_weight: 68.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "テツジン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [8.0,3.0,2.0,5.0,2.0], standard_weight: 110.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ドゴン",       allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,1.0,6.0,3.0,7.0], standard_weight: 58.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "バンカー",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [8.0,4.0,1.0,4.0,5.0], standard_weight: 140.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "マッスル",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [10.0,0.0,3.0,6.0,10.0], standard_weight: 78.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "イワオ",       allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,5.0,1.0,5.0,1.0], standard_weight: 160.0, voice_type: VoiceType::Mukuchi },
+
+    // --- おだやか系から進化 (20種) ---
+    Stage3Species { name: "ながれもん",   allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,8.0,5.0,3.0,2.0], standard_weight: 20.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "フワリン",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,9.0,2.0,7.0,6.0], standard_weight: 10.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "モコモコ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,10.0,1.0,8.0,7.0], standard_weight: 25.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "ネンネ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [0.0,9.0,1.0,5.0,3.0], standard_weight: 30.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "ポヨン",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,7.0,4.0,6.0,5.0], standard_weight: 18.0, voice_type: VoiceType::Gal },
+    Stage3Species { name: "スヤスヤ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [0.0,10.0,0.0,4.0,1.0], standard_weight: 35.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "カスミ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,8.0,3.0,2.0,4.0], standard_weight: 5.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ノドカ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,8.0,2.0,9.0,8.0], standard_weight: 22.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "ユメミ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,7.0,3.0,6.0,4.0], standard_weight: 15.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "ボンヤリ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [0.0,8.0,2.0,3.0,2.0], standard_weight: 28.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "ヒラタ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [3.0,7.0,3.0,5.0,5.0], standard_weight: 40.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "コロリン",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,9.0,2.0,7.0,6.0], standard_weight: 16.0, voice_type: VoiceType::Gal },
+    Stage3Species { name: "ムニャ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,10.0,1.0,4.0,3.0], standard_weight: 32.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "マッタリ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,8.0,1.0,8.0,9.0], standard_weight: 26.0, voice_type: VoiceType::Oyaji },
+    Stage3Species { name: "ホワワ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [0.0,9.0,3.0,5.0,5.0], standard_weight: 12.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "シズカ",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,9.0,1.0,6.0,4.0], standard_weight: 24.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "モグモグ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [3.0,7.0,2.0,7.0,7.0], standard_weight: 38.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "トロン",       allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,8.0,4.0,4.0,3.0], standard_weight: 14.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ユッタリ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,10.0,0.0,9.0,8.0], standard_weight: 42.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "ソヨカゼ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [0.0,7.0,5.0,3.0,4.0], standard_weight: 8.0, voice_type: VoiceType::Mukuchi },
+
+    // --- ぼうけん系から進化 (20種) ---
+    Stage3Species { name: "ガニ",         allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [3.0,1.0,9.0,4.0,6.0], standard_weight: 30.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "トビオ",       allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [2.0,2.0,10.0,5.0,7.0], standard_weight: 25.0, voice_type: VoiceType::Gal },
+    Stage3Species { name: "マルマル",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [4.0,3.0,8.0,6.0,5.0], standard_weight: 35.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "ハヤテ",       allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [5.0,0.0,10.0,3.0,8.0], standard_weight: 22.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "グルグルン",   allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [2.0,3.0,8.0,7.0,6.0], standard_weight: 20.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "カゼノコ",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [1.0,4.0,9.0,5.0,4.0], standard_weight: 15.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "ドカーン",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [6.0,0.0,9.0,2.0,7.0], standard_weight: 45.0, voice_type: VoiceType::Kajou },
+    Stage3Species { name: "スイスイ",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [2.0,5.0,8.0,6.0,5.0], standard_weight: 18.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "サスライ",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [3.0,2.0,10.0,1.0,3.0], standard_weight: 28.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "ピカッ",       allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [4.0,1.0,8.0,8.0,9.0], standard_weight: 16.0, voice_type: VoiceType::Gal },
+    Stage3Species { name: "バサバサ",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [5.0,2.0,9.0,4.0,6.0], standard_weight: 32.0, voice_type: VoiceType::Oyaji },
+    Stage3Species { name: "ウロチョロ",   allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [2.0,3.0,7.0,5.0,8.0], standard_weight: 14.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "ゴーゴー",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [6.0,1.0,8.0,3.0,9.0], standard_weight: 40.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "クモノス",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [3.0,4.0,7.0,4.0,4.0], standard_weight: 12.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "ホシゾラ",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [1.0,5.0,9.0,7.0,5.0], standard_weight: 10.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ブッチギリ",   allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [7.0,0.0,10.0,2.0,10.0], standard_weight: 38.0, voice_type: VoiceType::Kajou },
+    Stage3Species { name: "ワタリ",       allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [2.0,3.0,9.0,6.0,3.0], standard_weight: 26.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "ヒュー",       allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [3.0,2.0,8.0,8.0,7.0], standard_weight: 19.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "タンケン",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [4.0,4.0,8.0,5.0,6.0], standard_weight: 24.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "ジェット",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [5.0,1.0,10.0,4.0,8.0], standard_weight: 28.0, voice_type: VoiceType::Gal },
+
+    // --- ふつう型から進化 (20種) ---
+    Stage3Species { name: "ノーマル",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,5.0,5.0,5.0,5.0], standard_weight: 40.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "ヘイボン",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,5.0,4.0,6.0,6.0], standard_weight: 35.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "タソガレ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,6.0,4.0,4.0,3.0], standard_weight: 30.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ニッコリ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,4.0,4.0,8.0,8.0], standard_weight: 32.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "ダラーン",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,7.0,3.0,5.0,2.0], standard_weight: 45.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "キッチリ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [6.0,4.0,5.0,6.0,7.0], standard_weight: 38.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "ボチボチ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,5.0,5.0,4.0,4.0], standard_weight: 36.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "マアマア",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,4.0,4.0,5.0,5.0], standard_weight: 42.0, voice_type: VoiceType::Oyaji },
+    Stage3Species { name: "フニャ",       allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,6.0,3.0,7.0,6.0], standard_weight: 28.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "テンテン",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,3.0,6.0,5.0,7.0], standard_weight: 34.0, voice_type: VoiceType::Gal },
+    Stage3Species { name: "ナァナァ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,5.0,4.0,3.0,3.0], standard_weight: 39.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "ポツリ",       allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,4.0,5.0,4.0,4.0], standard_weight: 26.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "ソレナリ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,5.0,5.0,6.0,6.0], standard_weight: 37.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "ウンウン",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,5.0,3.0,7.0,7.0], standard_weight: 33.0, voice_type: VoiceType::Keigo },
+    Stage3Species { name: "チャッカリ",   allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,3.0,6.0,6.0,8.0], standard_weight: 31.0, voice_type: VoiceType::Gal },
+    Stage3Species { name: "ヤレヤレ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,6.0,3.0,4.0,5.0], standard_weight: 44.0, voice_type: VoiceType::Oyaji },
+    Stage3Species { name: "ドッコイ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [6.0,4.0,4.0,5.0,4.0], standard_weight: 48.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "パッパ",       allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,4.0,5.0,3.0,9.0], standard_weight: 29.0, voice_type: VoiceType::Taiiku },
+    Stage3Species { name: "ヌルリ",       allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,5.0,5.0,5.0,3.0], standard_weight: 34.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "オットリ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,6.0,4.0,7.0,5.0], standard_weight: 41.0, voice_type: VoiceType::Tennen },
+
+    // --- 野生型から進化 (20種) ---
+    Stage3Species { name: "ヤミノメ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [3.0,3.0,5.0,1.0,1.0], standard_weight: 15.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "オオヌシ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [7.0,2.0,4.0,2.0,1.0], standard_weight: 100.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "バケモノ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [5.0,1.0,7.0,1.0,2.0], standard_weight: 60.0, voice_type: VoiceType::Kajou },
+    Stage3Species { name: "ユウレイ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [1.0,5.0,4.0,2.0,1.0], standard_weight: 3.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ヤセイジ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [6.0,1.0,6.0,0.0,0.0], standard_weight: 45.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "シンエン",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [2.0,6.0,3.0,1.0,1.0], standard_weight: 20.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "ノラクロ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [4.0,3.0,6.0,3.0,2.0], standard_weight: 35.0, voice_type: VoiceType::Kansai },
+    Stage3Species { name: "モノノケ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [3.0,4.0,5.0,2.0,1.0], standard_weight: 10.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "クライ",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [2.0,5.0,3.0,1.0,1.0], standard_weight: 8.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "アヤシイ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [4.0,2.0,6.0,3.0,3.0], standard_weight: 25.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "ムジナ",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [5.0,3.0,5.0,2.0,2.0], standard_weight: 30.0, voice_type: VoiceType::Tameguchi },
+    Stage3Species { name: "ヌエ",         allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [6.0,2.0,5.0,1.0,1.0], standard_weight: 55.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "カマイタチ",   allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [4.0,1.0,8.0,2.0,2.0], standard_weight: 18.0, voice_type: VoiceType::Kajou },
+    Stage3Species { name: "ドロドロ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [3.0,4.0,3.0,3.0,1.0], standard_weight: 40.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "ヒノタマ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [5.0,2.0,6.0,1.0,1.0], standard_weight: 5.0, voice_type: VoiceType::Tetsugaku },
+    Stage3Species { name: "フルエ",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [2.0,3.0,4.0,4.0,3.0], standard_weight: 12.0, voice_type: VoiceType::Negative },
+    Stage3Species { name: "ケダマ",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [4.0,4.0,4.0,2.0,2.0], standard_weight: 22.0, voice_type: VoiceType::Tennen },
+    Stage3Species { name: "シノビ",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [5.0,2.0,7.0,1.0,2.0], standard_weight: 28.0, voice_type: VoiceType::Mukuchi },
+    Stage3Species { name: "ジゴク",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [7.0,1.0,5.0,0.0,0.0], standard_weight: 70.0, voice_type: VoiceType::Kogo },
+    Stage3Species { name: "ムゲン",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [3.0,5.0,5.0,2.0,1.0], standard_weight: 1.0, voice_type: VoiceType::Tetsugaku },
+];
+
+// ===== Stage4 突然変異 (8種) =====
+pub const STAGE4_SPECIES: &[Stage4Species] = &[
+    Stage4Species { name: "ゲンソウ",     allowed_from: &["ドドン","タワーン","ゴウケン","テッカイ","ブンブン","ガンテツ","ドスコイ","バリバリ","メガトン","グランド","イカヅチ","ゴリラン","ダイガン","ゴロゴロ","カチワリ","テツジン","ドゴン","バンカー","マッスル","イワオ"], standard_weight: 250.0, voice_type: VoiceType::Kogo },
+    Stage4Species { name: "エーテル",     allowed_from: &["ながれもん","フワリン","モコモコ","ネンネ","ポヨン","スヤスヤ","カスミ","ノドカ","ユメミ","ボンヤリ","ヒラタ","コロリン","ムニャ","マッタリ","ホワワ","シズカ","モグモグ","トロン","ユッタリ","ソヨカゼ"], standard_weight: 0.5, voice_type: VoiceType::Tetsugaku },
+    Stage4Species { name: "カイザー",     allowed_from: &["ガニ","トビオ","マルマル","ハヤテ","グルグルン","カゼノコ","ドカーン","スイスイ","サスライ","ピカッ","バサバサ","ウロチョロ","ゴーゴー","クモノス","ホシゾラ","ブッチギリ","ワタリ","ヒュー","タンケン","ジェット"], standard_weight: 80.0, voice_type: VoiceType::Kajou },
+    Stage4Species { name: "ハクチュウ",   allowed_from: &["ノーマル","ヘイボン","タソガレ","ニッコリ","ダラーン","キッチリ","ボチボチ","マアマア","フニャ","テンテン","ナァナァ","ポツリ","ソレナリ","ウンウン","チャッカリ","ヤレヤレ","ドッコイ","パッパ","ヌルリ","オットリ"], standard_weight: 50.0, voice_type: VoiceType::Tennen },
+    Stage4Species { name: "コンゲン",     allowed_from: &["ヤミノメ","オオヌシ","バケモノ","ユウレイ","ヤセイジ","シンエン","ノラクロ","モノノケ","クライ","アヤシイ","ムジナ","ヌエ","カマイタチ","ドロドロ","ヒノタマ","フルエ","ケダマ","シノビ","ジゴク","ムゲン"], standard_weight: 300.0, voice_type: VoiceType::Mukuchi },
+    Stage4Species { name: "キセキ",       allowed_from: &["ドドン","フワリン","トビオ","ニッコリ","ヤミノメ","マッスル","モコモコ","ハヤテ","キッチリ","オオヌシ"], standard_weight: 42.0, voice_type: VoiceType::Gal },
+    Stage4Species { name: "ムゲンダイ",   allowed_from: &["メガトン","スヤスヤ","ブッチギリ","ダラーン","ジゴク","イワオ","ネンネ","サスライ","ヌルリ","ムゲン"], standard_weight: 999.0, voice_type: VoiceType::Tetsugaku },
+    Stage4Species { name: "ナナシ",       allowed_from: &["カスミ","ソヨカゼ","クモノス","ポツリ","フルエ","ボンヤリ","カゼノコ","ナァナァ","クライ","ケダマ"], standard_weight: 7.0, voice_type: VoiceType::Mukuchi },
+];
+
+/// 進化イベントの結果
+#[allow(dead_code)]
+pub struct EvolutionEvent {
+    pub new_species: String,
+    pub new_stage: u8,
+}
+
+/// 進化チェック（起動時・アクション時に呼ぶ）
+pub fn check_evolution(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
+    match pet.stage {
+        1 => check_stage1_to_2(pet, rng),
+        2 => check_stage2_to_3(pet, rng),
+        3 => check_stage3_to_4(pet, rng),
+        _ => None,
+    }
+}
+
+/// Stage1 → Stage2 (6時間経過時、タイプ傾向で決定)
+fn check_stage1_to_2(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
+    if pet.age_ticks < STAGE2_TICKS {
+        return None;
+    }
+
+    let ts = &pet.type_scores;
+    let evo_type = determine_evo_type(ts.chikara, ts.odayaka, ts.bouken);
+
+    // 該当タイプの中からランダムに選択
+    let candidates: Vec<&Stage2Species> = STAGE2_SPECIES
+        .iter()
+        .filter(|s| s.evo_type == evo_type)
+        .collect();
+
+    let species = candidates[rng.gen_range(0..candidates.len())];
+    apply_evolution(pet, species.name, 2, species.standard_weight);
+
+    Some(EvolutionEvent {
+        new_species: species.name.to_string(),
+        new_stage: 2,
+    })
+}
+
+/// タイプ傾向からEvoTypeを決定
+fn determine_evo_type(chikara: u32, odayaka: u32, bouken: u32) -> EvoType {
+    let max_score = chikara.max(odayaka).max(bouken);
+    let min_score = chikara.min(odayaka).min(bouken);
+
+    // 全部0（一度もアクションしてない）→ 野生型
+    if max_score == 0 {
+        return EvoType::Wild;
+    }
+
+    // 最大と最小の差が3以内 → ふつう型
+    if max_score - min_score <= 3 {
+        return EvoType::Normal;
+    }
+
+    // 最大スコアのタイプ
+    if chikara >= odayaka && chikara >= bouken {
+        EvoType::Chikara
+    } else if odayaka >= chikara && odayaka >= bouken {
+        EvoType::Odayaka
+    } else {
+        EvoType::Bouken
+    }
+}
+
+/// Stage2 → Stage3 (24時間経過時、コサイン類似度で決定)
+fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
+    if pet.age_ticks < STAGE3_TICKS {
+        return None;
+    }
+
+    // 育て方ベクトルの構築
+    let total_actions = (pet.type_scores.chikara + pet.type_scores.odayaka + pet.type_scores.bouken) as f64;
+    let frequency = (total_actions / 10.0).min(10.0); // 正規化
+
+    let player_vec = [
+        pet.type_scores.chikara as f64,
+        pet.type_scores.odayaka as f64,
+        pet.type_scores.bouken as f64,
+        pet.nakayoshi / 10.0, // 0-10にスケール
+        frequency,
+    ];
+
+    // 系統制約：現在のStage2種族から進化可能なStage3のみ
+    let candidates: Vec<&Stage3Species> = STAGE3_SPECIES
+        .iter()
+        .filter(|s| s.allowed_from.contains(&pet.species.as_str()))
+        .collect();
+
+    if candidates.is_empty() {
+        return None;
+    }
+
+    // コサイン類似度でランク付け
+    let mut scored: Vec<(&Stage3Species, f64)> = candidates
+        .iter()
+        .map(|s| (*s, cosine_similarity(&player_vec, &s.vector)))
+        .collect();
+
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    // 上位3つから重み付きランダム選択（多様性のため）
+    let top_n = scored.len().min(3);
+    let weights: Vec<f64> = (0..top_n).map(|i| {
+        let base = scored[i].1.max(0.01);
+        base * (top_n - i) as f64
+    }).collect();
+
+    let total_weight: f64 = weights.iter().sum();
+    let mut roll = rng.gen::<f64>() * total_weight;
+
+    let mut chosen = scored[0].0;
+    for (i, w) in weights.iter().enumerate() {
+        roll -= w;
+        if roll <= 0.0 {
+            chosen = scored[i].0;
+            break;
+        }
+    }
+
+    apply_evolution(pet, chosen.name, 3, chosen.standard_weight);
+
+    Some(EvolutionEvent {
+        new_species: chosen.name.to_string(),
+        new_stage: 3,
+    })
+}
+
+/// Stage3 → Stage4 (24時間ごとに25%の確率)
+fn check_stage3_to_4(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
+    // Stage3になってからの経過時間
+    // age_ticksはトータルなので、Stage3になった時点を推定
+    // Stage3到達 = STAGE3_TICKS, それ以降の経過
+    if pet.age_ticks < STAGE3_TICKS + STAGE4_INTERVAL {
+        return None;
+    }
+
+    // 24時間経過ごとに1回判定（最後の判定タイミングを計算）
+    let ticks_since_stage3 = pet.age_ticks - STAGE3_TICKS;
+    let check_count = ticks_since_stage3 / STAGE4_INTERVAL;
+
+    // まだ判定されていない分を処理（簡易: 全チェック分の累積確率）
+    let survival_prob = (1.0 - STAGE4_CHANCE).powi(check_count as i32);
+    if rng.gen::<f64>() < survival_prob {
+        return None; // 変異せず
+    }
+
+    // 変異先を決定
+    let candidates: Vec<&Stage4Species> = STAGE4_SPECIES
+        .iter()
+        .filter(|s| s.allowed_from.contains(&pet.species.as_str()))
+        .collect();
+
+    if candidates.is_empty() {
+        return None;
+    }
+
+    let species = candidates[rng.gen_range(0..candidates.len())];
+    apply_evolution(pet, species.name, 4, species.standard_weight);
+
+    Some(EvolutionEvent {
+        new_species: species.name.to_string(),
+        new_stage: 4,
+    })
+}
+
+/// 進化適用の共通処理
+fn apply_evolution(pet: &mut PetData, new_name: &str, new_stage: u8, standard_weight: f64) {
+    pet.species = new_name.to_string();
+    pet.stage = new_stage;
+    pet.weight = standard_weight;
+    pet.evolution_line.push(new_name.to_string());
+}
+
+/// コサイン類似度
+fn cosine_similarity(a: &[f64; 5], b: &[f64; 5]) -> f64 {
+    let dot: f64 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
+    let mag_a: f64 = a.iter().map(|x| x * x).sum::<f64>().sqrt();
+    let mag_b: f64 = b.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+    if mag_a == 0.0 || mag_b == 0.0 {
+        return 0.0;
+    }
+
+    dot / (mag_a * mag_b)
+}
+
+/// 種族名から口調タイプを取得
+pub fn get_voice_type(species: &str) -> Option<VoiceType> {
+    // Stage1はデフォルト（Phase1の汎用セリフ使用）
+    for s in STAGE2_SPECIES {
+        if s.name == species {
+            return Some(s.voice_type);
+        }
+    }
+    for s in STAGE3_SPECIES {
+        if s.name == species {
+            return Some(s.voice_type);
+        }
+    }
+    for s in STAGE4_SPECIES {
+        if s.name == species {
+            return Some(s.voice_type);
+        }
+    }
+    None
+}
+
+/// 種族名から標準体重を取得（Stage2以降）
+pub fn get_standard_weight(species: &str) -> Option<f64> {
+    for s in STAGE2_SPECIES {
+        if s.name == species {
+            return Some(s.standard_weight);
+        }
+    }
+    for s in STAGE3_SPECIES {
+        if s.name == species {
+            return Some(s.standard_weight);
+        }
+    }
+    for s in STAGE4_SPECIES {
+        if s.name == species {
+            return Some(s.standard_weight);
+        }
+    }
+    None
+}
+
+/// 種族名から進化タイプを取得（Stage2は直接、Stage3/4は進化元から推定）
+pub fn get_evo_type(species: &str) -> Option<EvoType> {
+    for s in STAGE2_SPECIES {
+        if s.name == species {
+            return Some(s.evo_type);
+        }
+    }
+    for s in STAGE3_SPECIES {
+        if s.name == species {
+            if let Some(first_from) = s.allowed_from.first() {
+                return get_evo_type(first_from);
+            }
+        }
+    }
+    for s in STAGE4_SPECIES {
+        if s.name == species {
+            if let Some(first_from) = s.allowed_from.first() {
+                return get_evo_type(first_from);
+            }
+        }
+    }
+    None
+}
+
+/// 種族名からステージを取得
+pub fn get_stage(species: &str) -> Option<u8> {
+    for s in STAGE2_SPECIES {
+        if s.name == species { return Some(2); }
+    }
+    for s in STAGE3_SPECIES {
+        if s.name == species { return Some(3); }
+    }
+    for s in STAGE4_SPECIES {
+        if s.name == species { return Some(4); }
+    }
+    None
+}
+
+/// 全種族名リスト（図鑑用）
+pub fn all_species_names() -> Vec<&'static str> {
+    use crate::game::pet::STAGE1_SPECIES;
+
+    let mut names = Vec::new();
+
+    // Stage1
+    for s in &STAGE1_SPECIES {
+        names.push(s.name);
+    }
+    // Stage2
+    for s in STAGE2_SPECIES {
+        names.push(s.name);
+    }
+    // Stage3
+    for s in STAGE3_SPECIES {
+        names.push(s.name);
+    }
+    // Stage4
+    for s in STAGE4_SPECIES {
+        names.push(s.name);
+    }
+
+    names
+}
