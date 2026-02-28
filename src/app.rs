@@ -46,6 +46,15 @@ pub struct AppState {
     pub rng: ThreadRng,
 }
 
+fn install_panic_hook() {
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+        original_hook(panic_info);
+    }));
+}
+
 pub async fn run() -> Result<()> {
     // 1. Fetch current time
     let time_result = time::fetch_current_time().await;
@@ -109,7 +118,8 @@ pub async fn run() -> Result<()> {
         rng: rand::thread_rng(),
     };
 
-    // 4. Initialize terminal
+    // 4. Initialize terminal (with panic hook for safe cleanup)
+    install_panic_hook();
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -266,6 +276,16 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         // Check for hatching before action
         if let Some(_hatch) = pet::check_hatching(pet_data, &mut state.rng) {
             // Hatching happened! Will be visible on next render
+        }
+
+        // Egg stage: ignore actions (prevent type score accumulation before hatching)
+        if pet_data.stage == 0 {
+            state.action_result = Some(ActionResult {
+                action,
+                reaction_text: "（たまごは静かに揺れている…）".to_string(),
+            });
+            state.mode = AppMode::ActionReaction;
+            return Ok(());
         }
 
         // Perform the action

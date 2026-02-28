@@ -119,12 +119,14 @@ pub fn weight_label(species: &str, current_weight: f64) -> &'static str {
 }
 
 fn find_standard_weight(species: &str) -> f64 {
+    if species == "たまご" {
+        return 1.0;
+    }
     for s in &STAGE1_SPECIES {
         if s.name == species {
             return s.standard_weight;
         }
     }
-    // Default for egg or unknown species
     10.0
 }
 
