@@ -92,13 +92,19 @@ pub async fn run() -> Result<()> {
                     pet::apply_decay(p, elapsed.ticks, &mut rng);
 
                     // Check hatching (egg → stage 1)
-                    if let Some(hatch) = pet::check_hatching(p, &mut rng) {
+                    let just_hatched = if let Some(hatch) = pet::check_hatching(p, &mut rng) {
                         hatched_species = Some(hatch.new_species);
-                    }
+                        true
+                    } else {
+                        false
+                    };
 
                     // Check evolution (stage 1→2, 2→3, 3→4)
-                    if let Some(evo) = evolution::check_evolution(p, &mut rng) {
-                        evolved_species = Some(evo.new_species);
+                    // Skip if just hatched to prevent cascading (e.g. egg→Stage1→Stage2 in one pass)
+                    if !just_hatched {
+                        if let Some(evo) = evolution::check_evolution(p, &mut rng) {
+                            evolved_species = Some(evo.new_species);
+                        }
                     }
 
                     // Process random events (includes accident/death check)
@@ -491,16 +497,16 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         state.save_data.last_check_time = now;
 
         // Check for hatching before action
-        if let Some(_hatch) = pet::check_hatching(pet_data, &mut state.rng) {
-            // Hatching happened! Will be visible on next render
-        }
+        let just_hatched = pet::check_hatching(pet_data, &mut state.rng).is_some();
 
-        // Check evolution
-        if let Some(evo) = evolution::check_evolution(pet_data, &mut state.rng) {
-            state.evolution_message = Some(evo.new_species);
-            state.mode = AppMode::Evolution;
-            save::save(&state.save_data)?;
-            return Ok(());
+        // Check evolution (skip if just hatched to prevent cascading)
+        if !just_hatched {
+            if let Some(evo) = evolution::check_evolution(pet_data, &mut state.rng) {
+                state.evolution_message = Some(evo.new_species);
+                state.mode = AppMode::Evolution;
+                save::save(&state.save_data)?;
+                return Ok(());
+            }
         }
 
         // Egg stage: ignore actions (prevent type score accumulation before hatching)

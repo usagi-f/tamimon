@@ -370,19 +370,24 @@ fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
 
 /// Stage3 → Stage4 (25% chance every 24 hours)
 fn check_stage3_to_4(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
-    // Time elapsed since reaching Stage3
-    // age_ticks is total, so estimate when Stage3 was reached
-    // Stage3 reached at STAGE3_TICKS, count time after that
     if pet.age_ticks < STAGE3_TICKS + STAGE4_INTERVAL {
         return None;
     }
 
-    // One check per 24 hours elapsed (calculate last check timing)
+    // Calculate how many 24h intervals have passed since reaching Stage3
     let ticks_since_stage3 = pet.age_ticks - STAGE3_TICKS;
-    let check_count = ticks_since_stage3 / STAGE4_INTERVAL;
+    let total_intervals = ticks_since_stage3 / STAGE4_INTERVAL;
 
-    // Process unchecked intervals (simplified: cumulative probability for all checks)
-    let survival_prob = (1.0 - STAGE4_CHANCE).powi(check_count as i32);
+    // Only check intervals that haven't been checked yet
+    let new_intervals = total_intervals.saturating_sub(pet.last_stage4_check);
+    pet.last_stage4_check = total_intervals;
+
+    if new_intervals == 0 {
+        return None;
+    }
+
+    // Roll for each new interval: survival probability = (1 - 0.25)^new_intervals
+    let survival_prob = (1.0 - STAGE4_CHANCE).powi(new_intervals as i32);
     if rng.gen::<f64>() < survival_prob {
         return None; // No mutation
     }

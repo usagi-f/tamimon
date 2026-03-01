@@ -44,6 +44,7 @@ pub fn new_egg(nickname: String, now: DateTime<Utc>) -> PetData {
         survived_accident: false,
         birth_timestamp: now,
         cumulative_kimochi: 50.0,
+        last_stage4_check: 0,
     }
 }
 
