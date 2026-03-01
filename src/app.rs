@@ -53,6 +53,7 @@ pub struct AppState {
     pub startup_info: Option<StartupInfo>,
     pub action_result: Option<ActionResult>,
     pub death_message: Option<String>,
+    pub death_pet_name: Option<String>,
     pub evolution_message: Option<String>,
     pub album_state: album::AlbumState,
     pub rng: ThreadRng,
@@ -76,7 +77,7 @@ pub async fn run() -> Result<()> {
     let existing_save = save::load()?;
 
     // 3. Build initial state
-    let (mode, save_data, startup_info) = match existing_save {
+    let (mode, save_data, startup_info, startup_death_pet_name) = match existing_save {
         Some(mut data) => {
             let elapsed = time::calculate_elapsed_ticks(data.last_check_time, time_result.now);
             let mut rng = rand::thread_rng();
@@ -84,6 +85,7 @@ pub async fn run() -> Result<()> {
             let mut evolved_species = None;
             let mut event_messages = Vec::new();
             let mut death_message = None;
+            let mut death_pet_name: Option<String> = None;
 
             if !elapsed.rollback_detected {
                 if let Some(ref mut p) = data.pet {
@@ -104,12 +106,20 @@ pub async fn run() -> Result<()> {
                     for er in event_results {
                         if er.is_death {
                             death_message = Some(er.message.clone());
-                            // record_deathはDeath画面のキー押下時に実行する
-                            // （render_deathがペット情報を参照するため）
+                            // ペット名を保存（Death画面表示用）
+                            let name = if p.nickname.is_empty() { "なまえなし" } else { &p.nickname };
+                            death_pet_name = Some(name.to_string());
                         }
                         event_messages.push(er.message);
                     }
                 }
+
+                // 死亡が検知された場合、record_deathを呼んでセーブデータの整合性を保つ
+                if death_message.is_some() {
+                    let death_msg = death_message.as_deref().unwrap_or("");
+                    record_death(&mut data, death_msg);
+                }
+
                 data.last_check_time = time_result.now;
                 save::save(&data)?;
             }
@@ -126,7 +136,7 @@ pub async fn run() -> Result<()> {
                 death_message,
             };
 
-            (AppMode::Startup, data, Some(info))
+            (AppMode::Startup, data, Some(info), death_pet_name)
         }
         None => {
             let data = SaveData::new(time_result.now);
@@ -136,6 +146,7 @@ pub async fn run() -> Result<()> {
                     farewell_name: None,
                 },
                 data,
+                None,
                 None,
             )
         }
@@ -152,6 +163,7 @@ pub async fn run() -> Result<()> {
         startup_info,
         action_result: None,
         death_message: None,
+        death_pet_name: startup_death_pet_name,
         evolution_message: None,
         album_state: album::AlbumState::new(),
         rng: rand::thread_rng(),
@@ -254,23 +266,17 @@ fn render_death(f: &mut ratatui::Frame, state: &AppState) {
     lines.push(Line::from(""));
     lines.push(Line::from(""));
 
-    if let Some(ref pet) = state.save_data.pet {
-        let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+    // ペット名はdeath_pet_name（startup時に保存済み）またはpetから取得
+    let pet_name = state.death_pet_name.as_deref()
+        .or_else(|| state.save_data.pet.as_ref().map(|p| {
+            if p.nickname.is_empty() { "なまえなし" } else { p.nickname.as_str() }
+        }));
+
+    if let Some(name) = pet_name {
         lines.push(Line::from(Span::styled(
             format!("  さよなら、{}。", name),
             Style::default().add_modifier(Modifier::BOLD),
         )));
-    }
-
-    // Check record
-    if let Some(ref pet) = state.save_data.pet {
-        if pet.age_ticks > state.save_data.records.longest_survival_ticks {
-            lines.push(Line::from(""));
-            lines.push(Line::from(Span::styled(
-                "  🏆 最長生存記録を更新した！",
-                Style::default().fg(Color::Cyan),
-            )));
-        }
     }
 
     lines.push(Line::from(""));
@@ -444,14 +450,13 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         },
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
-            let farewell = if let Some(ref pet) = state.save_data.pet {
-                let name = if pet.nickname.is_empty() { "なまえなし".to_string() } else { pet.nickname.clone() };
-                Some(name)
-            } else {
-                None
-            };
+            // farewell名: death_pet_name（startup時）またはpetから取得
+            let farewell = state.death_pet_name.take()
+                .or_else(|| state.save_data.pet.as_ref().map(|p| {
+                    if p.nickname.is_empty() { "なまえなし".to_string() } else { p.nickname.clone() }
+                }));
 
-            // Actually finalize the death
+            // startup時はrecord_death済みだがdo_action経由はまだなので実行
             if state.save_data.pet.is_some() {
                 let death_msg = state.death_message.take().unwrap_or_default();
                 record_death(&mut state.save_data, &death_msg);
