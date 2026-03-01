@@ -241,7 +241,9 @@ pub fn render_action_animation(
         &pet.nickname
     };
 
-    let (art_lines, effect) = ascii_art::get_action_animation(action, state.animation_frame);
+    let mood = mood_level(pet.kimochi);
+    let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
+    let effect = ascii_art::get_action_effect(action, state.animation_frame);
 
     // Progress dots based on elapsed time
     let elapsed_ms = state.action_animation_start
@@ -274,7 +276,7 @@ pub fn render_action_animation(
 
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        effect.to_string(),
+        format!("  {}", effect),
         Style::default().fg(Color::Cyan),
     )));
 
@@ -302,7 +304,8 @@ pub fn render_action_reaction(
         &pet.nickname
     };
 
-    let art_lines = ascii_art::get_action_art(&pet.species, action);
+    let mood = mood_level(pet.kimochi);
+    let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
 
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(""));

@@ -56,102 +56,33 @@ fn get_template_art(species: &str, mood: MoodLevel, frame: usize) -> &'static [&
     }
 }
 
-pub fn get_action_art(species: &str, action: Action) -> &'static [&'static str] {
-    match (species, action) {
-        (_, Action::Talk) => &[
-            "",
-            "    (●'◡'●)ノ",
-            "     ヾ|",
-            "     /|",
-            "",
-        ],
-        (_, Action::Play) => &[
-            "      \\(≧▽≦)/",
-            "        |",
-            "       / \\",
-            "",
-        ],
-        (_, Action::Train) => &[
-            "",
-            "    (｀・ω・´)9",
-            "      ヾ|",
-            "      /|",
-            "",
-        ],
-        (_, Action::Relax) => &[
-            "",
-            "",
-            "    _(˘ω˘)_",
-            "   zzZ",
-            "",
-        ],
-    }
-}
-
-/// Frame-cycling animation art for the action animation phase.
-/// `frame` cycles at ~2fps; returns (art_lines, effect_line).
-pub fn get_action_animation(action: Action, frame: usize) -> (&'static [&'static str], &'static str) {
+/// Action-specific effect text that cycles with animation frames.
+pub fn get_action_effect(action: Action, frame: usize) -> &'static str {
     match action {
-        Action::Talk => {
-            let art = match frame % 4 {
-                0 => &["", "    (●'◡'●)", "      |", "     / \\", ""] as &[&str],
-                1 => &["", "    (●'◡'●)ノ", "     ヾ|", "     /|", ""],
-                2 => &["", "   ノ(●'◡'●)", "      |ヾ", "      |\\", ""],
-                _ => &["", "    (●'◡'●)ノ", "     ヾ|", "     /|", ""],
-            };
-            let effect = match frame % 4 {
-                0 => "  「 ・・・ 」",
-                1 => "  「 ・・・・・・ 」",
-                2 => "  「 ・・・・・・・・・ 」",
-                _ => "  「 ！ 」",
-            };
-            (art, effect)
-        }
-        Action::Play => {
-            let art = match frame % 4 {
-                0 => &["", "    \\(≧▽≦)/", "       |", "      / \\", ""] as &[&str],
-                1 => &["", "     (≧▽≦)ノ", "      ヾ|", "      /|", ""],
-                2 => &["", "  ヽ(≧▽≦)", "      |ヾ", "      |\\", ""],
-                _ => &["", "    \\(≧▽≦)/", "       |", "      / \\", ""],
-            };
-            let effect = match frame % 4 {
-                0 => "        ♪",
-                1 => "      ♪ ♪",
-                2 => "    ♪ ♪ ♪",
-                _ => "  ♪ ♪ ♪ ♪",
-            };
-            (art, effect)
-        }
-        Action::Train => {
-            let art = match frame % 4 {
-                0 => &["", "    (｀・ω・´)", "      |", "     / \\", ""] as &[&str],
-                1 => &["", "    (｀・ω・´)9", "      ヾ|", "      /|", ""],
-                2 => &["", "    (｀・ω・´)9", "      ヾ|  !", "      /|", ""],
-                _ => &["", "   9(｀・ω・´)9", "      ヾ|", "      /|", ""],
-            };
-            let effect = match frame % 4 {
-                0 => "       ...!",
-                1 => "      ﾌﾝｯ !!",
-                2 => "     ﾊｧ ﾊｧ ...!",
-                _ => "      ﾌﾝﾌﾝｯ !!!",
-            };
-            (art, effect)
-        }
-        Action::Relax => {
-            let art = match frame % 4 {
-                0 => &["", "", "    _(˘ω˘)_", "", ""] as &[&str],
-                1 => &["", "", "    _(˘ω˘)_", "        z", ""],
-                2 => &["", "", "    _(˘ω˘)_", "       zz", ""],
-                _ => &["", "", "    _(˘ω˘)_", "      zzZ", ""],
-            };
-            let effect = match frame % 4 {
-                0 => "      ～",
-                1 => "    ～ ～",
-                2 => "  ～ ～ ～",
-                _ => "～ ～ ～ ～",
-            };
-            (art, effect)
-        }
+        Action::Talk => match frame % 4 {
+            0 => "「 ・・・ 」",
+            1 => "「 ・・・・・・ 」",
+            2 => "「 ・・・・・・・・・ 」",
+            _ => "「 ！ 」",
+        },
+        Action::Play => match frame % 4 {
+            0 => "♪",
+            1 => "♪ ♪",
+            2 => "♪ ♪ ♪",
+            _ => "♪ ♪ ♪ ♪",
+        },
+        Action::Train => match frame % 4 {
+            0 => "...!",
+            1 => "ﾌﾝｯ !!",
+            2 => "ﾊｧ ﾊｧ ...!",
+            _ => "ﾌﾝﾌﾝｯ !!!",
+        },
+        Action::Relax => match frame % 4 {
+            0 => "～",
+            1 => "～ ～",
+            2 => "～ ～ ～",
+            _ => "～ ～ ～ ～",
+        },
     }
 }
 
