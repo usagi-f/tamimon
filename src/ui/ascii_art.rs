@@ -86,6 +86,297 @@ pub fn get_action_effect(action: Action, frame: usize) -> &'static str {
     }
 }
 
+/// Species-specific action animation art.
+/// Each species has unique poses for each action with 2-frame animation.
+pub fn get_action_art(species: &str, action: Action, frame: usize) -> &'static [&'static str] {
+    match species {
+        "たまご" => egg_art(),
+        "コロコロ" => korokoro_action(action, frame),
+        "ニョロ" => nyoro_action(action, frame),
+        "フワ" => fuwa_action(action, frame),
+        "ツブ" => tsubu_action(action, frame),
+        "プク" => puku_action(action, frame),
+        "ミジン" => mijin_action(action, frame),
+        "ネロ" => nero_action(action, frame),
+        "ボテ" => bote_action(action, frame),
+        _ => get_template_action_art(species, action, frame),
+    }
+}
+
+fn get_template_action_art(species: &str, action: Action, frame: usize) -> &'static [&'static str] {
+    let evo_type = evolution::get_evo_type(species).unwrap_or(EvoType::Normal);
+    let stage = evolution::get_stage(species).unwrap_or(2);
+    match (stage, evo_type) {
+        (2, EvoType::Chikara) => s2_chikara_action(action, frame),
+        (2, EvoType::Odayaka) => s2_odayaka_action(action, frame),
+        (2, EvoType::Bouken)  => s2_bouken_action(action, frame),
+        (2, EvoType::Normal)  => s2_normal_action(action, frame),
+        (2, EvoType::Wild)    => s2_wild_action(action, frame),
+        (3, EvoType::Chikara) => s3_chikara_action(action, frame),
+        (3, EvoType::Odayaka) => s3_odayaka_action(action, frame),
+        (3, EvoType::Bouken)  => s3_bouken_action(action, frame),
+        (3, EvoType::Normal)  => s3_normal_action(action, frame),
+        (3, EvoType::Wild)    => s3_wild_action(action, frame),
+        (4, _)                => s4_action(action, frame),
+        _                     => egg_art(),
+    }
+}
+
+// --- Stage 1 Action Art ---
+
+fn korokoro_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "    (˘ω˘)ノ", "     ヾ|", "     /|", ""],
+        (Action::Talk, _) => &["", "   ノ(˘ω˘)", "      |ヾ", "      |\\", ""],
+        (Action::Play, 0) => &["", "   ＼(≧▽≦)／", "       |", "      / \\", ""],
+        (Action::Play, _) => &["", "    ヽ(≧▽≦)ノ", "       |", "      / \\", ""],
+        (Action::Train, 0) => &["", "    (≧ω≦)9", "     ヾ|", "     /|", ""],
+        (Action::Train, _) => &["", "   9(≧ω≦)", "      |ヾ", "      |\\", ""],
+        (Action::Relax, 0) => &["", "", "    _(˘ω˘)_", "", ""],
+        (Action::Relax, _) => &["", "", "   _(˘ω˘)_", "       z", ""],
+    }
+}
+
+fn nyoro_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ≋(・ω・)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "ﾉ(・ω・)≋", "", "", ""],
+        (Action::Play, 0) => &["", "~≋(＞ω＜)≋~", "", "", ""],
+        (Action::Play, _) => &["", " ≋~(＞ω＜)~≋", "", "", ""],
+        (Action::Train, 0) => &["", " ≋(｀ω´)≋ !", "", "", ""],
+        (Action::Train, _) => &["", "! ≋(｀ω´)≋", "", "", ""],
+        (Action::Relax, 0) => &["", " ≋(˘ω˘)～", "", "", ""],
+        (Action::Relax, _) => &["", " ≋(˘ω˘)～ z", "", "", ""],
+    }
+}
+
+fn fuwa_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ୧(˶˘ᵕ˘)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "ﾉ(˶˘ᵕ˘)୨", "", "", ""],
+        (Action::Play, 0) => &["", "  ୧(˶≧▽≦)୨", "", "", ""],
+        (Action::Play, _) => &["", " ୨(˶≧▽≦)୧", "", "", ""],
+        (Action::Train, 0) => &["", " ୧(˶≧ω≦)9", "", "", ""],
+        (Action::Train, _) => &["", "9(˶≧ω≦)୨", "", "", ""],
+        (Action::Relax, 0) => &["", " _(˶˘ᵕ˘)_", "", "", ""],
+        (Action::Relax, _) => &["", " _(˶˘ᵕ˘)_ z", "", "", ""],
+    }
+}
+
+fn tsubu_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "    ⊙ω⊙ ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "  ﾉ ⊙ω⊙", "", "", ""],
+        (Action::Play, 0) => &["", "    ⊙▽⊙ !", "", "", ""],
+        (Action::Play, _) => &["", "  ! ⊙▽⊙", "", "", ""],
+        (Action::Train, 0) => &["", "    ⊙益⊙ !!", "", "", ""],
+        (Action::Train, _) => &["", "  !! ⊙益⊙", "", "", ""],
+        (Action::Relax, 0) => &["", "    ⊙_⊙", "", "", ""],
+        (Action::Relax, _) => &["", "    ⊙_⊙ z", "", "", ""],
+    }
+}
+
+fn puku_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "   (｡・ω・｡)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "  ﾉ(｡・ω・｡)", "", "", ""],
+        (Action::Play, 0) => &["", "   (｡>ω<｡)ノ", "", "", ""],
+        (Action::Play, _) => &["", "  ヽ(｡>ω<｡)", "", "", ""],
+        (Action::Train, 0) => &["", "   (｡>ω<｡)9", "", "", ""],
+        (Action::Train, _) => &["", "  9(｡>ω<｡)", "", "", ""],
+        (Action::Relax, 0) => &["", "   (｡-ω-｡)", "", "", ""],
+        (Action::Relax, _) => &["", "   (｡-ω-｡) z", "", "", ""],
+    }
+}
+
+fn mijin_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "    ･ω･ ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "  ﾉ ･ω･", "", "", ""],
+        (Action::Play, 0) => &["", "    ＞ω＜ !", "", "", ""],
+        (Action::Play, _) => &["", "  ! ＞ω＜", "", "", ""],
+        (Action::Train, 0) => &["", "    ＞益＜ !!", "", "", ""],
+        (Action::Train, _) => &["", "  !! ＞益＜", "", "", ""],
+        (Action::Relax, 0) => &["", "    -ω-", "", "", ""],
+        (Action::Relax, _) => &["", "    -ω- z", "", "", ""],
+    }
+}
+
+fn nero_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "   (^ω^)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "  ﾉ(^ω^)", "", "", ""],
+        (Action::Play, 0) => &["", "  ＼(^ω^)／", "", "", ""],
+        (Action::Play, _) => &["", "   ヽ(^ω^)ノ", "", "", ""],
+        (Action::Train, 0) => &["", "   (=`ω´=)9", "", "", ""],
+        (Action::Train, _) => &["", "  9(=`ω´=)", "", "", ""],
+        (Action::Relax, 0) => &["", "   (=ω=) zzZ", "", "", ""],
+        (Action::Relax, _) => &["", "   (- -) zzZ", "", "", ""],
+    }
+}
+
+fn bote_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "   (・▽・)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "  ﾉ(・▽・)", "", "", ""],
+        (Action::Play, 0) => &["", "  ＼(・▽・)／", "", "", ""],
+        (Action::Play, _) => &["", "   ヽ(・▽・)ノ", "", "", ""],
+        (Action::Train, 0) => &["", "   (・益・)9", "", "", ""],
+        (Action::Train, _) => &["", "  9(・益・)", "", "", ""],
+        (Action::Relax, 0) => &["", "   (・_・) z", "", "", ""],
+        (Action::Relax, _) => &["", "   (・ ・) zzZ", "", "", ""],
+    }
+}
+
+// --- Stage 2 Action Art ---
+
+fn s2_chikara_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  ᕙ(・ω・)ﾉ", "     ┃┃", "    ╚╝╚╝", ""],
+        (Action::Talk, _) => &["", "  ﾉ(・ω・)ᕗ", "     ┃┃", "    ╚╝╚╝", ""],
+        (Action::Play, 0) => &["", " ᕙ(≧▽≧)ᕗ ♪", "     ┃┃", "    ╚╝╚╝", ""],
+        (Action::Play, _) => &["", "♪ ᕙ(≧▽≧)ᕗ", "      ┃┃", "     ╚╝╚╝", ""],
+        (Action::Train, 0) => &["", "  ᕙ(≧益≧)ᕗ !!", "     ┃┃", "    ╚╝╚╝", ""],
+        (Action::Train, _) => &["", "!! ᕙ(≧益≧)ᕗ", "      ┃┃", "     ╚╝╚╝", ""],
+        (Action::Relax, 0) => &["", "   _(˘_˘)_", "     ┃┃", "    ╚╝╚╝", ""],
+        (Action::Relax, _) => &["", "   _(˘_˘)_ z", "     ┃┃", "    ╚╝╚╝", ""],
+    }
+}
+
+fn s2_odayaka_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ☁(˶˘ᵕ˘)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "ﾉ(˶˘ᵕ˘)☁", "", "", ""],
+        (Action::Play, 0) => &["", " ☁(˶≧▽≦)☁ ♪", "", "", ""],
+        (Action::Play, _) => &["", "♪ ☁(˶≧▽≦)☁", "", "", ""],
+        (Action::Train, 0) => &["", " ☁(˶>ω<)☁ !", "", "", ""],
+        (Action::Train, _) => &["", "! ☁(˶>ω<)☁", "", "", ""],
+        (Action::Relax, 0) => &["", " ☁(˶˘_˘)☁", "", "", ""],
+        (Action::Relax, _) => &["", " ☁(˶˘_˘)☁ z", "", "", ""],
+    }
+}
+
+fn s2_bouken_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  ＜(・ω・)ﾉ", "      |", "     / \\", ""],
+        (Action::Talk, _) => &["", "  ﾉ(・ω・)＞", "      |", "     / \\", ""],
+        (Action::Play, 0) => &["", " ＜(＞▽＜)＞ ♪", "      |", "     / \\", ""],
+        (Action::Play, _) => &["", "♪ ＜(＞▽＜)＞", "       |", "      / \\", ""],
+        (Action::Train, 0) => &["", "  ＜(＞益＜)＞ !!", "      |", "     / \\", ""],
+        (Action::Train, _) => &["", "!! ＜(＞益＜)＞", "       |", "      / \\", ""],
+        (Action::Relax, 0) => &["", "  ＜(˘_˘)＞", "      |", "     / \\", ""],
+        (Action::Relax, _) => &["", "  ＜(˘_˘)＞ z", "      |", "     / \\", ""],
+    }
+}
+
+fn s2_normal_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "   (´・ω・`)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "  ﾉ(´・ω・`)", "", "", ""],
+        (Action::Play, 0) => &["", "  (´・▽・`)ノ ♪", "", "", ""],
+        (Action::Play, _) => &["", " ♪ ヽ(´・▽・`)", "", "", ""],
+        (Action::Train, 0) => &["", "   (´・益・`)9", "", "", ""],
+        (Action::Train, _) => &["", "  9(´・益・`)", "", "", ""],
+        (Action::Relax, 0) => &["", "   (´・_・`)", "", "", ""],
+        (Action::Relax, _) => &["", "   (´・_・`) z", "", "", ""],
+    }
+}
+
+fn s2_wild_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ◉(⊙ω⊙)ﾉ", "", "", ""],
+        (Action::Talk, _) => &["", "ﾉ(⊙ω⊙)◉", "", "", ""],
+        (Action::Play, 0) => &["", " ◉(⊙▽⊙)◉ !", "", "", ""],
+        (Action::Play, _) => &["", "! ◉(⊙▽⊙)◉", "", "", ""],
+        (Action::Train, 0) => &["", " ◉(⊙益⊙)◉ !!", "", "", ""],
+        (Action::Train, _) => &["", "!! ◉(⊙益⊙)◉", "", "", ""],
+        (Action::Relax, 0) => &["", " ◉(- -)◉", "", "", ""],
+        (Action::Relax, _) => &["", " ◉(- -)◉ z", "", "", ""],
+    }
+}
+
+// --- Stage 3 Action Art ---
+
+fn s3_chikara_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["    ╔══╗", "  ᕙ(・ω・)ﾉ", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Talk, _) => &["    ╔══╗", "  ﾉ(・ω・)ᕗ", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Play, 0) => &["    ╔══╗ ♪", "  ᕙ(≧▽≧)ᕗ", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Play, _) => &["  ♪ ╔══╗", "  ᕙ(≧▽≧)ᕗ", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Train, 0) => &["    ╔══╗ !!", "  ᕙ(≧益≧)ᕗ", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Train, _) => &["  !!╔══╗", "  ᕙ(≧益≧)ᕗ", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Relax, 0) => &["    ╔══╗", "   _(˘_˘)_", "   ┃████┃", "   ╚╝  ╚╝", ""],
+        (Action::Relax, _) => &["    ╔══╗", "   _(˘_˘)_ z", "   ┃████┃", "   ╚╝  ╚╝", ""],
+    }
+}
+
+fn s3_odayaka_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["   ☁☁☁", " ☁(˶˘ᵕ˘)ﾉ", "  ☁☁☁☁", "", ""],
+        (Action::Talk, _) => &["   ☁☁☁", "ﾉ(˶˘ᵕ˘)☁", "  ☁☁☁☁", "", ""],
+        (Action::Play, 0) => &["   ☁☁☁ ♪", " ☁(˶≧▽≦)☁", "  ☁☁☁☁", "", ""],
+        (Action::Play, _) => &[" ♪ ☁☁☁", " ☁(˶≧▽≦)☁", "  ☁☁☁☁", "", ""],
+        (Action::Train, 0) => &["   ☁☁☁ !", " ☁(˶>ω<)☁", "  ☁☁☁☁", "", ""],
+        (Action::Train, _) => &[" ! ☁☁☁", " ☁(˶>ω<)☁", "  ☁☁☁☁", "", ""],
+        (Action::Relax, 0) => &["   ☁☁☁", " ☁(˶˘_˘)☁", "  ☁☁☁☁", "", ""],
+        (Action::Relax, _) => &["   ☁☁☁", " ☁(˶˘_˘)☁ z", "  ☁☁☁☁", "", ""],
+    }
+}
+
+fn s3_bouken_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["    ★", " ＜(・ω・)ﾉ", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Talk, _) => &["    ★", " ﾉ(・ω・)＞", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Play, 0) => &["    ★ ♪", " ＜(≧▽≦)＞", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Play, _) => &["  ♪ ★", " ＜(≧▽≦)＞", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Train, 0) => &["    ★ !!", " ＜(≧益≦)＞", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Train, _) => &["  !!★", " ＜(≧益≦)＞", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Relax, 0) => &["    ☆", " ＜(˘_˘)＞", "    ┃┃", "   ╱  ╲", ""],
+        (Action::Relax, _) => &["    ☆", " ＜(˘_˘)＞ z", "    ┃┃", "   ╱  ╲", ""],
+    }
+}
+
+fn s3_normal_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (´・ω・`)ﾉ", "    |__|", "   / \\/ \\", ""],
+        (Action::Talk, _) => &["", " ﾉ(´・ω・`)", "    |__|", "   / \\/ \\", ""],
+        (Action::Play, 0) => &["", " (´・▽・`)ノ ♪", "    |__|", "   / \\/ \\", ""],
+        (Action::Play, _) => &["", "♪ ヽ(´・▽・`)", "    |__|", "   / \\/ \\", ""],
+        (Action::Train, 0) => &["", "  (´・益・`)9 !!", "    |__|", "   / \\/ \\", ""],
+        (Action::Train, _) => &["", "!! 9(´・益・`)", "    |__|", "   / \\/ \\", ""],
+        (Action::Relax, 0) => &["", "  (´・_・`)", "    |__|", "   / \\/ \\", ""],
+        (Action::Relax, _) => &["", "  (´・_・`) z", "    |__|", "   / \\/ \\", ""],
+    }
+}
+
+fn s3_wild_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["   ≪≫≪≫", " ◉(⊙ω⊙)ﾉ", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Talk, _) => &["   ≫≪≫≪", "ﾉ(⊙ω⊙)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Play, 0) => &["   ≪≫≪≫ !", " ◉(⊙▽⊙)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Play, _) => &[" ! ≫≪≫≪", " ◉(⊙▽⊙)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Train, 0) => &["   ≪≫≪≫ !!!", " ◉(⊙益⊙)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Train, _) => &["!!!≫≪≫≪", " ◉(⊙益⊙)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Relax, 0) => &["", " ◉(- -)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
+        (Action::Relax, _) => &["", " ◉(- -)◉ z", "   ┃▓▓┃", "   ╱  ╲", ""],
+    }
+}
+
+// --- Stage 4 Action Art ---
+
+fn s4_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["  ╔═══╗", " ║(◎ω◎)ﾉ", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Talk, _) => &["  ╔═══╗", "ﾉ(◎ω◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Play, 0) => &["  ╔═══╗ ♪", " ║(◎▽◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Play, _) => &["♪ ╔═══╗", " ║(◎▽◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Train, 0) => &["  ╔═══╗ !!", " ║(◎益◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Train, _) => &["!!╔═══╗", " ║(◎益◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Relax, 0) => &["  ╔═══╗", " ║(◎_◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+        (Action::Relax, _) => &["  ╔═══╗", " ║(◎_◎)║ z", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],
+    }
+}
+
 pub fn get_idle_speech(species: &str, mood: MoodLevel) -> &'static [&'static str] {
     match (species, mood) {
         ("たまご", _) => &[
