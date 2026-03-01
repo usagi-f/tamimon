@@ -127,7 +127,7 @@ fn find_standard_weight(species: &str) -> f64 {
             return s.standard_weight;
         }
     }
-    // Stage2以降はevolutionモジュールから取得
+    // For Stage2+, get from evolution module
     if let Some(w) = crate::game::evolution::get_standard_weight(species) {
         return w;
     }

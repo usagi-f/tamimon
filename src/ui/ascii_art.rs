@@ -210,7 +210,7 @@ fn bote_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
 // 5 evo types x 3 stages = 15 template groups + 1 unified Stage4
 // Each has 3 variants x 3 moods x 2 frames
 
-// --- Stage2 チカラ系 ---
+// --- Stage2 Chikara (power) type ---
 fn stage2_chikara_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["", "   ᕙ(≧▽≧)ᕗ", "     ┃┃", "    ╚╝╚╝", ""],
@@ -234,7 +234,7 @@ fn stage2_chikara_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static
     }
 }
 
-// --- Stage2 おだやか系 ---
+// --- Stage2 Odayaka (gentle) type ---
 fn stage2_odayaka_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["", "  ☁(˶≧▽≦)☁", "", "", ""],
@@ -258,7 +258,7 @@ fn stage2_odayaka_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static
     }
 }
 
-// --- Stage2 ぼうけん系 ---
+// --- Stage2 Bouken (adventure) type ---
 fn stage2_bouken_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["", "  ＜(＞▽＜)＞", "      |", "     / \\", ""],
@@ -282,7 +282,7 @@ fn stage2_bouken_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static 
     }
 }
 
-// --- Stage2 ふつう型 ---
+// --- Stage2 Normal type ---
 fn stage2_normal_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["", "   (´・▽・`)", "", "", ""],
@@ -306,7 +306,7 @@ fn stage2_normal_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static 
     }
 }
 
-// --- Stage2 野生型 ---
+// --- Stage2 Wild type ---
 fn stage2_wild_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["", "  ◉(⊙▽⊙)◉", "", "", ""],
@@ -330,7 +330,7 @@ fn stage2_wild_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&
     }
 }
 
-// --- Stage3 チカラ系 (larger, more imposing) ---
+// --- Stage3 Chikara (larger, more imposing) ---
 fn stage3_chikara_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["    ╔══╗", "  ᕙ(≧▽≧)ᕗ", "   ┃████┃", "   ╚╝  ╚╝", ""],
@@ -354,7 +354,7 @@ fn stage3_chikara_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static
     }
 }
 
-// --- Stage3 おだやか系 (larger, fluffier) ---
+// --- Stage3 Odayaka (larger, fluffier) ---
 fn stage3_odayaka_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["   ☁☁☁", " ☁(˶≧▽≦)☁", "  ☁☁☁☁", "", ""],
@@ -378,7 +378,7 @@ fn stage3_odayaka_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static
     }
 }
 
-// --- Stage3 ぼうけん系 (larger, winged/star motifs) ---
+// --- Stage3 Bouken (larger, winged/star motifs) ---
 fn stage3_bouken_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["    ★", " ＜(≧▽≦)＞", "    ┃┃", "   ╱  ╲", ""],
@@ -402,7 +402,7 @@ fn stage3_bouken_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static 
     }
 }
 
-// --- Stage3 ふつう型 (slightly bigger, balanced) ---
+// --- Stage3 Normal type (slightly bigger, balanced) ---
 fn stage3_normal_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["", "  (´・▽・`)ノ", "    |__|", "   / \\/ \\", ""],
@@ -426,7 +426,7 @@ fn stage3_normal_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static 
     }
 }
 
-// --- Stage3 野生型 (larger, eerie) ---
+// --- Stage3 Wild type (larger, eerie) ---
 fn stage3_wild_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["   ≪≫≪≫", " ◉(⊙▽⊙)◉", "   ┃▓▓┃", "   ╱  ╲", ""],
@@ -450,7 +450,7 @@ fn stage3_wild_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&
     }
 }
 
-// --- Stage4 突然変異 (special, unified across types) ---
+// --- Stage4 Mutation (special, unified across types) ---
 fn stage4_art(variant: usize, mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (variant % 3, mood, frame % 2) {
         (0, MoodLevel::High, 0) => &["  ╔═══╗", " ║(◎▽◎)║", " ╚═════╝", "  ███████", " ╚╝   ╚╝"],

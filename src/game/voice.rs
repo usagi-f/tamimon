@@ -4,7 +4,7 @@ use crate::game::actions::Action;
 use crate::game::evolution::VoiceType;
 use crate::game::pet::MoodLevel;
 
-/// 口調タイプ別リアクションテキストを取得
+/// Get reaction text by voice type
 pub fn get_reaction(
     voice_type: VoiceType,
     action: Action,
@@ -16,7 +16,7 @@ pub fn get_reaction(
     pool[idx].to_string()
 }
 
-/// 口調タイプ別アイドルセリフを取得
+/// Get idle speech by voice type
 pub fn get_idle_speech(
     voice_type: VoiceType,
     mood: MoodLevel,
@@ -29,7 +29,7 @@ pub fn get_idle_speech(
 
 fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> &'static [&'static str] {
     match (voice_type, action, mood) {
-        // ===== タメ口 =====
+        // ===== Tameguchi (casual) =====
         (VoiceType::Tameguchi, Action::Talk, MoodLevel::High) => &["「なに、ひまなの」", "「あー、いたの」", "「ふーん、で？」", "「話しかけてきた」", "「まあいっか」"],
         (VoiceType::Tameguchi, Action::Talk, MoodLevel::Normal) => &["「なに」", "「うるさい」", "「ふーん」", "「…あっそ」", "「べつに」"],
         (VoiceType::Tameguchi, Action::Talk, MoodLevel::Low) => &["「…」", "「うざ」", "「しつこい」", "「ほっとけ」", "「はぁ」"],
@@ -43,7 +43,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Tameguchi, Action::Relax, MoodLevel::Normal) => &["「…zzz」", "「ねる」", "「おやすみ」", "「…」"],
         (VoiceType::Tameguchi, Action::Relax, MoodLevel::Low) => &["「もう寝る」", "「ほっとけ」", "「…zzz」", "「うるさい」"],
 
-        // ===== 敬語 =====
+        // ===== Keigo (polite) =====
         (VoiceType::Keigo, Action::Talk, MoodLevel::High) => &["「お声がけいただき光栄です」", "「失礼ですが、うれしいです」", "「ありがとうございます」", "「恐縮です」"],
         (VoiceType::Keigo, Action::Talk, MoodLevel::Normal) => &["「失礼ですが、今少しお眠いです」", "「ありがとうございます。特に何もありません」", "「…はい」", "「恐縮ですが、少しだけほっといてください」"],
         (VoiceType::Keigo, Action::Talk, MoodLevel::Low) => &["「申し訳ございません、今はちょっと…」", "「…失礼します」", "「恐れ入りますが…」", "「…はい」"],
@@ -57,7 +57,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Keigo, Action::Relax, MoodLevel::Normal) => &["「…失礼、少しウトウトしました」", "「穏やかですね」", "「ゆっくりしております」", "「…zzz」"],
         (VoiceType::Keigo, Action::Relax, MoodLevel::Low) => &["「…休ませていただきます」", "「…zzz」", "「…失礼します」", "「…」"],
 
-        // ===== ギャル =====
+        // ===== Gal =====
         (VoiceType::Gal, Action::Talk, MoodLevel::High) => &["「えーまって！うれしー！」", "「きゃー！話そ話そ！」", "「やばくない！？」", "「テンション上がる〜！」"],
         (VoiceType::Gal, Action::Talk, MoodLevel::Normal) => &["「あーね」", "「それな」", "「ふーん、で？」", "「まあいっか」"],
         (VoiceType::Gal, Action::Talk, MoodLevel::Low) => &["「無理…」", "「だる…」", "「え、今？」", "「…」"],
@@ -71,7 +71,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Gal, Action::Relax, MoodLevel::Normal) => &["「まったり〜」", "「zzz…はっ！寝てた」", "「ふぁ〜」", "「まあいっか」"],
         (VoiceType::Gal, Action::Relax, MoodLevel::Low) => &["「もう寝る…」", "「…zzz」", "「おやすみ…」", "「…」"],
 
-        // ===== オヤジ =====
+        // ===== Oyaji (old man) =====
         (VoiceType::Oyaji, Action::Talk, MoodLevel::High) => &["「おう、よく来たな」", "「むかしはなあ…」", "「いい天気だなあ」", "「まあ座れ座れ」"],
         (VoiceType::Oyaji, Action::Talk, MoodLevel::Normal) => &["「ん？なんだ？」", "「あーはいはい」", "「そういうこともある」", "「まあな」"],
         (VoiceType::Oyaji, Action::Talk, MoodLevel::Low) => &["「…今はちょっと」", "「疲れたわ」", "「腰が痛い」", "「…」"],
@@ -85,7 +85,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Oyaji, Action::Relax, MoodLevel::Normal) => &["「…zzz」", "「ぐう」", "「のんびりだなあ」", "「…ん？寝てた？」"],
         (VoiceType::Oyaji, Action::Relax, MoodLevel::Low) => &["「もう寝る」", "「おやすみ」", "「…zzz」", "「疲れた」"],
 
-        // ===== 哲学者 =====
+        // ===== Tetsugaku (philosopher) =====
         (VoiceType::Tetsugaku, Action::Talk, MoodLevel::High) => &["「言葉とは、沈黙の間に咲く花だ」", "「存在を確認してくれてありがとう」", "「会話は、二つの孤独が交差する瞬間だ」", "「今日は言葉が軽い。いい日だ」"],
         (VoiceType::Tetsugaku, Action::Talk, MoodLevel::Normal) => &["「存在とは何か」", "「…考えていた」", "「言葉は不完全だ」", "「沈黙にも意味がある」"],
         (VoiceType::Tetsugaku, Action::Talk, MoodLevel::Low) => &["「…」", "「虚無を見つめている」", "「なぜ話すのだ」", "「意味はあるのか」"],
@@ -99,7 +99,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Tetsugaku, Action::Relax, MoodLevel::Normal) => &["「時間は幻だ」", "「…考えている」", "「無とは…zzz」", "「…」"],
         (VoiceType::Tetsugaku, Action::Relax, MoodLevel::Low) => &["「…」", "「存在が重い」", "「…zzz」", "「なにも考えたくない」"],
 
-        // ===== 体育会系 =====
+        // ===== Taiiku (athletic) =====
         (VoiceType::Taiiku, Action::Talk, MoodLevel::High) => &["「はいっ！元気ッス！」", "「今日もいい日ッス！」", "「声出していこう！」", "「ありがとうございます！」"],
         (VoiceType::Taiiku, Action::Talk, MoodLevel::Normal) => &["「はい！」", "「…うッス」", "「がんばります」", "「了解ッス」"],
         (VoiceType::Taiiku, Action::Talk, MoodLevel::Low) => &["「…はい」", "「…ッス」", "「すいません…」", "「…」"],
@@ -113,7 +113,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Taiiku, Action::Relax, MoodLevel::Normal) => &["「…zzz」", "「休むのも修行ッス」", "「…ふぅ」", "「…」"],
         (VoiceType::Taiiku, Action::Relax, MoodLevel::Low) => &["「…zzz」", "「…」", "「おやすみなさい…」", "「…ッス」"],
 
-        // ===== ネガティブ =====
+        // ===== Negative =====
         (VoiceType::Negative, Action::Talk, MoodLevel::High) => &["「…え、話しかけてくれるんだ…うれしい…かも」", "「どうせすぐいなくなるんでしょ…でもありがとう」", "「…今日はちょっとだけ…いい日かも」", "「…ほんと？」"],
         (VoiceType::Negative, Action::Talk, MoodLevel::Normal) => &["「どうせ…」", "「…ごめんなさい」", "「わたしなんかに話しかけても…」", "「…うん」"],
         (VoiceType::Negative, Action::Talk, MoodLevel::Low) => &["「…」", "「やっぱり無理でした」", "「消えたい…」", "「…ごめん」"],
@@ -127,7 +127,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Negative, Action::Relax, MoodLevel::Normal) => &["「…zzz」", "「…寝てもいい？」", "「…」", "「…ごめん、ねむい」"],
         (VoiceType::Negative, Action::Relax, MoodLevel::Low) => &["「…もう寝ます」", "「…」", "「…zzz」", "「…消えたい」"],
 
-        // ===== 天然 =====
+        // ===== Tennen (airhead) =====
         (VoiceType::Tennen, Action::Talk, MoodLevel::High) => &["「あ、いた！なんかうれしい！」", "「えへへ」", "「なんの話してたっけ」", "「あ、そっか！」"],
         (VoiceType::Tennen, Action::Talk, MoodLevel::Normal) => &["「あ、そっか」", "「…なんの話だっけ」", "「ん？」", "「あー」"],
         (VoiceType::Tennen, Action::Talk, MoodLevel::Low) => &["「…あれ、なにしてたっけ」", "「…zzz…あ、起きてた」", "「…ん？」", "「…」"],
@@ -141,7 +141,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Tennen, Action::Relax, MoodLevel::Normal) => &["「…zzz」", "「ふぁ〜」", "「…あ、寝てた」", "「のんびり〜」"],
         (VoiceType::Tennen, Action::Relax, MoodLevel::Low) => &["「…zzz」", "「…」", "「…あれ」", "「…ねる」"],
 
-        // ===== 無口 =====
+        // ===== Mukuchi (taciturn) =====
         (VoiceType::Mukuchi, Action::Talk, MoodLevel::High) => &["「…」（少し近づいてきた）", "「ん」", "（じっとこちらを見る）", "（少し首をかしげる）"],
         (VoiceType::Mukuchi, Action::Talk, MoodLevel::Normal) => &["「…」", "「ん」", "「。」", "（目を合わせない）"],
         (VoiceType::Mukuchi, Action::Talk, MoodLevel::Low) => &["「…」", "（動かない）", "（…）", "「…」"],
@@ -155,7 +155,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Mukuchi, Action::Relax, MoodLevel::Normal) => &["「…」", "（…）", "（目を閉じている）", "「…zzz」"],
         (VoiceType::Mukuchi, Action::Relax, MoodLevel::Low) => &["「…」", "（…）", "（丸くなる）", "「…zzz」"],
 
-        // ===== 過剰 =====
+        // ===== Kajou (excessive) =====
         (VoiceType::Kajou, Action::Talk, MoodLevel::High) => &["「話しかけてくれた…！！これが…会話…！！」", "「言葉が…！心に響く…！！」", "「ありがとう！！ありがとう！！！」", "「生きてて良かった…！！」"],
         (VoiceType::Kajou, Action::Talk, MoodLevel::Normal) => &["「…話しかけてくれたのか…」", "「ありがとう…」", "「言葉って…すごいな…」", "「…感動した」"],
         (VoiceType::Kajou, Action::Talk, MoodLevel::Low) => &["「…声が…遠い…」", "「…ありがとう…」", "「…」", "「…聞こえてる…」"],
@@ -169,7 +169,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Kajou, Action::Relax, MoodLevel::Normal) => &["「…休む…」", "「…zzz」", "「…穏やか…」", "「…」"],
         (VoiceType::Kajou, Action::Relax, MoodLevel::Low) => &["「…休ませて…」", "「…zzz」", "「…」", "「…もう…」"],
 
-        // ===== 関西弁 =====
+        // ===== Kansai (Kansai dialect) =====
         (VoiceType::Kansai, Action::Talk, MoodLevel::High) => &["「おー！よう来たな！」", "「なんやねん、うれしいやんけ」", "「ほんまええ日やわ」", "「まあ座り座り」"],
         (VoiceType::Kansai, Action::Talk, MoodLevel::Normal) => &["「なんやねん」", "「あーはいはい」", "「ほんまかいな」", "「知らんけど」"],
         (VoiceType::Kansai, Action::Talk, MoodLevel::Low) => &["「…だるいわ」", "「ほっといてくれ」", "「…」", "「あかん…」"],
@@ -183,7 +183,7 @@ fn get_reaction_pool(voice_type: VoiceType, action: Action, mood: MoodLevel) -> 
         (VoiceType::Kansai, Action::Relax, MoodLevel::Normal) => &["「…zzz」", "「のんびりやな」", "「まあええか」", "「…ん？寝てたわ」"],
         (VoiceType::Kansai, Action::Relax, MoodLevel::Low) => &["「…zzz」", "「もう寝るわ」", "「…」", "「おやすみ」"],
 
-        // ===== 古語 =====
+        // ===== Kogo (archaic) =====
         (VoiceType::Kogo, Action::Talk, MoodLevel::High) => &["「さよう、いかにも」", "「参られたか。よきことなり」", "「今宵は月が美しい」", "「なかなかに良き日よ」"],
         (VoiceType::Kogo, Action::Talk, MoodLevel::Normal) => &["「…さて」", "「いかがした」", "「さても…」", "「…ふむ」"],
         (VoiceType::Kogo, Action::Talk, MoodLevel::Low) => &["「…」", "「退がれ」", "「…さても退屈なり」", "「…zzz」"],

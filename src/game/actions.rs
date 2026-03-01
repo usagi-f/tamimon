@@ -27,7 +27,7 @@ pub struct ActionResult {
     pub reaction_text: String,
 }
 
-/// アクションのステータス効果のみ適用（リアクションテキストは別途）
+/// Apply only action stat effects (reaction text handled separately)
 pub fn apply_action_effects(
     action: Action,
     pet: &mut PetData,
@@ -59,7 +59,7 @@ pub fn apply_action_effects(
     pet.weight = pet.weight.max(0.1);
 }
 
-/// Stage1用の汎用リアクション（Phase1互換）
+/// Generic reactions for Stage1 (Phase1 compatible)
 pub fn select_generic_reaction(action: Action, mood: MoodLevel, rng: &mut impl Rng) -> String {
     let pool = match (action, mood) {
         (Action::Talk, MoodLevel::High) => &[

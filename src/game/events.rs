@@ -2,7 +2,7 @@ use rand::Rng;
 
 use crate::save::schema::PetData;
 
-/// ランダムイベントの結果
+/// Random event result
 #[allow(dead_code)]
 pub struct EventResult {
     pub message: String,
@@ -10,7 +10,7 @@ pub struct EventResult {
     pub survived_accident: bool,
 }
 
-/// ポジティブ/ニュートラルイベント定義
+/// Positive/neutral event definition
 struct PositiveEvent {
     probability: f64,
     message: &'static str,
@@ -72,7 +72,7 @@ const POSITIVE_EVENTS: &[PositiveEvent] = &[
     },
 ];
 
-/// 事故メッセージ（死因）
+/// Accident messages (cause of death)
 const ACCIDENT_MESSAGES: &[&str] = &[
     "⚡ 突然の雷雨。{name}は空を見上げ、そして…",
     "🕳 散歩中に突然消えた。穴の底はとても深かったようだ",
@@ -97,7 +97,7 @@ const ACCIDENT_MESSAGES: &[&str] = &[
     "🚪 特に理由はないが、気が向いたらしく、どこかへ歩いていった",
 ];
 
-/// 寿命メッセージ（日齢7以上で選ばれやすい）
+/// Longevity messages (more likely for pets aged 7+ days)
 const LONGEVITY_MESSAGES: &[&str] = &[
     "🌙 {name}はある夜、静かに目を閉じた。穏やかな顔をしていた",
     "☀️ {name}は満足そうにあくびをして、そのまま動かなくなった",
@@ -108,15 +108,15 @@ const LONGEVITY_MESSAGES: &[&str] = &[
     "🌇 夕焼けを眺めながら、ゆっくりと遠ざかっていった",
 ];
 
-/// 「助かった」メッセージ
+/// "Survived" messages
 const SURVIVED_MESSAGES: &[&str] = &[
     "💫 危ないところだった…！でも{name}は無事だった！",
     "🍀 {name}はかろうじて助かった…！奇跡だ！",
     "⭐ あぶなかった！でも{name}は帰ってきた！",
 ];
 
-/// 起動時のランダムイベント処理
-/// 経過時間1時間ごとに1回抽選
+/// Process random events during startup
+/// One roll per hour of elapsed time
 pub fn process_offline_events(
     pet: &mut PetData,
     elapsed_ticks: u64,
@@ -124,25 +124,25 @@ pub fn process_offline_events(
 ) -> Vec<EventResult> {
     let mut results = Vec::new();
 
-    // たまごにはイベントなし
+    // No events for eggs
     if pet.stage == 0 {
         return results;
     }
 
-    // 経過時間1時間ごとに1回抽選（最低1回）
+    // One roll per hour elapsed (minimum 1)
     let rolls = (elapsed_ticks / 60).max(1) as usize;
 
     for _ in 0..rolls {
-        // まず事故判定
+        // Check for accident first
         if let Some(death_result) = check_accident(pet, rng) {
             let is_death = death_result.is_death;
             results.push(death_result);
             if is_death {
-                return results; // 死んだら即終了
+                return results; // Immediately return if dead
             }
         }
 
-        // ポジティブイベント抽選
+        // Roll for positive event
         if let Some(event_result) = roll_positive_event(pet, rng) {
             results.push(event_result);
         }
@@ -151,19 +151,19 @@ pub fn process_offline_events(
     results
 }
 
-/// 事故判定
-/// 1ティックあたりの事故確率 = 日齢 × 0.00347%
+/// Accident check
+/// Accident probability per tick = day_age × 0.00347%
 fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> {
     let day_age = (pet.age_ticks as f64 / 1440.0).max(1.0);
     let accident_prob_per_tick = day_age * 0.0000347;
-    // 1時間分（60ティック）の事故確率を合算
+    // Aggregate accident probability over 1 hour (60 ticks)
     let accident_prob = 1.0 - (1.0 - accident_prob_per_tick).powi(60);
 
     if rng.gen::<f64>() >= accident_prob {
         return None;
     }
 
-    // 事故発生！ 助かり判定
+    // Accident occurred! Check for survival
     if !pet.survived_accident {
         let nakayoshi_ratio = pet.nakayoshi / 100.0;
         let survive_prob = nakayoshi_ratio * nakayoshi_ratio * 0.80;
@@ -185,14 +185,14 @@ fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> 
         }
     }
 
-    // 死亡確定
+    // Death confirmed
     let name = if pet.nickname.is_empty() {
         "なまえなし"
     } else {
         &pet.nickname
     };
 
-    // 日齢7以上は寿命メッセージも選ばれやすい
+    // At day_age 7+, longevity messages are more likely
     let msg_template = if day_age >= 7.0 && rng.gen::<f64>() < 0.4 {
         LONGEVITY_MESSAGES[rng.gen_range(0..LONGEVITY_MESSAGES.len())]
     } else {
@@ -207,7 +207,7 @@ fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> 
     })
 }
 
-/// ポジティブイベント抽選
+/// Roll for positive events
 fn roll_positive_event(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> {
     let roll: f64 = rng.gen();
     let mut cumulative = 0.0;
@@ -224,5 +224,5 @@ fn roll_positive_event(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventRes
         }
     }
 
-    None // 何も起きなかった
+    None // Nothing happened
 }

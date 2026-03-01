@@ -2,13 +2,13 @@ use rand::Rng;
 
 use crate::save::schema::PetData;
 
-// --- 進化タイミング定数 ---
-const STAGE2_TICKS: u64 = 360;   // 6時間
-const STAGE3_TICKS: u64 = 1440;  // 24時間
-const STAGE4_INTERVAL: u64 = 1440; // 24時間ごとに判定
+// --- Evolution timing constants ---
+const STAGE2_TICKS: u64 = 360;   // 6 hours
+const STAGE3_TICKS: u64 = 1440;  // 24 hours
+const STAGE4_INTERVAL: u64 = 1440; // Check every 24 hours
 const STAGE4_CHANCE: f64 = 0.25;   // 25%
 
-// --- 進化タイプ ---
+// --- Evolution types ---
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EvoType {
     Chikara,
@@ -18,7 +18,7 @@ pub enum EvoType {
     Wild,
 }
 
-// --- Stage2 種族定義 ---
+// --- Stage2 species definition ---
 pub struct Stage2Species {
     pub name: &'static str,
     pub evo_type: EvoType,
@@ -26,43 +26,43 @@ pub struct Stage2Species {
     pub voice_type: VoiceType,
 }
 
-// --- Stage3 種族定義 ---
+// --- Stage3 species definition ---
 pub struct Stage3Species {
     pub name: &'static str,
-    pub allowed_from: &'static [&'static str], // Stage2の進化元
+    pub allowed_from: &'static [&'static str], // Stage2 ancestors
     pub vector: [f64; 5], // [chikara, odayaka, bouken, nakayoshi, frequency]
     pub standard_weight: f64,
     pub voice_type: VoiceType,
 }
 
-// --- Stage4 種族定義 ---
+// --- Stage4 species definition ---
 pub struct Stage4Species {
     pub name: &'static str,
-    pub allowed_from: &'static [&'static str], // Stage3の進化元
+    pub allowed_from: &'static [&'static str], // Stage3 ancestors
     pub standard_weight: f64,
     pub voice_type: VoiceType,
 }
 
-// --- 口調タイプ ---
+// --- Voice types ---
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VoiceType {
-    Tameguchi,   // タメ口
-    Keigo,       // 敬語
-    Gal,         // ギャル
-    Oyaji,       // オヤジ
-    Tetsugaku,   // 哲学者
-    Taiiku,      // 体育会系
-    Negative,    // ネガティブ
-    Tennen,      // 天然
-    Mukuchi,     // 無口
-    Kajou,       // 過剰
-    Kansai,      // 関西弁
-    Kogo,        // 古語
+    Tameguchi,   // Casual
+    Keigo,       // Polite
+    Gal,         // Gal
+    Oyaji,       // Old man
+    Tetsugaku,   // Philosopher
+    Taiiku,      // Athletic
+    Negative,    // Negative
+    Tennen,      // Airhead
+    Mukuchi,     // Taciturn
+    Kajou,       // Excessive
+    Kansai,      // Kansai dialect
+    Kogo,        // Archaic
 }
 
-// ===== Stage2 全40種 (5タイプ × 8種) =====
+// ===== Stage2: 40 species (5 types × 8 each) =====
 pub const STAGE2_SPECIES: &[Stage2Species] = &[
-    // --- チカラ系 (8種) ---
+    // --- Chikara type (8 species) ---
     Stage2Species { name: "ドタン",       evo_type: EvoType::Chikara, standard_weight: 25.0, voice_type: VoiceType::Taiiku },
     Stage2Species { name: "ガシャ",       evo_type: EvoType::Chikara, standard_weight: 30.0, voice_type: VoiceType::Tameguchi },
     Stage2Species { name: "ズンズン",     evo_type: EvoType::Chikara, standard_weight: 35.0, voice_type: VoiceType::Oyaji },
@@ -72,7 +72,7 @@ pub const STAGE2_SPECIES: &[Stage2Species] = &[
     Stage2Species { name: "グイグイ",     evo_type: EvoType::Chikara, standard_weight: 22.0, voice_type: VoiceType::Taiiku },
     Stage2Species { name: "バキバキ",     evo_type: EvoType::Chikara, standard_weight: 38.0, voice_type: VoiceType::Tameguchi },
 
-    // --- おだやか系 (8種) ---
+    // --- Odayaka type (8 species) ---
     Stage2Species { name: "ヒョロン",     evo_type: EvoType::Odayaka, standard_weight: 12.0, voice_type: VoiceType::Keigo },
     Stage2Species { name: "フワモン",     evo_type: EvoType::Odayaka, standard_weight: 8.0,  voice_type: VoiceType::Tennen },
     Stage2Species { name: "ユラリ",       evo_type: EvoType::Odayaka, standard_weight: 10.0, voice_type: VoiceType::Tetsugaku },
@@ -82,7 +82,7 @@ pub const STAGE2_SPECIES: &[Stage2Species] = &[
     Stage2Species { name: "ウトウト",     evo_type: EvoType::Odayaka, standard_weight: 13.0, voice_type: VoiceType::Negative },
     Stage2Species { name: "モヤモヤ",     evo_type: EvoType::Odayaka, standard_weight: 9.0,  voice_type: VoiceType::Tetsugaku },
 
-    // --- ぼうけん系 (8種) ---
+    // --- Bouken type (8 species) ---
     Stage2Species { name: "クルル",       evo_type: EvoType::Bouken, standard_weight: 18.0, voice_type: VoiceType::Gal },
     Stage2Species { name: "トゲたろう",   evo_type: EvoType::Bouken, standard_weight: 20.0, voice_type: VoiceType::Tameguchi },
     Stage2Species { name: "ハネオ",       evo_type: EvoType::Bouken, standard_weight: 15.0, voice_type: VoiceType::Kajou },
@@ -92,7 +92,7 @@ pub const STAGE2_SPECIES: &[Stage2Species] = &[
     Stage2Species { name: "ノゾキ",       evo_type: EvoType::Bouken, standard_weight: 13.0, voice_type: VoiceType::Tameguchi },
     Stage2Species { name: "ピョコ",       evo_type: EvoType::Bouken, standard_weight: 12.0, voice_type: VoiceType::Gal },
 
-    // --- ふつう型 (8種) ---
+    // --- Normal type (8 species) ---
     Stage2Species { name: "ペタ",         evo_type: EvoType::Normal, standard_weight: 20.0, voice_type: VoiceType::Keigo },
     Stage2Species { name: "ノホホ",       evo_type: EvoType::Normal, standard_weight: 18.0, voice_type: VoiceType::Tennen },
     Stage2Species { name: "マジメ",       evo_type: EvoType::Normal, standard_weight: 22.0, voice_type: VoiceType::Keigo },
@@ -102,7 +102,7 @@ pub const STAGE2_SPECIES: &[Stage2Species] = &[
     Stage2Species { name: "ソコソコ",     evo_type: EvoType::Normal, standard_weight: 16.0, voice_type: VoiceType::Negative },
     Stage2Species { name: "ホドホド",     evo_type: EvoType::Normal, standard_weight: 20.0, voice_type: VoiceType::Mukuchi },
 
-    // --- 野生型 (8種) ---
+    // --- Wild type (8 species) ---
     Stage2Species { name: "メダマ",       evo_type: EvoType::Wild, standard_weight: 8.0,  voice_type: VoiceType::Mukuchi },
     Stage2Species { name: "ケモノ",       evo_type: EvoType::Wild, standard_weight: 25.0, voice_type: VoiceType::Tameguchi },
     Stage2Species { name: "ヌシ",         evo_type: EvoType::Wild, standard_weight: 50.0, voice_type: VoiceType::Kogo },
@@ -113,10 +113,10 @@ pub const STAGE2_SPECIES: &[Stage2Species] = &[
     Stage2Species { name: "ドロリ",       evo_type: EvoType::Wild, standard_weight: 20.0, voice_type: VoiceType::Kajou },
 ];
 
-// ===== Stage3 全100種 =====
+// ===== Stage3: 100 species =====
 // vector: [chikara, odayaka, bouken, nakayoshi, frequency(action_count)]
 pub const STAGE3_SPECIES: &[Stage3Species] = &[
-    // --- チカラ系から進化 (20種) ---
+    // --- Evolved from Chikara type (20 species) ---
     Stage3Species { name: "ドドン",       allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [9.0,1.0,3.0,4.0,6.0], standard_weight: 80.0, voice_type: VoiceType::Taiiku },
     Stage3Species { name: "タワーン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,4.0,2.0,8.0,8.0], standard_weight: 60.0, voice_type: VoiceType::Keigo },
     Stage3Species { name: "ゴウケン",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [10.0,0.0,2.0,3.0,5.0], standard_weight: 90.0, voice_type: VoiceType::Tameguchi },
@@ -138,7 +138,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
     Stage3Species { name: "マッスル",     allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [10.0,0.0,3.0,6.0,10.0], standard_weight: 78.0, voice_type: VoiceType::Taiiku },
     Stage3Species { name: "イワオ",       allowed_from: &["ドタン","ガシャ","ズンズン","デカオ","ゴツモリ","ドンガメ","グイグイ","バキバキ"], vector: [7.0,5.0,1.0,5.0,1.0], standard_weight: 160.0, voice_type: VoiceType::Mukuchi },
 
-    // --- おだやか系から進化 (20種) ---
+    // --- Evolved from Odayaka type (20 species) ---
     Stage3Species { name: "ながれもん",   allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,8.0,5.0,3.0,2.0], standard_weight: 20.0, voice_type: VoiceType::Tetsugaku },
     Stage3Species { name: "フワリン",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [1.0,9.0,2.0,7.0,6.0], standard_weight: 10.0, voice_type: VoiceType::Tennen },
     Stage3Species { name: "モコモコ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,10.0,1.0,8.0,7.0], standard_weight: 25.0, voice_type: VoiceType::Keigo },
@@ -160,7 +160,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
     Stage3Species { name: "ユッタリ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [2.0,10.0,0.0,9.0,8.0], standard_weight: 42.0, voice_type: VoiceType::Keigo },
     Stage3Species { name: "ソヨカゼ",     allowed_from: &["ヒョロン","フワモン","ユラリ","ネムタ","ポワン","ホワモコ","ウトウト","モヤモヤ"], vector: [0.0,7.0,5.0,3.0,4.0], standard_weight: 8.0, voice_type: VoiceType::Mukuchi },
 
-    // --- ぼうけん系から進化 (20種) ---
+    // --- Evolved from Bouken type (20 species) ---
     Stage3Species { name: "ガニ",         allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [3.0,1.0,9.0,4.0,6.0], standard_weight: 30.0, voice_type: VoiceType::Kansai },
     Stage3Species { name: "トビオ",       allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [2.0,2.0,10.0,5.0,7.0], standard_weight: 25.0, voice_type: VoiceType::Gal },
     Stage3Species { name: "マルマル",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [4.0,3.0,8.0,6.0,5.0], standard_weight: 35.0, voice_type: VoiceType::Tennen },
@@ -182,7 +182,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
     Stage3Species { name: "タンケン",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [4.0,4.0,8.0,5.0,6.0], standard_weight: 24.0, voice_type: VoiceType::Keigo },
     Stage3Species { name: "ジェット",     allowed_from: &["クルル","トゲたろう","ハネオ","ビョーン","ダッシュ","グルグル","ノゾキ","ピョコ"], vector: [5.0,1.0,10.0,4.0,8.0], standard_weight: 28.0, voice_type: VoiceType::Gal },
 
-    // --- ふつう型から進化 (20種) ---
+    // --- Evolved from Normal type (20 species) ---
     Stage3Species { name: "ノーマル",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [5.0,5.0,5.0,5.0,5.0], standard_weight: 40.0, voice_type: VoiceType::Tameguchi },
     Stage3Species { name: "ヘイボン",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,5.0,4.0,6.0,6.0], standard_weight: 35.0, voice_type: VoiceType::Keigo },
     Stage3Species { name: "タソガレ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,6.0,4.0,4.0,3.0], standard_weight: 30.0, voice_type: VoiceType::Tetsugaku },
@@ -204,7 +204,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
     Stage3Species { name: "ヌルリ",       allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [3.0,5.0,5.0,5.0,3.0], standard_weight: 34.0, voice_type: VoiceType::Negative },
     Stage3Species { name: "オットリ",     allowed_from: &["ペタ","ノホホ","マジメ","フツウ","ナミナミ","テキトー","ソコソコ","ホドホド"], vector: [4.0,6.0,4.0,7.0,5.0], standard_weight: 41.0, voice_type: VoiceType::Tennen },
 
-    // --- 野生型から進化 (20種) ---
+    // --- Evolved from Wild type (20 species) ---
     Stage3Species { name: "ヤミノメ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [3.0,3.0,5.0,1.0,1.0], standard_weight: 15.0, voice_type: VoiceType::Mukuchi },
     Stage3Species { name: "オオヌシ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [7.0,2.0,4.0,2.0,1.0], standard_weight: 100.0, voice_type: VoiceType::Kogo },
     Stage3Species { name: "バケモノ",     allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [5.0,1.0,7.0,1.0,2.0], standard_weight: 60.0, voice_type: VoiceType::Kajou },
@@ -227,7 +227,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
     Stage3Species { name: "ムゲン",       allowed_from: &["メダマ","ケモノ","ヌシ","カゲ","ザワザワ","ヒトダマ","ウロウロ","ドロリ"], vector: [3.0,5.0,5.0,2.0,1.0], standard_weight: 1.0, voice_type: VoiceType::Tetsugaku },
 ];
 
-// ===== Stage4 突然変異 (8種) =====
+// ===== Stage4: Mutations (8 species) =====
 pub const STAGE4_SPECIES: &[Stage4Species] = &[
     Stage4Species { name: "ゲンソウ",     allowed_from: &["ドドン","タワーン","ゴウケン","テッカイ","ブンブン","ガンテツ","ドスコイ","バリバリ","メガトン","グランド","イカヅチ","ゴリラン","ダイガン","ゴロゴロ","カチワリ","テツジン","ドゴン","バンカー","マッスル","イワオ"], standard_weight: 250.0, voice_type: VoiceType::Kogo },
     Stage4Species { name: "エーテル",     allowed_from: &["ながれもん","フワリン","モコモコ","ネンネ","ポヨン","スヤスヤ","カスミ","ノドカ","ユメミ","ボンヤリ","ヒラタ","コロリン","ムニャ","マッタリ","ホワワ","シズカ","モグモグ","トロン","ユッタリ","ソヨカゼ"], standard_weight: 0.5, voice_type: VoiceType::Tetsugaku },
@@ -239,14 +239,14 @@ pub const STAGE4_SPECIES: &[Stage4Species] = &[
     Stage4Species { name: "ナナシ",       allowed_from: &["カスミ","ソヨカゼ","クモノス","ポツリ","フルエ","ボンヤリ","カゼノコ","ナァナァ","クライ","ケダマ"], standard_weight: 7.0, voice_type: VoiceType::Mukuchi },
 ];
 
-/// 進化イベントの結果
+/// Evolution event result
 #[allow(dead_code)]
 pub struct EvolutionEvent {
     pub new_species: String,
     pub new_stage: u8,
 }
 
-/// 進化チェック（起動時・アクション時に呼ぶ）
+/// Check for evolution (called at startup and after actions)
 pub fn check_evolution(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
     match pet.stage {
         1 => check_stage1_to_2(pet, rng),
@@ -256,7 +256,7 @@ pub fn check_evolution(pet: &mut PetData, rng: &mut impl Rng) -> Option<Evolutio
     }
 }
 
-/// Stage1 → Stage2 (6時間経過時、タイプ傾向で決定)
+/// Stage1 → Stage2 (at 6 hours elapsed, determined by type tendency)
 fn check_stage1_to_2(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
     if pet.age_ticks < STAGE2_TICKS {
         return None;
@@ -265,7 +265,7 @@ fn check_stage1_to_2(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
     let ts = &pet.type_scores;
     let evo_type = determine_evo_type(ts.chikara, ts.odayaka, ts.bouken);
 
-    // 該当タイプの中からランダムに選択
+    // Random selection from matching type
     let candidates: Vec<&Stage2Species> = STAGE2_SPECIES
         .iter()
         .filter(|s| s.evo_type == evo_type)
@@ -280,22 +280,22 @@ fn check_stage1_to_2(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
     })
 }
 
-/// タイプ傾向からEvoTypeを決定
+/// Determine EvoType from type tendency scores
 fn determine_evo_type(chikara: u32, odayaka: u32, bouken: u32) -> EvoType {
     let max_score = chikara.max(odayaka).max(bouken);
     let min_score = chikara.min(odayaka).min(bouken);
 
-    // 全部0（一度もアクションしてない）→ 野生型
+    // All zero (no actions taken) → Wild type
     if max_score == 0 {
         return EvoType::Wild;
     }
 
-    // 最大と最小の差が3以内 → ふつう型
+    // Difference between max and min <= 3 → Normal type
     if max_score - min_score <= 3 {
         return EvoType::Normal;
     }
 
-    // 最大スコアのタイプ
+    // Type with highest score
     if chikara >= odayaka && chikara >= bouken {
         EvoType::Chikara
     } else if odayaka >= chikara && odayaka >= bouken {
@@ -305,25 +305,25 @@ fn determine_evo_type(chikara: u32, odayaka: u32, bouken: u32) -> EvoType {
     }
 }
 
-/// Stage2 → Stage3 (24時間経過時、コサイン類似度で決定)
+/// Stage2 → Stage3 (at 24 hours elapsed, determined by cosine similarity)
 fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
     if pet.age_ticks < STAGE3_TICKS {
         return None;
     }
 
-    // 育て方ベクトルの構築
+    // Build raising-style vector
     let total_actions = (pet.type_scores.chikara + pet.type_scores.odayaka + pet.type_scores.bouken) as f64;
-    let frequency = (total_actions / 10.0).min(10.0); // 正規化
+    let frequency = (total_actions / 10.0).min(10.0); // Normalize
 
     let player_vec = [
         pet.type_scores.chikara as f64,
         pet.type_scores.odayaka as f64,
         pet.type_scores.bouken as f64,
-        pet.nakayoshi / 10.0, // 0-10にスケール
+        pet.nakayoshi / 10.0, // Scale to 0-10
         frequency,
     ];
 
-    // 系統制約：現在のStage2種族から進化可能なStage3のみ
+    // Lineage constraint: only Stage3 species reachable from current Stage2
     let candidates: Vec<&Stage3Species> = STAGE3_SPECIES
         .iter()
         .filter(|s| s.allowed_from.contains(&pet.species.as_str()))
@@ -333,7 +333,7 @@ fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
         return None;
     }
 
-    // コサイン類似度でランク付け
+    // Rank by cosine similarity
     let mut scored: Vec<(&Stage3Species, f64)> = candidates
         .iter()
         .map(|s| (*s, cosine_similarity(&player_vec, &s.vector)))
@@ -341,7 +341,7 @@ fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
 
     scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-    // 上位3つから重み付きランダム選択（多様性のため）
+    // Weighted random selection from top 3 (for diversity)
     let top_n = scored.len().min(3);
     let weights: Vec<f64> = (0..top_n).map(|i| {
         let base = scored[i].1.max(0.01);
@@ -368,26 +368,26 @@ fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
     })
 }
 
-/// Stage3 → Stage4 (24時間ごとに25%の確率)
+/// Stage3 → Stage4 (25% chance every 24 hours)
 fn check_stage3_to_4(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
-    // Stage3になってからの経過時間
-    // age_ticksはトータルなので、Stage3になった時点を推定
-    // Stage3到達 = STAGE3_TICKS, それ以降の経過
+    // Time elapsed since reaching Stage3
+    // age_ticks is total, so estimate when Stage3 was reached
+    // Stage3 reached at STAGE3_TICKS, count time after that
     if pet.age_ticks < STAGE3_TICKS + STAGE4_INTERVAL {
         return None;
     }
 
-    // 24時間経過ごとに1回判定（最後の判定タイミングを計算）
+    // One check per 24 hours elapsed (calculate last check timing)
     let ticks_since_stage3 = pet.age_ticks - STAGE3_TICKS;
     let check_count = ticks_since_stage3 / STAGE4_INTERVAL;
 
-    // まだ判定されていない分を処理（簡易: 全チェック分の累積確率）
+    // Process unchecked intervals (simplified: cumulative probability for all checks)
     let survival_prob = (1.0 - STAGE4_CHANCE).powi(check_count as i32);
     if rng.gen::<f64>() < survival_prob {
-        return None; // 変異せず
+        return None; // No mutation
     }
 
-    // 変異先を決定
+    // Determine mutation target
     let candidates: Vec<&Stage4Species> = STAGE4_SPECIES
         .iter()
         .filter(|s| s.allowed_from.contains(&pet.species.as_str()))
@@ -406,7 +406,7 @@ fn check_stage3_to_4(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
     })
 }
 
-/// 進化適用の共通処理
+/// Common evolution application logic
 fn apply_evolution(pet: &mut PetData, new_name: &str, new_stage: u8, standard_weight: f64) {
     pet.species = new_name.to_string();
     pet.stage = new_stage;
@@ -414,7 +414,7 @@ fn apply_evolution(pet: &mut PetData, new_name: &str, new_stage: u8, standard_we
     pet.evolution_line.push(new_name.to_string());
 }
 
-/// コサイン類似度
+/// Cosine similarity
 fn cosine_similarity(a: &[f64; 5], b: &[f64; 5]) -> f64 {
     let dot: f64 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
     let mag_a: f64 = a.iter().map(|x| x * x).sum::<f64>().sqrt();
@@ -427,9 +427,9 @@ fn cosine_similarity(a: &[f64; 5], b: &[f64; 5]) -> f64 {
     dot / (mag_a * mag_b)
 }
 
-/// 種族名から口調タイプを取得
+/// Get voice type from species name
 pub fn get_voice_type(species: &str) -> Option<VoiceType> {
-    // Stage1はデフォルト（Phase1の汎用セリフ使用）
+    // Stage1 uses default (Phase1 generic dialogue)
     for s in STAGE2_SPECIES {
         if s.name == species {
             return Some(s.voice_type);
@@ -448,7 +448,7 @@ pub fn get_voice_type(species: &str) -> Option<VoiceType> {
     None
 }
 
-/// 種族名から標準体重を取得（Stage2以降）
+/// Get standard weight from species name (Stage2+)
 pub fn get_standard_weight(species: &str) -> Option<f64> {
     for s in STAGE2_SPECIES {
         if s.name == species {
@@ -468,7 +468,7 @@ pub fn get_standard_weight(species: &str) -> Option<f64> {
     None
 }
 
-/// 種族名から進化タイプを取得（Stage2は直接、Stage3/4は進化元から推定）
+/// Get evolution type from species name (Stage2: direct, Stage3/4: inferred from ancestors)
 pub fn get_evo_type(species: &str) -> Option<EvoType> {
     for s in STAGE2_SPECIES {
         if s.name == species {
@@ -492,7 +492,7 @@ pub fn get_evo_type(species: &str) -> Option<EvoType> {
     None
 }
 
-/// 種族名からステージを取得
+/// Get stage number from species name
 pub fn get_stage(species: &str) -> Option<u8> {
     for s in STAGE2_SPECIES {
         if s.name == species { return Some(2); }
@@ -506,7 +506,7 @@ pub fn get_stage(species: &str) -> Option<u8> {
     None
 }
 
-/// 全種族名リスト（図鑑用）
+/// List all species names (for album)
 pub fn all_species_names() -> Vec<&'static str> {
     use crate::game::pet::STAGE1_SPECIES;
 

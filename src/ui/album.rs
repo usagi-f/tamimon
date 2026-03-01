@@ -43,7 +43,7 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
     let all_species = evolution::all_species_names();
     let total_species = all_species.len();
 
-    // 出会った種族を集計（現在のペット + アルバム）
+    // Count encountered species (current pet + album)
     let mut encountered: std::collections::HashSet<String> = std::collections::HashSet::new();
     if let Some(ref pet) = save_data.pet {
         for species in &pet.evolution_line {
@@ -56,7 +56,7 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
             encountered.insert(species.clone());
         }
     }
-    // たまごは除外
+    // Exclude egg
     encountered.remove("たまご");
 
     let encountered_count = encountered.len();
@@ -165,7 +165,7 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
     f.render_widget(footer, footer_inner);
 }
 
-/// 図鑑に表示する種族の総数
+/// Total number of species displayed in the album
 pub fn total_species_count() -> usize {
     evolution::all_species_names().len()
 }

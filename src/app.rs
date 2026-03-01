@@ -106,7 +106,7 @@ pub async fn run() -> Result<()> {
                     for er in event_results {
                         if er.is_death {
                             death_message = Some(er.message.clone());
-                            // ペット名を保存（Death画面表示用）
+                            // Save pet name for Death screen display
                             let name = if p.nickname.is_empty() { "なまえなし" } else { &p.nickname };
                             death_pet_name = Some(name.to_string());
                         }
@@ -114,7 +114,7 @@ pub async fn run() -> Result<()> {
                     }
                 }
 
-                // 死亡が検知された場合、record_deathを呼んでセーブデータの整合性を保つ
+                // If death was detected, call record_death to maintain save data consistency
                 if death_message.is_some() {
                     let death_msg = death_message.as_deref().unwrap_or("");
                     record_death(&mut data, death_msg);
@@ -266,7 +266,7 @@ fn render_death(f: &mut ratatui::Frame, state: &AppState) {
     lines.push(Line::from(""));
     lines.push(Line::from(""));
 
-    // ペット名はdeath_pet_name（startup時に保存済み）またはpetから取得
+    // Get pet name from death_pet_name (saved at startup) or from live pet data
     let pet_name = state.death_pet_name.as_deref()
         .or_else(|| state.save_data.pet.as_ref().map(|p| {
             if p.nickname.is_empty() { "なまえなし" } else { p.nickname.as_str() }
@@ -450,13 +450,13 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         },
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
-            // farewell名: death_pet_name（startup時）またはpetから取得
+            // Get farewell name from death_pet_name (startup) or from live pet data
             let farewell = state.death_pet_name.take()
                 .or_else(|| state.save_data.pet.as_ref().map(|p| {
                     if p.nickname.is_empty() { "なまえなし".to_string() } else { p.nickname.clone() }
                 }));
 
-            // startup時はrecord_death済みだがdo_action経由はまだなので実行
+            // Record death if pet is still alive (startup deaths already recorded)
             if state.save_data.pet.is_some() {
                 let death_msg = state.death_message.take().unwrap_or_default();
                 record_death(&mut state.save_data, &death_msg);
@@ -537,7 +537,7 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     Ok(())
 }
 
-/// 死亡時のアルバム記録
+/// Record death to album and clear pet data
 fn record_death(save_data: &mut SaveData, death_message: &str) {
     if let Some(pet) = save_data.pet.take() {
         let days_lived = (pet.age_ticks as f64 / 1440.0).ceil() as u32;
@@ -569,12 +569,12 @@ fn pick_idle_speech(save_data: &SaveData, rng: &mut impl Rng) -> String {
     if let Some(ref pet) = save_data.pet {
         let mood = pet::mood_level(pet.kimochi);
 
-        // Stage2以降は口調タイプ別のアイドルセリフ
+        // Stage2+: use voice-type-specific idle speech
         if let Some(vt) = evolution::get_voice_type(&pet.species) {
             return voice::get_idle_speech(vt, mood, rng);
         }
 
-        // Stage1はPhase1の汎用セリフ
+        // Stage1: use generic idle speech from Phase 1
         let pool = ascii_art::get_idle_speech(&pet.species, mood);
         if pool.is_empty() {
             return String::new();
