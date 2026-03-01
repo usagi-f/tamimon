@@ -88,6 +88,73 @@ pub fn get_action_art(species: &str, action: Action) -> &'static [&'static str] 
     }
 }
 
+/// Frame-cycling animation art for the action animation phase.
+/// `frame` cycles at ~2fps; returns (art_lines, effect_line).
+pub fn get_action_animation(action: Action, frame: usize) -> (&'static [&'static str], &'static str) {
+    match action {
+        Action::Talk => {
+            let art = match frame % 4 {
+                0 => &["", "    (●'◡'●)", "      |", "     / \\", ""] as &[&str],
+                1 => &["", "    (●'◡'●)ノ", "     ヾ|", "     /|", ""],
+                2 => &["", "   ノ(●'◡'●)", "      |ヾ", "      |\\", ""],
+                _ => &["", "    (●'◡'●)ノ", "     ヾ|", "     /|", ""],
+            };
+            let effect = match frame % 4 {
+                0 => "  「 ・・・ 」",
+                1 => "  「 ・・・・・・ 」",
+                2 => "  「 ・・・・・・・・・ 」",
+                _ => "  「 ！ 」",
+            };
+            (art, effect)
+        }
+        Action::Play => {
+            let art = match frame % 4 {
+                0 => &["", "    \\(≧▽≦)/", "       |", "      / \\", ""] as &[&str],
+                1 => &["", "     (≧▽≦)ノ", "      ヾ|", "      /|", ""],
+                2 => &["", "  ヽ(≧▽≦)", "      |ヾ", "      |\\", ""],
+                _ => &["", "    \\(≧▽≦)/", "       |", "      / \\", ""],
+            };
+            let effect = match frame % 4 {
+                0 => "        ♪",
+                1 => "      ♪ ♪",
+                2 => "    ♪ ♪ ♪",
+                _ => "  ♪ ♪ ♪ ♪",
+            };
+            (art, effect)
+        }
+        Action::Train => {
+            let art = match frame % 4 {
+                0 => &["", "    (｀・ω・´)", "      |", "     / \\", ""] as &[&str],
+                1 => &["", "    (｀・ω・´)9", "      ヾ|", "      /|", ""],
+                2 => &["", "    (｀・ω・´)9", "      ヾ|  !", "      /|", ""],
+                _ => &["", "   9(｀・ω・´)9", "      ヾ|", "      /|", ""],
+            };
+            let effect = match frame % 4 {
+                0 => "       ...!",
+                1 => "      ﾌﾝｯ !!",
+                2 => "     ﾊｧ ﾊｧ ...!",
+                _ => "      ﾌﾝﾌﾝｯ !!!",
+            };
+            (art, effect)
+        }
+        Action::Relax => {
+            let art = match frame % 4 {
+                0 => &["", "", "    _(˘ω˘)_", "", ""] as &[&str],
+                1 => &["", "", "    _(˘ω˘)_", "        z", ""],
+                2 => &["", "", "    _(˘ω˘)_", "       zz", ""],
+                _ => &["", "", "    _(˘ω˘)_", "      zzZ", ""],
+            };
+            let effect = match frame % 4 {
+                0 => "      ～",
+                1 => "    ～ ～",
+                2 => "  ～ ～ ～",
+                _ => "～ ～ ～ ～",
+            };
+            (art, effect)
+        }
+    }
+}
+
 pub fn get_idle_speech(species: &str, mood: MoodLevel) -> &'static [&'static str] {
     match (species, mood) {
         ("たまご", _) => &[

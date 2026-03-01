@@ -26,6 +26,7 @@ pub enum AppMode {
     Startup,
     Naming { input: String, farewell_name: Option<String> },
     Main,
+    ActionAnimation,
     ActionReaction,
     Album,
     Death,
@@ -52,6 +53,7 @@ pub struct AppState {
     pub speech_text: String,
     pub startup_info: Option<StartupInfo>,
     pub action_result: Option<ActionResult>,
+    pub action_animation_start: Option<Instant>,
     pub death_message: Option<String>,
     pub death_pet_name: Option<String>,
     pub evolution_message: Option<String>,
@@ -168,6 +170,7 @@ pub async fn run() -> Result<()> {
         speech_text,
         startup_info,
         action_result: None,
+        action_animation_start: None,
         death_message: None,
         death_pet_name: startup_death_pet_name,
         evolution_message: None,
@@ -218,6 +221,16 @@ async fn run_loop(
             }
         }
 
+        // Auto-transition: ActionAnimation → ActionReaction after 2.5s
+        if matches!(state.mode, AppMode::ActionAnimation) {
+            if let Some(start) = state.action_animation_start {
+                if start.elapsed() >= Duration::from_millis(2500) {
+                    state.action_animation_start = None;
+                    state.mode = AppMode::ActionReaction;
+                }
+            }
+        }
+
         // Update animation frame (~2fps)
         if state.last_frame_time.elapsed() >= Duration::from_millis(500) {
             state.animation_frame = state.animation_frame.wrapping_add(1);
@@ -236,6 +249,9 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         }
         AppMode::Main => {
             main_screen::render_main(f, state);
+        }
+        AppMode::ActionAnimation => {
+            main_screen::render_action_animation(f, state);
         }
         AppMode::ActionReaction => {
             main_screen::render_action_reaction(f, state);
@@ -434,6 +450,11 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             }
             _ => {}
         },
+        AppMode::ActionAnimation => {
+            // Any key → skip animation, go straight to result
+            state.action_animation_start = None;
+            state.mode = AppMode::ActionReaction;
+        }
         AppMode::ActionReaction => {
             // Any key → back to Main
             state.action_result = None;
@@ -515,7 +536,8 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
                 action,
                 reaction_text: "（たまごは静かに揺れている…）".to_string(),
             });
-            state.mode = AppMode::ActionReaction;
+            state.action_animation_start = Some(Instant::now());
+            state.mode = AppMode::ActionAnimation;
             return Ok(());
         }
 
@@ -534,7 +556,8 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             action,
             reaction_text,
         });
-        state.mode = AppMode::ActionReaction;
+        state.action_animation_start = Some(Instant::now());
+        state.mode = AppMode::ActionAnimation;
 
         // Save after every action
         save::save(&state.save_data)?;
