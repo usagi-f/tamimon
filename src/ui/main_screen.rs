@@ -171,6 +171,37 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
         )));
     }
 
+    // Only show evolution if the pet didn't die in the same startup
+    if info.death_message.is_none() {
+        if let Some(ref evolved) = info.evolved_species {
+            lines.push(Line::from(""));
+            let evo_msg = if let Some(ref pet) = state.save_data.pet {
+                let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+                format!("  ✨ {}が進化した！ → {}", name, evolved)
+            } else {
+                format!("  ✨ 進化した！ → {}", evolved)
+            };
+            lines.push(Line::from(Span::styled(
+                evo_msg,
+                Style::default().fg(Color::Magenta),
+            )));
+        }
+    }
+
+    // Show non-death event messages (death message will be shown on the Death screen)
+    let non_death_msgs: Vec<&String> = info.event_messages.iter()
+        .filter(|m| info.death_message.as_ref() != Some(m))
+        .collect();
+    if !non_death_msgs.is_empty() {
+        lines.push(Line::from(""));
+        for msg in &non_death_msgs {
+            lines.push(Line::from(Span::styled(
+                format!("  {}", msg),
+                Style::default().fg(Color::Yellow),
+            )));
+        }
+    }
+
     if info.rollback_detected {
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(

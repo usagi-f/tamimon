@@ -40,6 +40,8 @@ pub struct PetData {
     pub survived_accident: bool,
     pub birth_timestamp: DateTime<Utc>,
     pub cumulative_kimochi: f64,
+    #[serde(default)]
+    pub last_stage4_check: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

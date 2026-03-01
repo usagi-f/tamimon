@@ -44,6 +44,7 @@ pub fn new_egg(nickname: String, now: DateTime<Utc>) -> PetData {
         survived_accident: false,
         birth_timestamp: now,
         cumulative_kimochi: 50.0,
+        last_stage4_check: 0,
     }
 }
 
@@ -126,6 +127,10 @@ fn find_standard_weight(species: &str) -> f64 {
         if s.name == species {
             return s.standard_weight;
         }
+    }
+    // For Stage2+, get from evolution module
+    if let Some(w) = crate::game::evolution::get_standard_weight(species) {
+        return w;
     }
     10.0
 }
