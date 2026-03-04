@@ -78,6 +78,19 @@ impl DebugAlbumState {
             *index = (*index + ALL_ACTIONS.len() - 1) % ALL_ACTIONS.len();
         }
     }
+
+    pub fn next_species(&mut self) {
+        let max = Self::species_count().saturating_sub(1);
+        if self.cursor < max {
+            self.cursor += 1;
+        }
+    }
+
+    pub fn prev_species(&mut self) {
+        if self.cursor > 0 {
+            self.cursor -= 1;
+        }
+    }
 }
 
 // ─── Rendering ───────────────────────────────────────────
@@ -229,7 +242,7 @@ fn render_idle(f: &mut Frame, state: &DebugAlbumState, animation_frame: usize) {
 
     let footer_inner = inner_area(chunks[2], 0, 1);
     let footer = Paragraph::new(Line::from(
-        "  [A] アクション表示  [Esc] 一覧へ戻る",
+        "  [←→] 前後  [A] アクション表示  [Esc] 一覧へ戻る",
     ));
     f.render_widget(footer, footer_inner);
 }

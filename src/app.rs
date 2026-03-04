@@ -513,6 +513,12 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                     state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
                 }
                 // ── Idle view ──
+                (DebugAlbumView::Idle, KeyCode::Left) => {
+                    ds.prev_species();
+                }
+                (DebugAlbumView::Idle, KeyCode::Right) => {
+                    ds.next_species();
+                }
                 (DebugAlbumView::Idle, KeyCode::Char('a') | KeyCode::Char('A')) => {
                     ds.view = DebugAlbumView::Action { index: 0 };
                 }
