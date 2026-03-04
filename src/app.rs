@@ -21,6 +21,8 @@ use crate::game::voice;
 use crate::save;
 use crate::save::schema::{AlbumEntry, SaveData};
 use crate::ui::{album, ascii_art, main_screen, naming};
+#[cfg(debug_assertions)]
+use crate::ui::debug_album;
 
 pub enum AppMode {
     Startup,
@@ -29,6 +31,8 @@ pub enum AppMode {
     ActionAnimation,
     ActionReaction,
     Album,
+    #[cfg(debug_assertions)]
+    DebugAlbum,
     Death,
     Evolution,
 }
@@ -259,6 +263,10 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         AppMode::Album => {
             album::render_album(f, &state.save_data, &state.album_state);
         }
+        #[cfg(debug_assertions)]
+        AppMode::DebugAlbum => {
+            debug_album::render_debug_album(f, &state.save_data);
+        }
         AppMode::Death => {
             render_death(f, state);
         }
@@ -445,6 +453,10 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                 state.album_state = album::AlbumState::new();
                 state.mode = AppMode::Album;
             }
+            #[cfg(debug_assertions)]
+            KeyCode::Char('d') | KeyCode::Char('D') => {
+                state.mode = AppMode::DebugAlbum;
+            }
             KeyCode::Char('q') | KeyCode::Char('Q') => {
                 return Ok(InputResult::Quit);
             }
@@ -469,6 +481,14 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                 let total = album::total_species_count() + 1; // +1 for mystery line
                 state.album_state.scroll_down(total, 20);
             }
+            KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc => {
+                state.mode = AppMode::Main;
+                state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+            }
+            _ => {}
+        },
+        #[cfg(debug_assertions)]
+        AppMode::DebugAlbum => match key {
             KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc => {
                 state.mode = AppMode::Main;
                 state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);

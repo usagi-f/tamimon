@@ -102,9 +102,15 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
     f.render_widget(footer_block, chunks[2]);
 
     let footer_inner = inner_area(chunks[2], 0, 1);
+    #[cfg(not(debug_assertions))]
     let footer_lines = vec![
         Line::from("  [T]話しかける  [P]あそぶ  [R]特訓  [E]まったり"),
         Line::from("  [A]図鑑                                [Q]終了"),
+    ];
+    #[cfg(debug_assertions)]
+    let footer_lines = vec![
+        Line::from("  [T]話しかける  [P]あそぶ  [R]特訓  [E]まったり"),
+        Line::from("  [A]図鑑  [D]デバッグ図鑑                [Q]終了"),
     ];
     let footer = Paragraph::new(footer_lines);
     f.render_widget(footer, footer_inner);
