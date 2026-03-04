@@ -62,6 +62,8 @@ pub struct AppState {
     pub death_pet_name: Option<String>,
     pub evolution_message: Option<String>,
     pub album_state: album::AlbumState,
+    #[cfg(debug_assertions)]
+    pub debug_album_state: debug_album::DebugAlbumState,
     pub rng: ThreadRng,
 }
 
@@ -179,6 +181,8 @@ pub async fn run() -> Result<()> {
         death_pet_name: startup_death_pet_name,
         evolution_message: None,
         album_state: album::AlbumState::new(),
+        #[cfg(debug_assertions)]
+        debug_album_state: debug_album::DebugAlbumState::new(),
         rng: rand::thread_rng(),
     };
 
@@ -265,7 +269,7 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         }
         #[cfg(debug_assertions)]
         AppMode::DebugAlbum => {
-            debug_album::render_debug_album(f, &state.save_data);
+            debug_album::render_debug_album(f, &state.debug_album_state, state.animation_frame);
         }
         AppMode::Death => {
             render_death(f, state);
@@ -455,6 +459,7 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             }
             #[cfg(debug_assertions)]
             KeyCode::Char('d') | KeyCode::Char('D') => {
+                state.debug_album_state = debug_album::DebugAlbumState::new();
                 state.mode = AppMode::DebugAlbum;
             }
             KeyCode::Char('q') | KeyCode::Char('Q') => {
@@ -488,13 +493,48 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             _ => {}
         },
         #[cfg(debug_assertions)]
-        AppMode::DebugAlbum => match key {
-            KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc => {
-                state.mode = AppMode::Main;
-                state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+        AppMode::DebugAlbum => {
+            use debug_album::DebugAlbumView;
+            let ds = &mut state.debug_album_state;
+            match (&ds.view, key) {
+                // ── List view ──
+                (DebugAlbumView::List, KeyCode::Up) => {
+                    ds.cursor_up();
+                }
+                (DebugAlbumView::List, KeyCode::Down) => {
+                    let visible = 20; // approximate visible lines
+                    ds.cursor_down(visible);
+                }
+                (DebugAlbumView::List, KeyCode::Enter) => {
+                    ds.view = DebugAlbumView::Idle;
+                }
+                (DebugAlbumView::List, KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc) => {
+                    state.mode = AppMode::Main;
+                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                }
+                // ── Idle view ──
+                (DebugAlbumView::Idle, KeyCode::Char('a') | KeyCode::Char('A')) => {
+                    ds.view = DebugAlbumView::Action { index: 0 };
+                }
+                (DebugAlbumView::Idle, KeyCode::Esc) => {
+                    ds.view = DebugAlbumView::List;
+                }
+                // ── Action view ──
+                (DebugAlbumView::Action { .. }, KeyCode::Right) => {
+                    ds.next_action();
+                }
+                (DebugAlbumView::Action { .. }, KeyCode::Left) => {
+                    ds.prev_action();
+                }
+                (DebugAlbumView::Action { .. }, KeyCode::Char('i') | KeyCode::Char('I')) => {
+                    ds.view = DebugAlbumView::Idle;
+                }
+                (DebugAlbumView::Action { .. }, KeyCode::Esc) => {
+                    ds.view = DebugAlbumView::List;
+                }
+                _ => {}
             }
-            _ => {}
-        },
+        }
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
             // Get farewell name from death_pet_name (startup) or from live pet data
