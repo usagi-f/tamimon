@@ -40,7 +40,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
 
     let header_line = Line::from(vec![
         Span::styled(
-            format!("  {}  ", nickname),
+            format!("  {}（{}）  ", nickname, pet.species),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ]);
