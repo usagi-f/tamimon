@@ -25,6 +25,8 @@ pub fn get_art(species: &str, mood: MoodLevel, frame: usize) -> Vec<String> {
         "ミジン" => to_vec(mijin_art(mood, frame)),
         "ネロ" => to_vec(nero_art(mood, frame)),
         "ボテ" => to_vec(bote_art(mood, frame)),
+        "ピリリ" => to_vec(piriri_art(mood, frame)),
+        "モグモ" => to_vec(mogumo_art(mood, frame)),
         _ => compose_idle(species, mood, frame),
     }
 }
@@ -71,6 +73,8 @@ pub fn get_action_art(species: &str, action: Action, frame: usize) -> Vec<String
         "ミジン" => to_vec(mijin_action(action, frame)),
         "ネロ" => to_vec(nero_action(action, frame)),
         "ボテ" => to_vec(bote_action(action, frame)),
+        "ピリリ" => to_vec(piriri_action(action, frame)),
+        "モグモ" => to_vec(mogumo_action(action, frame)),
         _ => compose_action(species, action, frame),
     }
 }
@@ -107,199 +111,267 @@ fn to_vec(art: &[&str]) -> Vec<String> {
     art.iter().map(|s| s.to_string()).collect()
 }
 
-// ===== Stage 1 Species Art (unchanged) =====
+// ===== Stage 1 Species Art (hand-crafted, 1-line each) =====
 
+// 1. コロコロ（口: ω）- 丸いスライム
 fn korokoro_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "    (≧▽≦)ノ", "     ヾ|", "     /|", ""],
-        (MoodLevel::High, _) => &["", "     (≧▽≦)", "      |ノ", "      |\\", ""],
-        (MoodLevel::Normal, 0) => &["", "    (˘ω˘)", "      |", "     / \\", ""],
-        (MoodLevel::Normal, _) => &["", "    (˘─˘)", "      |", "     / \\", ""],
-        (MoodLevel::Low, 0) => &["", "    (￣_￣)", "      |", "     / \\", ""],
-        (MoodLevel::Low, _) => &["", "    (￣ ￣)", "      |", "     / \\", ""],
+        (MoodLevel::High, 0) => &["", "", "    (≧▽≦)ﾉ", "", ""],
+        (MoodLevel::High, _) => &["", "", "   ﾉ(≧▽≦)", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "    (˘ω˘)", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "     (˘ω˘)", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "    (￣_￣)", "", ""],
+        (MoodLevel::Low, _) => &["", "", "    (￣ ￣)", "", ""],
     }
 }
 
+// 2. ニョロ（口: へ）- ヘビ/ミミズ
 fn nyoro_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", " ≋(＞ω＜)≋", "", ""],
-        (MoodLevel::High, _) => &["", "≋(＞ω＜)≋ ", "", ""],
-        (MoodLevel::Normal, 0) => &["", " ≋(・ω・)", "", ""],
-        (MoodLevel::Normal, _) => &["", " ≋(・─・)", "", ""],
-        (MoodLevel::Low, 0) => &["", " ≋(￣_￣)", "", ""],
-        (MoodLevel::Low, _) => &["", "≋(￣ ￣) ", "", ""],
+        (MoodLevel::High, 0) => &["", "", "  ～～(＞へ＜)！", "", ""],
+        (MoodLevel::High, _) => &["", "", "  ！(＞へ＜)～～", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  ～～(・へ・)", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "  (・へ・)～～", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "  ～(￣へ￣)", "", ""],
+        (MoodLevel::Low, _) => &["", "", "  (￣ ￣)～", "", ""],
     }
 }
 
+// 3. フワ（口: ᵕ）- ふわふわ雲
 fn fuwa_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "  ୧(˶≧▽≦)୨", "", ""],
-        (MoodLevel::High, _) => &["", " ୧(˶≧▽≦)୨ ", "", ""],
-        (MoodLevel::Normal, 0) => &["", "  ୧(˶˘ᵕ˘)", "", ""],
-        (MoodLevel::Normal, _) => &["", "  ୧(˶˘─˘)", "", ""],
-        (MoodLevel::Low, 0) => &["", "  ୧(˶￣_￣)", "", ""],
-        (MoodLevel::Low, _) => &["", "  ୧(˶￣ ￣)", "", ""],
+        (MoodLevel::High, 0) => &["", "", "  ☁(≧▽≦)☁♪", "", ""],
+        (MoodLevel::High, _) => &["", "", "  ♪☁(≧▽≦)☁", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  ☁(˘ᵕ˘)☁", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "   ☁(˘ᵕ˘)☁", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "  ☁(￣_￣)☁", "", ""],
+        (MoodLevel::Low, _) => &["", "", "   ☁(￣ ￣)☁", "", ""],
     }
 }
 
+// 4. ツブ（口: _）- 微小粒
 fn tsubu_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "    ⊙▽⊙", "", ""],
-        (MoodLevel::High, _) => &["", "    ⊙▽⊙ !", "", ""],
-        (MoodLevel::Normal, 0) => &["", "    ⊙_⊙", "", ""],
-        (MoodLevel::Normal, _) => &["", "    ⊙─⊙", "", ""],
-        (MoodLevel::Low, 0) => &["", "    ⊙_⊙", "", ""],
-        (MoodLevel::Low, _) => &["", "    -_-", "", ""],
+        (MoodLevel::High, 0) => &["", "", "    ⊙▽⊙ !", "", ""],
+        (MoodLevel::High, _) => &["", "", "   ! ⊙▽⊙", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "    ⊙_⊙", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "    ⊙ ⊙", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "    -_-", "", ""],
+        (MoodLevel::Low, _) => &["", "", "    - -", "", ""],
     }
 }
 
+// 5. プク（口: ◡）- ぷくぷく
 fn puku_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "   (｡>ω<｡)", "", ""],
-        (MoodLevel::High, _) => &["", "   (｡>ω<｡)ノ", "", ""],
-        (MoodLevel::Normal, 0) => &["", "   (｡･ω･｡)", "", ""],
-        (MoodLevel::Normal, _) => &["", "   (｡･─･｡)", "", ""],
-        (MoodLevel::Low, 0) => &["", "   (｡-ω-｡)", "", ""],
-        (MoodLevel::Low, _) => &["", "   (｡- -｡)", "", ""],
+        (MoodLevel::High, 0) => &["", "", "  (｡＞◡＜｡)ﾉ", "", ""],
+        (MoodLevel::High, _) => &["", "", "  ﾉ(｡＞◡＜｡)", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  (｡・◡・｡)", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "   (｡・◡・｡)", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "  (｡-◡-｡)", "", ""],
+        (MoodLevel::Low, _) => &["", "", "  (｡- -｡)", "", ""],
     }
 }
 
+// 6. ミジン（口: ▿）- 極小微生物
 fn mijin_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "    ＞ω＜", "", ""],
-        (MoodLevel::High, _) => &["", "   ＞ω＜ !", "", ""],
-        (MoodLevel::Normal, 0) => &["", "    ･ω･", "", ""],
-        (MoodLevel::Normal, _) => &["", "    ･─･", "", ""],
-        (MoodLevel::Low, 0) => &["", "    -ω-", "", ""],
-        (MoodLevel::Low, _) => &["", "    - -", "", ""],
+        (MoodLevel::High, 0) => &["", "", "    ＞▿＜ !", "", ""],
+        (MoodLevel::High, _) => &["", "", "   ! ＞▿＜", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "    ･▿･", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "     ･▿･", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "    -▿-", "", ""],
+        (MoodLevel::Low, _) => &["", "", "    - -", "", ""],
     }
 }
 
+// 7. ネロ（口: ー）- 子猫
 fn nero_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "   (^ω^)", "", ""],
-        (MoodLevel::High, _) => &["", "   (^ω^)ノ", "", ""],
-        (MoodLevel::Normal, 0) => &["", "   (=ω=)", "", ""],
-        (MoodLevel::Normal, _) => &["", "   (=─=)", "", ""],
-        (MoodLevel::Low, 0) => &["", "   (-ω-) zzZ", "", ""],
-        (MoodLevel::Low, _) => &["", "   (- -) zzZ", "", ""],
+        (MoodLevel::High, 0) => &["", "", "  (=^▽^=)ﾉ", "", ""],
+        (MoodLevel::High, _) => &["", "", "  ﾉ(=^▽^=)", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  (=ー=)～", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "  (=ー=)～～", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "  (=- -)zzZ", "", ""],
+        (MoodLevel::Low, _) => &["", "", "  (= =)zzZ", "", ""],
     }
 }
 
+// 8. ボテ（口: □）- でっぷり
 fn bote_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["", "   (・▽・)", "", ""],
-        (MoodLevel::High, _) => &["", "   (・▽・)ノ", "", ""],
-        (MoodLevel::Normal, 0) => &["", "   (・●・)", "", ""],
-        (MoodLevel::Normal, _) => &["", "   (・─・)", "", ""],
-        (MoodLevel::Low, 0) => &["", "   (・_・)", "", ""],
-        (MoodLevel::Low, _) => &["", "   (・ ・)", "", ""],
+        (MoodLevel::High, 0) => &["", "", "  《・▽・》ﾉ", "", ""],
+        (MoodLevel::High, _) => &["", "", "  ﾉ《・▽・》", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  《・□・》", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "  《・ ・》", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "  《・_・》", "", ""],
+        (MoodLevel::Low, _) => &["", "", "  《- -》", "", ""],
     }
 }
 
-// ===== Stage 1 Action Art (unchanged) =====
+// 9. ピリリ（口: ∀）- 電気
+fn piriri_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "", "  ⚡°▽°⚡!", "", ""],
+        (MoodLevel::High, _) => &["", "", "  !⚡°▽°⚡", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  ⚡°∀°⚡", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "   ⚡°∀°⚡", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "    °_°", "", ""],
+        (MoodLevel::Low, _) => &["", "", "    ° °", "", ""],
+    }
+}
 
+// 10. モグモ（口: 〇）- もぐもぐ耳つき
+fn mogumo_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "", "  ∩(°▽°)∩ﾉ", "", ""],
+        (MoodLevel::High, _) => &["", "", "  ﾉ∩(°▽°)∩", "", ""],
+        (MoodLevel::Normal, 0) => &["", "", "  ∩(°〇°)∩", "", ""],
+        (MoodLevel::Normal, _) => &["", "", "   ∩(°〇°)∩", "", ""],
+        (MoodLevel::Low, 0) => &["", "", "  ∩(°_°)∩", "", ""],
+        (MoodLevel::Low, _) => &["", "", "  ∩(° °)∩", "", ""],
+    }
+}
+
+// ===== Stage 1 Action Art (hand-crafted, 1-line each) =====
+
+// 1. コロコロ（口: ω）
 fn korokoro_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", "    (˘ω˘)ノ", "     ヾ|", "     /|", ""],
-        (Action::Talk, _) => &["", "   ノ(˘ω˘)", "      |ヾ", "      |\\", ""],
-        (Action::Play, 0) => &["", "   ＼(≧▽≦)／", "       |", "      / \\", ""],
-        (Action::Play, _) => &["", "    ヽ(≧▽≦)ノ", "       |", "      / \\", ""],
-        (Action::Train, 0) => &["", "    (≧ω≦)9", "     ヾ|", "     /|", ""],
-        (Action::Train, _) => &["", "   9(≧ω≦)", "      |ヾ", "      |\\", ""],
-        (Action::Relax, 0) => &["", "", "    _(˘ω˘)_", "", ""],
-        (Action::Relax, _) => &["", "", "   _(˘ω˘)_", "       z", ""],
+        (Action::Talk, 0) => &["", "", "    (˘ω˘)ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "   ﾉ(˘ω˘)", "", ""],
+        (Action::Play, 0) => &["", "", "   (≧▽≦)ﾉ♪", "", ""],
+        (Action::Play, _) => &["", "", "  ♪ﾉ(≧▽≦)", "", ""],
+        (Action::Train, 0) => &["", "", "    (≧ω≦)9", "", ""],
+        (Action::Train, _) => &["", "", "   9(≧ω≦)", "", ""],
+        (Action::Relax, 0) => &["", "", "    (˘ω˘)～", "", ""],
+        (Action::Relax, _) => &["", "", "    (˘ω˘)～z", "", ""],
     }
 }
 
+// 2. ニョロ（口: へ）
 fn nyoro_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", " ≋(・ω・)ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "ﾉ(・ω・)≋", "", "", ""],
-        (Action::Play, 0) => &["", "~≋(＞ω＜)≋~", "", "", ""],
-        (Action::Play, _) => &["", " ≋~(＞ω＜)~≋", "", "", ""],
-        (Action::Train, 0) => &["", " ≋(｀ω´)≋ !", "", "", ""],
-        (Action::Train, _) => &["", "! ≋(｀ω´)≋", "", "", ""],
-        (Action::Relax, 0) => &["", " ≋(˘ω˘)～", "", "", ""],
-        (Action::Relax, _) => &["", " ≋(˘ω˘)～ z", "", "", ""],
+        (Action::Talk, 0) => &["", "", "  ～～(・へ・)ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "  ﾉ(・へ・)～～", "", ""],
+        (Action::Play, 0) => &["", "", "  ～～(＞へ＜)！♪", "", ""],
+        (Action::Play, _) => &["", "", "  ♪！(＞へ＜)～～", "", ""],
+        (Action::Train, 0) => &["", "", "  ～～(｀へ´)9", "", ""],
+        (Action::Train, _) => &["", "", "  9(｀へ´)～～", "", ""],
+        (Action::Relax, 0) => &["", "", "  ～～(˘へ˘)～", "", ""],
+        (Action::Relax, _) => &["", "", "  ～～(˘へ˘)～z", "", ""],
     }
 }
 
+// 3. フワ（口: ᵕ）
 fn fuwa_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", " ୧(˶˘ᵕ˘)ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "ﾉ(˶˘ᵕ˘)୨", "", "", ""],
-        (Action::Play, 0) => &["", "  ୧(˶≧▽≦)୨", "", "", ""],
-        (Action::Play, _) => &["", " ୨(˶≧▽≦)୧", "", "", ""],
-        (Action::Train, 0) => &["", " ୧(˶≧ω≦)9", "", "", ""],
-        (Action::Train, _) => &["", "9(˶≧ω≦)୨", "", "", ""],
-        (Action::Relax, 0) => &["", " _(˶˘ᵕ˘)_", "", "", ""],
-        (Action::Relax, _) => &["", " _(˶˘ᵕ˘)_ z", "", "", ""],
+        (Action::Talk, 0) => &["", "", "  ☁(˘ᵕ˘)ﾉ☁", "", ""],
+        (Action::Talk, _) => &["", "", "  ☁ﾉ(˘ᵕ˘)☁", "", ""],
+        (Action::Play, 0) => &["", "", "  ☁(≧▽≦)☁♪", "", ""],
+        (Action::Play, _) => &["", "", "  ♪☁(≧▽≦)☁", "", ""],
+        (Action::Train, 0) => &["", "", "  ☁(≧ᵕ≦)9☁", "", ""],
+        (Action::Train, _) => &["", "", "  ☁9(≧ᵕ≦)☁", "", ""],
+        (Action::Relax, 0) => &["", "", "  ☁(˘ᵕ˘)☁～", "", ""],
+        (Action::Relax, _) => &["", "", "  ☁(˘ᵕ˘)☁～z", "", ""],
     }
 }
 
+// 4. ツブ（口: _）
 fn tsubu_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", "    ⊙ω⊙ ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "  ﾉ ⊙ω⊙", "", "", ""],
-        (Action::Play, 0) => &["", "    ⊙▽⊙ !", "", "", ""],
-        (Action::Play, _) => &["", "  ! ⊙▽⊙", "", "", ""],
-        (Action::Train, 0) => &["", "    ⊙益⊙ !!", "", "", ""],
-        (Action::Train, _) => &["", "  !! ⊙益⊙", "", "", ""],
-        (Action::Relax, 0) => &["", "    ⊙_⊙", "", "", ""],
-        (Action::Relax, _) => &["", "    ⊙_⊙ z", "", "", ""],
+        (Action::Talk, 0) => &["", "", "    ⊙_⊙ ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "   ﾉ ⊙_⊙", "", ""],
+        (Action::Play, 0) => &["", "", "    ⊙▽⊙ !", "", ""],
+        (Action::Play, _) => &["", "", "   ! ⊙▽⊙", "", ""],
+        (Action::Train, 0) => &["", "", "    ⊙益⊙ !!", "", ""],
+        (Action::Train, _) => &["", "", "   !! ⊙益⊙", "", ""],
+        (Action::Relax, 0) => &["", "", "    ⊙_⊙ ～", "", ""],
+        (Action::Relax, _) => &["", "", "    ⊙_⊙ ～z", "", ""],
     }
 }
 
+// 5. プク（口: ◡）
 fn puku_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", "   (｡・ω・｡)ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "  ﾉ(｡・ω・｡)", "", "", ""],
-        (Action::Play, 0) => &["", "   (｡>ω<｡)ノ", "", "", ""],
-        (Action::Play, _) => &["", "  ヽ(｡>ω<｡)", "", "", ""],
-        (Action::Train, 0) => &["", "   (｡>ω<｡)9", "", "", ""],
-        (Action::Train, _) => &["", "  9(｡>ω<｡)", "", "", ""],
-        (Action::Relax, 0) => &["", "   (｡-ω-｡)", "", "", ""],
-        (Action::Relax, _) => &["", "   (｡-ω-｡) z", "", "", ""],
+        (Action::Talk, 0) => &["", "", "  (｡・◡・｡)ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "  ﾉ(｡・◡・｡)", "", ""],
+        (Action::Play, 0) => &["", "", "  (｡＞◡＜｡)♪", "", ""],
+        (Action::Play, _) => &["", "", "  ♪(｡＞◡＜｡)", "", ""],
+        (Action::Train, 0) => &["", "", "  (｡＞◡＜｡)9", "", ""],
+        (Action::Train, _) => &["", "", "  9(｡＞◡＜｡)", "", ""],
+        (Action::Relax, 0) => &["", "", "  (｡-◡-｡)～", "", ""],
+        (Action::Relax, _) => &["", "", "  (｡-◡-｡)～z", "", ""],
     }
 }
 
+// 6. ミジン（口: ▿）
 fn mijin_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", "    ･ω･ ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "  ﾉ ･ω･", "", "", ""],
-        (Action::Play, 0) => &["", "    ＞ω＜ !", "", "", ""],
-        (Action::Play, _) => &["", "  ! ＞ω＜", "", "", ""],
-        (Action::Train, 0) => &["", "    ＞益＜ !!", "", "", ""],
-        (Action::Train, _) => &["", "  !! ＞益＜", "", "", ""],
-        (Action::Relax, 0) => &["", "    -ω-", "", "", ""],
-        (Action::Relax, _) => &["", "    -ω- z", "", "", ""],
+        (Action::Talk, 0) => &["", "", "    ･▿･ ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "   ﾉ ･▿･", "", ""],
+        (Action::Play, 0) => &["", "", "    ＞▿＜ !", "", ""],
+        (Action::Play, _) => &["", "", "   ! ＞▿＜", "", ""],
+        (Action::Train, 0) => &["", "", "    ＞益＜ !!", "", ""],
+        (Action::Train, _) => &["", "", "   !! ＞益＜", "", ""],
+        (Action::Relax, 0) => &["", "", "    -▿- ～", "", ""],
+        (Action::Relax, _) => &["", "", "    -▿- ～z", "", ""],
     }
 }
 
+// 7. ネロ（口: ー）
 fn nero_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", "   (^ω^)ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "  ﾉ(^ω^)", "", "", ""],
-        (Action::Play, 0) => &["", "  ＼(^ω^)／", "", "", ""],
-        (Action::Play, _) => &["", "   ヽ(^ω^)ノ", "", "", ""],
-        (Action::Train, 0) => &["", "   (=`ω´=)9", "", "", ""],
-        (Action::Train, _) => &["", "  9(=`ω´=)", "", "", ""],
-        (Action::Relax, 0) => &["", "   (=ω=) zzZ", "", "", ""],
-        (Action::Relax, _) => &["", "   (- -) zzZ", "", "", ""],
+        (Action::Talk, 0) => &["", "", "  (=ー=)ﾉ～", "", ""],
+        (Action::Talk, _) => &["", "", "  ﾉ(=ー=)～", "", ""],
+        (Action::Play, 0) => &["", "", "  (=^▽^=)♪～", "", ""],
+        (Action::Play, _) => &["", "", "  ～♪(=^▽^=)", "", ""],
+        (Action::Train, 0) => &["", "", "  (=`益´=)9～", "", ""],
+        (Action::Train, _) => &["", "", "  ～9(=`益´=)", "", ""],
+        (Action::Relax, 0) => &["", "", "  (=ー=)～zzZ", "", ""],
+        (Action::Relax, _) => &["", "", "  (= =)～zzZ", "", ""],
     }
 }
 
+// 8. ボテ（口: □）
 fn bote_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["", "   (・▽・)ﾉ", "", "", ""],
-        (Action::Talk, _) => &["", "  ﾉ(・▽・)", "", "", ""],
-        (Action::Play, 0) => &["", "  ＼(・▽・)／", "", "", ""],
-        (Action::Play, _) => &["", "   ヽ(・▽・)ノ", "", "", ""],
-        (Action::Train, 0) => &["", "   (・益・)9", "", "", ""],
-        (Action::Train, _) => &["", "  9(・益・)", "", "", ""],
-        (Action::Relax, 0) => &["", "   (・_・) z", "", "", ""],
-        (Action::Relax, _) => &["", "   (・ ・) zzZ", "", "", ""],
+        (Action::Talk, 0) => &["", "", "  《・□・》ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "  ﾉ《・□・》", "", ""],
+        (Action::Play, 0) => &["", "", "  《・▽・》♪", "", ""],
+        (Action::Play, _) => &["", "", "  ♪《・▽・》", "", ""],
+        (Action::Train, 0) => &["", "", "  《・益・》9", "", ""],
+        (Action::Train, _) => &["", "", "  9《・益・》", "", ""],
+        (Action::Relax, 0) => &["", "", "  《・□・》～", "", ""],
+        (Action::Relax, _) => &["", "", "  《・ ・》～z", "", ""],
+    }
+}
+
+// 9. ピリリ（口: ∀）
+fn piriri_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "", "  ⚡°∀°⚡ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "  ﾉ⚡°∀°⚡", "", ""],
+        (Action::Play, 0) => &["", "", "  ⚡°▽°⚡♪!", "", ""],
+        (Action::Play, _) => &["", "", "  !♪⚡°▽°⚡", "", ""],
+        (Action::Train, 0) => &["", "", "  ⚡°益°⚡9", "", ""],
+        (Action::Train, _) => &["", "", "  9⚡°益°⚡", "", ""],
+        (Action::Relax, 0) => &["", "", "    °∀°～", "", ""],
+        (Action::Relax, _) => &["", "", "    °∀°～z", "", ""],
+    }
+}
+
+// 10. モグモ（口: 〇）
+fn mogumo_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "", "  ∩(°〇°)∩ﾉ", "", ""],
+        (Action::Talk, _) => &["", "", "  ﾉ∩(°〇°)∩", "", ""],
+        (Action::Play, 0) => &["", "", "  ∩(°▽°)∩♪", "", ""],
+        (Action::Play, _) => &["", "", "  ♪∩(°▽°)∩", "", ""],
+        (Action::Train, 0) => &["", "", "  ∩(°益°)∩9", "", ""],
+        (Action::Train, _) => &["", "", "  9∩(°益°)∩", "", ""],
+        (Action::Relax, 0) => &["", "", "  ∩(°〇°)∩～", "", ""],
+        (Action::Relax, _) => &["", "", "  ∩(° °)∩～z", "", ""],
     }
 }
 
