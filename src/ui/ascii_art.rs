@@ -27,6 +27,41 @@ pub fn get_art(species: &str, mood: MoodLevel, frame: usize) -> Vec<String> {
         "ボテ" => to_vec(bote_art(mood, frame)),
         "ピリリ" => to_vec(piriri_art(mood, frame)),
         "モグモ" => to_vec(mogumo_art(mood, frame)),
+        // Stage 2 - Chikara type
+        "ドタン" => to_vec(dotan_art(mood, frame)),
+        "ガシャ" => to_vec(gasha_art(mood, frame)),
+        "ズンズン" => to_vec(zunzun_art(mood, frame)),
+        "デカオ" => to_vec(dekao_art(mood, frame)),
+        "ゴツモリ" => to_vec(gotsumori_art(mood, frame)),
+        "ドンガメ" => to_vec(dongame_art(mood, frame)),
+        // Stage 2 - Odayaka type
+        "ヒョロン" => to_vec(hyoron_art(mood, frame)),
+        "フワモン" => to_vec(fuwamon_art(mood, frame)),
+        "ユラリ" => to_vec(yurari_art(mood, frame)),
+        "ネムタ" => to_vec(nemuta_art(mood, frame)),
+        "ポワン" => to_vec(powan_art(mood, frame)),
+        "ホワモコ" => to_vec(howamoko_art(mood, frame)),
+        // Stage 2 - Bouken type
+        "クルル" => to_vec(kururu_art(mood, frame)),
+        "トゲたろう" => to_vec(togetarou_art(mood, frame)),
+        "ハネオ" => to_vec(haneo_art(mood, frame)),
+        "ビョーン" => to_vec(byoon_art(mood, frame)),
+        "ダッシュ" => to_vec(dashu_art(mood, frame)),
+        "グルグル" => to_vec(guruguru_art(mood, frame)),
+        // Stage 2 - Normal type
+        "ペタ" => to_vec(peta_art(mood, frame)),
+        "ノホホ" => to_vec(nohoho_art(mood, frame)),
+        "マジメ" => to_vec(majime_art(mood, frame)),
+        "フツウ" => to_vec(futsuu_art(mood, frame)),
+        "ナミナミ" => to_vec(naminami_art(mood, frame)),
+        "テキトー" => to_vec(tekitoo_art(mood, frame)),
+        // Stage 2 - Wild type
+        "メダマ" => to_vec(medama_art(mood, frame)),
+        "ケモノ" => to_vec(kemono_art(mood, frame)),
+        "ヌシ" => to_vec(nushi_art(mood, frame)),
+        "カゲ" => to_vec(kage_art(mood, frame)),
+        "ザワザワ" => to_vec(zawazawa_art(mood, frame)),
+        "ヒトダマ" => to_vec(hitodama_art(mood, frame)),
         _ => compose_idle(species, mood, frame),
     }
 }
@@ -75,6 +110,41 @@ pub fn get_action_art(species: &str, action: Action, frame: usize) -> Vec<String
         "ボテ" => to_vec(bote_action(action, frame)),
         "ピリリ" => to_vec(piriri_action(action, frame)),
         "モグモ" => to_vec(mogumo_action(action, frame)),
+        // Stage 2 - Chikara type
+        "ドタン" => to_vec(dotan_action(action, frame)),
+        "ガシャ" => to_vec(gasha_action(action, frame)),
+        "ズンズン" => to_vec(zunzun_action(action, frame)),
+        "デカオ" => to_vec(dekao_action(action, frame)),
+        "ゴツモリ" => to_vec(gotsumori_action(action, frame)),
+        "ドンガメ" => to_vec(dongame_action(action, frame)),
+        // Stage 2 - Odayaka type
+        "ヒョロン" => to_vec(hyoron_action(action, frame)),
+        "フワモン" => to_vec(fuwamon_action(action, frame)),
+        "ユラリ" => to_vec(yurari_action(action, frame)),
+        "ネムタ" => to_vec(nemuta_action(action, frame)),
+        "ポワン" => to_vec(powan_action(action, frame)),
+        "ホワモコ" => to_vec(howamoko_action(action, frame)),
+        // Stage 2 - Bouken type
+        "クルル" => to_vec(kururu_action(action, frame)),
+        "トゲたろう" => to_vec(togetarou_action(action, frame)),
+        "ハネオ" => to_vec(haneo_action(action, frame)),
+        "ビョーン" => to_vec(byoon_action(action, frame)),
+        "ダッシュ" => to_vec(dashu_action(action, frame)),
+        "グルグル" => to_vec(guruguru_action(action, frame)),
+        // Stage 2 - Normal type
+        "ペタ" => to_vec(peta_action(action, frame)),
+        "ノホホ" => to_vec(nohoho_action(action, frame)),
+        "マジメ" => to_vec(majime_action(action, frame)),
+        "フツウ" => to_vec(futsuu_action(action, frame)),
+        "ナミナミ" => to_vec(naminami_action(action, frame)),
+        "テキトー" => to_vec(tekitoo_action(action, frame)),
+        // Stage 2 - Wild type
+        "メダマ" => to_vec(medama_action(action, frame)),
+        "ケモノ" => to_vec(kemono_action(action, frame)),
+        "ヌシ" => to_vec(nushi_action(action, frame)),
+        "カゲ" => to_vec(kage_action(action, frame)),
+        "ザワザワ" => to_vec(zawazawa_action(action, frame)),
+        "ヒトダマ" => to_vec(hitodama_action(action, frame)),
         _ => compose_action(species, action, frame),
     }
 }
@@ -375,15 +445,771 @@ fn mogumo_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
+// ===== Stage 2 Species Art (hand-crafted, 2-line each) =====
+
+// --- Chikara type ---
+
+// 1. ドタン - Muscular stomper with thick arms
+fn dotan_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  ᕙ(≧▽≧)ᕗ!", "    ╚╝╚╝", "", ""],
+        (MoodLevel::High, _) => &["", " !ᕙ(≧▽≧)ᕗ", "    ╚╝╚╝", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  ᕙ(・益・)ᕗ", "    ╚╝╚╝", "", ""],
+        (MoodLevel::Normal, _) => &["", "   ᕙ(・益・)ᕗ", "     ╚╝╚╝", "", ""],
+        (MoodLevel::Low, 0) => &["", "  ᕙ(￣_￣)ᕗ", "    ╚╝╚╝", "", ""],
+        (MoodLevel::Low, _) => &["", "  ᕙ(￣ ￣)ᕗ", "    ╚╝╚╝", "", ""],
+    }
+}
+
+fn dotan_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  ᕙ(・益・)ᕗﾉ", "    ╚╝╚╝", "", ""],
+        (Action::Talk, _) => &["", " ﾉᕙ(・益・)ᕗ", "    ╚╝╚╝", "", ""],
+        (Action::Play, 0) => &["", "  ᕙ(≧▽≧)ᕗ♪", "    ╚╝╚╝", "", ""],
+        (Action::Play, _) => &["", " ♪ᕙ(≧▽≧)ᕗ", "    ╚╝╚╝", "", ""],
+        (Action::Train, 0) => &["", "  ᕙ(≧益≧)ᕗ!!", "    ╚╝  ╚╝", "", ""],
+        (Action::Train, _) => &["", "  ᕙ(≧益≧)ᕗ", "   ╚╝╚╝", "", ""],
+        (Action::Relax, 0) => &["", "  ᕙ(˘_˘)ᕗ～", "    ╚╝╚╝", "", ""],
+        (Action::Relax, _) => &["", "  ᕙ(˘ ˘)ᕗ～z", "    ╚╝╚╝", "", ""],
+    }
+}
+
+// 2. ガシャ - Armored shell creature
+fn gasha_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  ┏(≧▽≧)┓!", "   ┗━━━┛", "", ""],
+        (MoodLevel::High, _) => &["", " !┏(≧▽≧)┓", "   ┗━━━┛", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  ┏(・ω・)┓", "   ┗━━━┛", "", ""],
+        (MoodLevel::Normal, _) => &["", "   ┏(・ω・)┓", "    ┗━━━┛", "", ""],
+        (MoodLevel::Low, 0) => &["", "  ┏(￣_￣)┓", "   ┗━━━┛", "", ""],
+        (MoodLevel::Low, _) => &["", "  ┏(￣ ￣)┓", "   ┗━━━┛", "", ""],
+    }
+}
+
+fn gasha_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  ┏(・ω・)┓ﾉ", "   ┗━━━┛", "", ""],
+        (Action::Talk, _) => &["", " ﾉ┏(・ω・)┓", "   ┗━━━┛", "", ""],
+        (Action::Play, 0) => &["", "  ┏(≧▽≧)┓♪", "   ┗━━━┛", "", ""],
+        (Action::Play, _) => &["", " ♪┏(≧▽≧)┓", "   ┗━━━┛", "", ""],
+        (Action::Train, 0) => &["", "  ┏(≧益≧)┓!!", "   ┗━━━━┛", "", ""],
+        (Action::Train, _) => &["", "  ┏(≧益≧)┓", "  ┗━━━━┛", "", ""],
+        (Action::Relax, 0) => &["", "  ┏(˘ω˘)┓～", "   ┗━━━┛", "", ""],
+        (Action::Relax, _) => &["", "  ┏(˘ ˘)┓～z", "   ┗━━━┛", "", ""],
+    }
+}
+
+// 3. ズンズン - Forward-charging marcher
+fn zunzun_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  >(°▽°)>!", "    /▓▓\\", "", ""],
+        (MoodLevel::High, _) => &["", "   >(°▽°)>!", "     /▓▓\\", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  >(°益°)>", "    /▓▓\\", "", ""],
+        (MoodLevel::Normal, _) => &["", "   >(°益°)>", "     /▓▓\\", "", ""],
+        (MoodLevel::Low, 0) => &["", "  >(°_°)>", "    /▓▓\\", "", ""],
+        (MoodLevel::Low, _) => &["", "  >(° °)>", "    /▓▓\\", "", ""],
+    }
+}
+
+fn zunzun_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  >(°益°)>ﾉ", "    /▓▓\\", "", ""],
+        (Action::Talk, _) => &["", " ﾉ>(°益°)>", "    /▓▓\\", "", ""],
+        (Action::Play, 0) => &["", "  >(°▽°)>♪", "    /▓▓\\", "", ""],
+        (Action::Play, _) => &["", " ♪>(°▽°)>", "     /▓▓\\", "", ""],
+        (Action::Train, 0) => &["", "  >>(°益°)>>!!", "     /▓▓\\", "", ""],
+        (Action::Train, _) => &["", "  >(°益°)>", "   /▓▓\\", "", ""],
+        (Action::Relax, 0) => &["", "  >(˘_˘)>～", "    /▓▓\\", "", ""],
+        (Action::Relax, _) => &["", "  >(˘ ˘)>～z", "    /▓▓\\", "", ""],
+    }
+}
+
+// 4. デカオ - Comically huge round face
+fn dekao_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ((◎▽◎))!", "     ωω", "", ""],
+        (MoodLevel::High, _) => &["", "!((◎▽◎))", "     ωω", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ((◎ω◎))", "     ωω", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ((◎ω◎))", "      ωω", "", ""],
+        (MoodLevel::Low, 0) => &["", " ((◎_◎))", "     ωω", "", ""],
+        (MoodLevel::Low, _) => &["", " ((◎ ◎))", "     ωω", "", ""],
+    }
+}
+
+fn dekao_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ((◎ω◎))ﾉ", "     ωω", "", ""],
+        (Action::Talk, _) => &["", "ﾉ((◎ω◎))", "     ωω", "", ""],
+        (Action::Play, 0) => &["", " ((◎▽◎))♪", "     ωω", "", ""],
+        (Action::Play, _) => &["", "♪((◎▽◎))", "     ωω", "", ""],
+        (Action::Train, 0) => &["", " ((◎益◎))9", "     ωω", "", ""],
+        (Action::Train, _) => &["", "9((◎益◎))", "     ωω", "", ""],
+        (Action::Relax, 0) => &["", " ((◎_◎))～", "     ωω", "", ""],
+        (Action::Relax, _) => &["", " ((◎ ◎))～z", "     ωω", "", ""],
+    }
+}
+
+// 5. ゴツモリ - Rocky armored creature
+fn gotsumori_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ◆(▲▽▲)◆!", "  ╚████╝", "", ""],
+        (MoodLevel::High, _) => &["", "!◆(▲▽▲)◆", "  ╚████╝", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ◆(▲益▲)◆", "  ╚████╝", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ◆(▲益▲)◆", "   ╚████╝", "", ""],
+        (MoodLevel::Low, 0) => &["", " ◆(▲_▲)◆", "  ╚████╝", "", ""],
+        (MoodLevel::Low, _) => &["", " ◆(▲ ▲)◆", "  ╚████╝", "", ""],
+    }
+}
+
+fn gotsumori_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ◆(▲益▲)◆ﾉ", "  ╚████╝", "", ""],
+        (Action::Talk, _) => &["", "ﾉ◆(▲益▲)◆", "  ╚████╝", "", ""],
+        (Action::Play, 0) => &["", " ◆(▲▽▲)◆♪", "  ╚████╝", "", ""],
+        (Action::Play, _) => &["", "♪◆(▲▽▲)◆", "  ╚████╝", "", ""],
+        (Action::Train, 0) => &["", " ◆(▲益▲)◆!!", "  ╚████╝", "", ""],
+        (Action::Train, _) => &["", " ◆(▲益▲)◆", " ╚████╝", "", ""],
+        (Action::Relax, 0) => &["", " ◆(▲_▲)◆～", "  ╚████╝", "", ""],
+        (Action::Relax, _) => &["", " ◆(▲ ▲)◆～z", "  ╚████╝", "", ""],
+    }
+}
+
+// 6. ドンガメ - Slow turtle with shell
+fn dongame_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (◎▽◎)⊃!", "  甲甲甲甲", "", ""],
+        (MoodLevel::High, _) => &["", " !(◎▽◎)⊃", "  甲甲甲甲", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (◎ω◎)⊃", "  甲甲甲甲", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (◎ω◎)⊃", "   甲甲甲甲", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (◎_◎)⊃", "  甲甲甲甲", "", ""],
+        (MoodLevel::Low, _) => &["", "  (◎ ◎)⊃", "  甲甲甲甲", "", ""],
+    }
+}
+
+fn dongame_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (◎ω◎)⊃ﾉ", "  甲甲甲甲", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(◎ω◎)⊃", "  甲甲甲甲", "", ""],
+        (Action::Play, 0) => &["", "  (◎▽◎)⊃♪", "  甲甲甲甲", "", ""],
+        (Action::Play, _) => &["", " ♪(◎▽◎)⊃", "   甲甲甲甲", "", ""],
+        (Action::Train, 0) => &["", "  (◎益◎)⊃!!", "  甲甲甲甲", "", ""],
+        (Action::Train, _) => &["", "  (◎益◎)⊃", "  甲甲甲甲", "", ""],
+        (Action::Relax, 0) => &["", "  (◎_◎)⊃～", "  甲甲甲甲", "", ""],
+        (Action::Relax, _) => &["", "  (◎ ◎)⊃～z", "  甲甲甲甲", "", ""],
+    }
+}
+
+// --- Odayaka type ---
+
+// 7. ヒョロン - Thin and lanky
+fn hyoron_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (˘▽˘)ﾉ♪", "   |  |", "", ""],
+        (MoodLevel::High, _) => &["", " ♪ﾉ(˘▽˘)", "    |  |", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (˘ᵕ˘)ﾉ", "   |  |", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (˘ᵕ˘)ﾉ", "    |  |", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (￣_￣)", "   |  |", "", ""],
+        (MoodLevel::Low, _) => &["", "  (￣ ￣)", "   |  |", "", ""],
+    }
+}
+
+fn hyoron_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (˘ᵕ˘)ﾉ", "   |  |", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(˘ᵕ˘)", "   |  |", "", ""],
+        (Action::Play, 0) => &["", "  (˘▽˘)ﾉ♪", "   |  |", "", ""],
+        (Action::Play, _) => &["", " ♪ﾉ(˘▽˘)", "    |  |", "", ""],
+        (Action::Train, 0) => &["", "  (˘益˘)9", "   |  |", "", ""],
+        (Action::Train, _) => &["", " 9(˘益˘)", "   |  |", "", ""],
+        (Action::Relax, 0) => &["", "  (˘_˘)～", "   |  |", "", ""],
+        (Action::Relax, _) => &["", "  (˘ ˘)～z", "   |  |", "", ""],
+    }
+}
+
+// 8. フワモン - Cloud-wrapped fluffy monster
+fn fuwamon_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ☁(≧▽≦)☁♪", "  ☁☁☁☁", "", ""],
+        (MoodLevel::High, _) => &["", "♪☁(≧▽≦)☁", "  ☁☁☁☁", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ☁(˘ω˘)☁", "  ☁☁☁☁", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ☁(˘ω˘)☁", "   ☁☁☁☁", "", ""],
+        (MoodLevel::Low, 0) => &["", " ☁(￣_￣)☁", "  ☁☁☁☁", "", ""],
+        (MoodLevel::Low, _) => &["", " ☁(￣ ￣)☁", "  ☁☁☁☁", "", ""],
+    }
+}
+
+fn fuwamon_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ☁(˘ω˘)☁ﾉ", "  ☁☁☁☁", "", ""],
+        (Action::Talk, _) => &["", "ﾉ☁(˘ω˘)☁", "  ☁☁☁☁", "", ""],
+        (Action::Play, 0) => &["", " ☁(≧▽≦)☁♪", "  ☁☁☁☁", "", ""],
+        (Action::Play, _) => &["", "♪☁(≧▽≦)☁", "   ☁☁☁☁", "", ""],
+        (Action::Train, 0) => &["", " ☁(≧益≦)☁!", "  ☁☁☁☁", "", ""],
+        (Action::Train, _) => &["", " ☁(≧益≦)☁", "  ☁☁☁☁", "", ""],
+        (Action::Relax, 0) => &["", " ☁(˘_˘)☁～", "  ☁☁☁☁", "", ""],
+        (Action::Relax, _) => &["", " ☁(˘ ˘)☁～z", "  ☁☁☁☁", "", ""],
+    }
+}
+
+// 9. ユラリ - Jellyfish-like swayer
+fn yurari_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ～(・▽・)～♪", "   ∫∫∫∫∫", "", ""],
+        (MoodLevel::High, _) => &["", "♪～(・▽・)～", "   ∫∫∫∫∫", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ～(・ᵕ・)～", "   ∫∫∫∫∫", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ～(・ᵕ・)～", "    ∫∫∫∫∫", "", ""],
+        (MoodLevel::Low, 0) => &["", " ～(・_・)～", "   ∫∫∫∫∫", "", ""],
+        (MoodLevel::Low, _) => &["", " ～(・ ・)～", "   ∫∫∫∫∫", "", ""],
+    }
+}
+
+fn yurari_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ～(・ᵕ・)～ﾉ", "   ∫∫∫∫∫", "", ""],
+        (Action::Talk, _) => &["", "ﾉ～(・ᵕ・)～", "   ∫∫∫∫∫", "", ""],
+        (Action::Play, 0) => &["", " ～(・▽・)～♪", "   ∫∫∫∫∫", "", ""],
+        (Action::Play, _) => &["", "♪～(・▽・)～", "    ∫∫∫∫∫", "", ""],
+        (Action::Train, 0) => &["", " ～(・益・)～!", "   ∫∫∫∫∫", "", ""],
+        (Action::Train, _) => &["", " ～(・益・)～", "   ∫∫∫∫∫", "", ""],
+        (Action::Relax, 0) => &["", " ～(・_・)～～", "   ∫∫∫∫∫", "", ""],
+        (Action::Relax, _) => &["", " ～(・ ・)～～z", "   ∫∫∫∫∫", "", ""],
+    }
+}
+
+// 10. ネムタ - Always sleepy, pudgy
+fn nemuta_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (˘▽˘)ﾉ!", "   ∪∪∪", "", ""],
+        (MoodLevel::High, _) => &["", " !ﾉ(˘▽˘)", "   ∪∪∪", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (˘o˘)zzZ", "   ∪∪∪", "", ""],
+        (MoodLevel::Normal, _) => &["", "  (˘o˘)zZ", "    ∪∪∪", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (￣o￣)zzZ", "   ∪∪∪", "", ""],
+        (MoodLevel::Low, _) => &["", "  (￣ ￣)zZ", "   ∪∪∪", "", ""],
+    }
+}
+
+fn nemuta_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (˘o˘)ﾉ", "   ∪∪∪", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(˘o˘)", "   ∪∪∪", "", ""],
+        (Action::Play, 0) => &["", "  (˘▽˘)ﾉ♪", "   ∪∪∪", "", ""],
+        (Action::Play, _) => &["", " ♪ﾉ(˘▽˘)", "   ∪∪∪", "", ""],
+        (Action::Train, 0) => &["", "  (˘益˘)9!", "   ∪∪∪", "", ""],
+        (Action::Train, _) => &["", " 9(˘益˘)", "   ∪∪∪", "", ""],
+        (Action::Relax, 0) => &["", "  (˘_˘)zzZ", "   ∪∪∪", "", ""],
+        (Action::Relax, _) => &["", "  (˘ ˘)zzZZ", "   ∪∪∪", "", ""],
+    }
+}
+
+// 11. ポワン - Dreamy bubble creature
+fn powan_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " °(˘▽˘)°♪", "   °○°○", "", ""],
+        (MoodLevel::High, _) => &["", "♪°(˘▽˘)°", "   °○°○", "", ""],
+        (MoodLevel::Normal, 0) => &["", " °(˘ᵕ˘)°", "   °○°○", "", ""],
+        (MoodLevel::Normal, _) => &["", "  °(˘ᵕ˘)°", "    °○°○", "", ""],
+        (MoodLevel::Low, 0) => &["", " °(￣_￣)°", "   °○°○", "", ""],
+        (MoodLevel::Low, _) => &["", " °(￣ ￣)°", "   °○°○", "", ""],
+    }
+}
+
+fn powan_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " °(˘ᵕ˘)°ﾉ", "   °○°○", "", ""],
+        (Action::Talk, _) => &["", "ﾉ°(˘ᵕ˘)°", "   °○°○", "", ""],
+        (Action::Play, 0) => &["", " °(˘▽˘)°♪", "   °○°○", "", ""],
+        (Action::Play, _) => &["", "♪°(˘▽˘)°", "    °○°○", "", ""],
+        (Action::Train, 0) => &["", " °(˘益˘)°!", "   °○°○", "", ""],
+        (Action::Train, _) => &["", " °(˘益˘)°", "   °○°○", "", ""],
+        (Action::Relax, 0) => &["", " °(˘_˘)°～", "   °○°○", "", ""],
+        (Action::Relax, _) => &["", " °(˘ ˘)°～z", "   °○°○", "", ""],
+    }
+}
+
+// 12. ホワモコ - Warm fluffy creature with ears
+fn howamoko_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ∩(˘▽˘)∩♪", "  ﾜﾜﾜﾜ", "", ""],
+        (MoodLevel::High, _) => &["", "♪∩(˘▽˘)∩", "  ﾜﾜﾜﾜ", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ∩(˘ω˘)∩", "  ﾜﾜﾜﾜ", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ∩(˘ω˘)∩", "   ﾜﾜﾜﾜ", "", ""],
+        (MoodLevel::Low, 0) => &["", " ∩(￣_￣)∩", "  ﾜﾜﾜﾜ", "", ""],
+        (MoodLevel::Low, _) => &["", " ∩(￣ ￣)∩", "  ﾜﾜﾜﾜ", "", ""],
+    }
+}
+
+fn howamoko_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ∩(˘ω˘)∩ﾉ", "  ﾜﾜﾜﾜ", "", ""],
+        (Action::Talk, _) => &["", "ﾉ∩(˘ω˘)∩", "  ﾜﾜﾜﾜ", "", ""],
+        (Action::Play, 0) => &["", " ∩(˘▽˘)∩♪", "  ﾜﾜﾜﾜ", "", ""],
+        (Action::Play, _) => &["", "♪∩(˘▽˘)∩", "   ﾜﾜﾜﾜ", "", ""],
+        (Action::Train, 0) => &["", " ∩(˘益˘)∩!", "  ﾜﾜﾜﾜ", "", ""],
+        (Action::Train, _) => &["", " ∩(˘益˘)∩", "  ﾜﾜﾜﾜ", "", ""],
+        (Action::Relax, 0) => &["", " ∩(˘_˘)∩～", "  ﾜﾜﾜﾜ", "", ""],
+        (Action::Relax, _) => &["", " ∩(˘ ˘)∩～z", "  ﾜﾜﾜﾜ", "", ""],
+    }
+}
+
+// --- Bouken type ---
+
+// 13. クルル - Spinning wheel creature
+fn kururu_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ◎(・▽・)◎!", "   ○○○○", "", ""],
+        (MoodLevel::High, _) => &["", "!◎(・▽・)◎", "   ○○○○", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ◎(・∀・)◎", "   ○○○○", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ◎(・∀・)◎", "    ○○○○", "", ""],
+        (MoodLevel::Low, 0) => &["", " ◎(・_・)◎", "   ○○○○", "", ""],
+        (MoodLevel::Low, _) => &["", " ◎(・ ・)◎", "   ○○○○", "", ""],
+    }
+}
+
+fn kururu_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ◎(・∀・)◎ﾉ", "   ○○○○", "", ""],
+        (Action::Talk, _) => &["", "ﾉ◎(・∀・)◎", "   ○○○○", "", ""],
+        (Action::Play, 0) => &["", " ◎(・▽・)◎♪", "   ○○○○", "", ""],
+        (Action::Play, _) => &["", "♪◎(・▽・)◎", "    ○○○○", "", ""],
+        (Action::Train, 0) => &["", " ◎(・益・)◎!!", "   ○○○○", "", ""],
+        (Action::Train, _) => &["", " ◎(・益・)◎", "   ○○○○", "", ""],
+        (Action::Relax, 0) => &["", " ◎(・_・)◎～", "   ○○○○", "", ""],
+        (Action::Relax, _) => &["", " ◎(・ ・)◎～z", "   ○○○○", "", ""],
+    }
+}
+
+// 14. トゲたろう - Spiky adventurer
+fn togetarou_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " /{＞▽＜}\\!", "  ＞＜＞＜", "", ""],
+        (MoodLevel::High, _) => &["", "!/{＞▽＜}\\", "  ＞＜＞＜", "", ""],
+        (MoodLevel::Normal, 0) => &["", " /{＞ω＜}\\", "  ＞＜＞＜", "", ""],
+        (MoodLevel::Normal, _) => &["", "  /{＞ω＜}\\", "   ＞＜＞＜", "", ""],
+        (MoodLevel::Low, 0) => &["", " /{＞_＜}\\", "  ＞＜＞＜", "", ""],
+        (MoodLevel::Low, _) => &["", " /{＞ ＜}\\", "  ＞＜＞＜", "", ""],
+    }
+}
+
+fn togetarou_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " /{＞ω＜}\\ﾉ", "  ＞＜＞＜", "", ""],
+        (Action::Talk, _) => &["", "ﾉ/{＞ω＜}\\", "  ＞＜＞＜", "", ""],
+        (Action::Play, 0) => &["", " /{＞▽＜}\\♪", "  ＞＜＞＜", "", ""],
+        (Action::Play, _) => &["", "♪/{＞▽＜}\\", "   ＞＜＞＜", "", ""],
+        (Action::Train, 0) => &["", " /{＞益＜}\\!!", "  ＞＜＞＜", "", ""],
+        (Action::Train, _) => &["", " /{＞益＜}\\", "  ＞＜＞＜", "", ""],
+        (Action::Relax, 0) => &["", " /{＞_＜}\\～", "  ＞＜＞＜", "", ""],
+        (Action::Relax, _) => &["", " /{＞ ＜}\\～z", "  ＞＜＞＜", "", ""],
+    }
+}
+
+// 15. ハネオ - Winged creature
+fn haneo_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " 彡(・▽・)彡♪", "     ∧∧", "", ""],
+        (MoodLevel::High, _) => &["", "♪彡(・▽・)彡", "     ∧∧", "", ""],
+        (MoodLevel::Normal, 0) => &["", " 彡(・ω・)彡", "     ∧∧", "", ""],
+        (MoodLevel::Normal, _) => &["", "  彡(・ω・)彡", "      ∧∧", "", ""],
+        (MoodLevel::Low, 0) => &["", " 彡(・_・)彡", "     ∧∧", "", ""],
+        (MoodLevel::Low, _) => &["", " 彡(・ ・)彡", "     ∧∧", "", ""],
+    }
+}
+
+fn haneo_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " 彡(・ω・)彡ﾉ", "     ∧∧", "", ""],
+        (Action::Talk, _) => &["", "ﾉ彡(・ω・)彡", "     ∧∧", "", ""],
+        (Action::Play, 0) => &["", " 彡(・▽・)彡♪", "     ∧∧", "", ""],
+        (Action::Play, _) => &["", "♪彡(・▽・)彡", "      ∧∧", "", ""],
+        (Action::Train, 0) => &["", " 彡(・益・)彡!!", "     ∧∧", "", ""],
+        (Action::Train, _) => &["", " 彡(・益・)彡", "     ∧∧", "", ""],
+        (Action::Relax, 0) => &["", " 彡(・_・)彡～", "     ∧∧", "", ""],
+        (Action::Relax, _) => &["", " 彡(・ ・)彡～z", "     ∧∧", "", ""],
+    }
+}
+
+// 16. ビョーン - Bouncy spring creature
+fn byoon_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (＞◡＜)!", "   ∞∞∞∞", "", ""],
+        (MoodLevel::High, _) => &["", "  !(＞◡＜)", "    ∞∞∞∞", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (・◡・)", "   ∞∞∞∞", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (・◡・)", "    ∞∞∞∞", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (・_・)", "   ∞∞∞∞", "", ""],
+        (MoodLevel::Low, _) => &["", "  (・ ・)", "   ∞∞∞∞", "", ""],
+    }
+}
+
+fn byoon_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (・◡・)ﾉ", "   ∞∞∞∞", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(・◡・)", "   ∞∞∞∞", "", ""],
+        (Action::Play, 0) => &["", "  (＞◡＜)♪", "   ∞∞∞∞", "", ""],
+        (Action::Play, _) => &["", " ♪(＞◡＜)", "    ∞∞∞∞", "", ""],
+        (Action::Train, 0) => &["", "  (＞益＜)!!", "   ∞∞∞∞", "", ""],
+        (Action::Train, _) => &["", "  (＞益＜)", "   ∞∞∞∞", "", ""],
+        (Action::Relax, 0) => &["", "  (・_・)～", "   ∞∞∞∞", "", ""],
+        (Action::Relax, _) => &["", "  (・ ・)～z", "   ∞∞∞∞", "", ""],
+    }
+}
+
+// 17. ダッシュ - Speed runner with motion lines
+fn dashu_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ≫(°▽°)⊃!", "    ⊂⊃", "", ""],
+        (MoodLevel::High, _) => &["", "  ≫(°▽°)⊃!", "     ⊂⊃", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ≫(°∀°)⊃", "    ⊂⊃", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ≫(°∀°)⊃", "     ⊂⊃", "", ""],
+        (MoodLevel::Low, 0) => &["", " ≫(°_°)⊃", "    ⊂⊃", "", ""],
+        (MoodLevel::Low, _) => &["", " ≫(° °)⊃", "    ⊂⊃", "", ""],
+    }
+}
+
+fn dashu_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ≫(°∀°)⊃ﾉ", "    ⊂⊃", "", ""],
+        (Action::Talk, _) => &["", "ﾉ≫(°∀°)⊃", "    ⊂⊃", "", ""],
+        (Action::Play, 0) => &["", " ≫(°▽°)⊃♪", "    ⊂⊃", "", ""],
+        (Action::Play, _) => &["", "♪≫(°▽°)⊃", "     ⊂⊃", "", ""],
+        (Action::Train, 0) => &["", " ≫≫(°益°)⊃!!", "      ⊂⊃", "", ""],
+        (Action::Train, _) => &["", " ≫(°益°)⊃", "    ⊂⊃", "", ""],
+        (Action::Relax, 0) => &["", " ≫(°_°)⊃～", "    ⊂⊃", "", ""],
+        (Action::Relax, _) => &["", " ≫(° °)⊃～z", "    ⊂⊃", "", ""],
+    }
+}
+
+// 18. グルグル - Spiral spinning creature
+fn guruguru_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " @(・▽・)@♪", "   ～～～", "", ""],
+        (MoodLevel::High, _) => &["", "♪@(・▽・)@", "   ～～～", "", ""],
+        (MoodLevel::Normal, 0) => &["", " @(・ω・)@", "   ～～～", "", ""],
+        (MoodLevel::Normal, _) => &["", "  @(・ω・)@", "    ～～～", "", ""],
+        (MoodLevel::Low, 0) => &["", " @(・_・)@", "   ～～～", "", ""],
+        (MoodLevel::Low, _) => &["", " @(・ ・)@", "   ～～～", "", ""],
+    }
+}
+
+fn guruguru_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " @(・ω・)@ﾉ", "   ～～～", "", ""],
+        (Action::Talk, _) => &["", "ﾉ@(・ω・)@", "   ～～～", "", ""],
+        (Action::Play, 0) => &["", " @(・▽・)@♪", "   ～～～", "", ""],
+        (Action::Play, _) => &["", "♪@(・▽・)@", "    ～～～", "", ""],
+        (Action::Train, 0) => &["", " @(・益・)@!!", "   ～～～", "", ""],
+        (Action::Train, _) => &["", " @(・益・)@", "   ～～～", "", ""],
+        (Action::Relax, 0) => &["", " @(・_・)@～", "   ～～～", "", ""],
+        (Action::Relax, _) => &["", " @(・ ・)@～z", "   ～～～", "", ""],
+    }
+}
+
+// --- Normal type ---
+
+// 19. ペタ - Flat, spread out on ground
+fn peta_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (´・▽・`)♪", "  ＝＝＝＝", "", ""],
+        (MoodLevel::High, _) => &["", " ♪(´・▽・`)", "  ＝＝＝＝", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (´・ω・`)", "  ＝＝＝＝", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (´・ω・`)", "   ＝＝＝＝", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (´・_・`)", "  ＝＝＝＝", "", ""],
+        (MoodLevel::Low, _) => &["", "  (´・ ・`)", "  ＝＝＝＝", "", ""],
+    }
+}
+
+fn peta_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (´・ω・`)ﾉ", "  ＝＝＝＝", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(´・ω・`)", "  ＝＝＝＝", "", ""],
+        (Action::Play, 0) => &["", "  (´・▽・`)♪", "  ＝＝＝＝", "", ""],
+        (Action::Play, _) => &["", " ♪(´・▽・`)", "   ＝＝＝＝", "", ""],
+        (Action::Train, 0) => &["", "  (´・益・`)9", "  ＝＝＝＝", "", ""],
+        (Action::Train, _) => &["", " 9(´・益・`)", "  ＝＝＝＝", "", ""],
+        (Action::Relax, 0) => &["", "  (´・_・`)～", "  ＝＝＝＝", "", ""],
+        (Action::Relax, _) => &["", "  (´・ ・`)～z", "  ＝＝＝＝", "", ""],
+    }
+}
+
+// 20. ノホホ - Carefree, relaxed posture
+fn nohoho_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (˘▽˘)ﾉ♪", "   / \\", "", ""],
+        (MoodLevel::High, _) => &["", " ♪ﾉ(˘▽˘)", "    / \\", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (˘ω˘)ﾉ", "   / \\", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (˘ω˘)ﾉ", "    / \\", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (˘_˘)", "   / \\", "", ""],
+        (MoodLevel::Low, _) => &["", "  (˘ ˘)", "   / \\", "", ""],
+    }
+}
+
+fn nohoho_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (˘ω˘)ﾉ", "   / \\", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(˘ω˘)", "   / \\", "", ""],
+        (Action::Play, 0) => &["", "  (˘▽˘)ﾉ♪", "   / \\", "", ""],
+        (Action::Play, _) => &["", " ♪ﾉ(˘▽˘)", "    / \\", "", ""],
+        (Action::Train, 0) => &["", "  (˘益˘)9", "   / \\", "", ""],
+        (Action::Train, _) => &["", " 9(˘益˘)", "   / \\", "", ""],
+        (Action::Relax, 0) => &["", "  (˘_˘)～", "   / \\", "", ""],
+        (Action::Relax, _) => &["", "  (˘ ˘)～z", "   / \\", "", ""],
+    }
+}
+
+// 21. マジメ - Serious, rigid square posture
+fn majime_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  [・▽・]!", "   || ||", "", ""],
+        (MoodLevel::High, _) => &["", " ![・▽・]", "   || ||", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  [・_・]", "   || ||", "", ""],
+        (MoodLevel::Normal, _) => &["", "   [・_・]", "    || ||", "", ""],
+        (MoodLevel::Low, 0) => &["", "  [￣_￣]", "   || ||", "", ""],
+        (MoodLevel::Low, _) => &["", "  [￣ ￣]", "   || ||", "", ""],
+    }
+}
+
+fn majime_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  [・_・]ﾉ", "   || ||", "", ""],
+        (Action::Talk, _) => &["", " ﾉ[・_・]", "   || ||", "", ""],
+        (Action::Play, 0) => &["", "  [・▽・]♪", "   || ||", "", ""],
+        (Action::Play, _) => &["", " ♪[・▽・]", "    || ||", "", ""],
+        (Action::Train, 0) => &["", "  [・益・]9!", "   || ||", "", ""],
+        (Action::Train, _) => &["", " 9[・益・]", "   || ||", "", ""],
+        (Action::Relax, 0) => &["", "  [・_・]～", "   || ||", "", ""],
+        (Action::Relax, _) => &["", "  [・ ・]～z", "   || ||", "", ""],
+    }
+}
+
+// 22. フツウ - The most ordinary creature
+fn futsuu_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (・▽・)ﾉ!", "   ∪ ∪", "", ""],
+        (MoodLevel::High, _) => &["", " !ﾉ(・▽・)", "    ∪ ∪", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (・ω・)", "   ∪ ∪", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (・ω・)", "    ∪ ∪", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (・_・)", "   ∪ ∪", "", ""],
+        (MoodLevel::Low, _) => &["", "  (・ ・)", "   ∪ ∪", "", ""],
+    }
+}
+
+fn futsuu_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (・ω・)ﾉ", "   ∪ ∪", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(・ω・)", "   ∪ ∪", "", ""],
+        (Action::Play, 0) => &["", "  (・▽・)♪", "   ∪ ∪", "", ""],
+        (Action::Play, _) => &["", " ♪(・▽・)", "    ∪ ∪", "", ""],
+        (Action::Train, 0) => &["", "  (・益・)9", "   ∪ ∪", "", ""],
+        (Action::Train, _) => &["", " 9(・益・)", "   ∪ ∪", "", ""],
+        (Action::Relax, 0) => &["", "  (・_・)～", "   ∪ ∪", "", ""],
+        (Action::Relax, _) => &["", "  (・ ・)～z", "   ∪ ∪", "", ""],
+    }
+}
+
+// 23. ナミナミ - Wavy, fluid body
+fn naminami_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (˘▽˘)♪", "  ～～～～", "", ""],
+        (MoodLevel::High, _) => &["", " ♪(˘▽˘)", "  ～～～～", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (˘ω˘)", "  ～～～～", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (˘ω˘)", "   ～～～～", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (˘_˘)", "  ～～～～", "", ""],
+        (MoodLevel::Low, _) => &["", "  (˘ ˘)", "  ～～～～", "", ""],
+    }
+}
+
+fn naminami_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (˘ω˘)ﾉ", "  ～～～～", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(˘ω˘)", "  ～～～～", "", ""],
+        (Action::Play, 0) => &["", "  (˘▽˘)♪", "  ～～～～", "", ""],
+        (Action::Play, _) => &["", " ♪(˘▽˘)", "   ～～～～", "", ""],
+        (Action::Train, 0) => &["", "  (˘益˘)9", "  ～～～～", "", ""],
+        (Action::Train, _) => &["", " 9(˘益˘)", "  ～～～～", "", ""],
+        (Action::Relax, 0) => &["", "  (˘_˘)～", "  ～～～～", "", ""],
+        (Action::Relax, _) => &["", "  (˘ ˘)～z", "  ～～～～", "", ""],
+    }
+}
+
+// 24. テキトー - Slouchy, casual creature
+fn tekitoo_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", "  (´▽`)ﾉ♪", "   _/\\_", "", ""],
+        (MoodLevel::High, _) => &["", " ♪ﾉ(´▽`)", "    _/\\_", "", ""],
+        (MoodLevel::Normal, 0) => &["", "  (´ω`)>", "   _/\\_", "", ""],
+        (MoodLevel::Normal, _) => &["", "   (´ω`)>", "    _/\\_", "", ""],
+        (MoodLevel::Low, 0) => &["", "  (´_`)", "   _/\\_", "", ""],
+        (MoodLevel::Low, _) => &["", "  (´ `)", "   _/\\_", "", ""],
+    }
+}
+
+fn tekitoo_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", "  (´ω`)>ﾉ", "   _/\\_", "", ""],
+        (Action::Talk, _) => &["", " ﾉ(´ω`)>", "   _/\\_", "", ""],
+        (Action::Play, 0) => &["", "  (´▽`)>♪", "   _/\\_", "", ""],
+        (Action::Play, _) => &["", " ♪(´▽`)>", "    _/\\_", "", ""],
+        (Action::Train, 0) => &["", "  (´益`)>9", "   _/\\_", "", ""],
+        (Action::Train, _) => &["", " 9(´益`)>", "   _/\\_", "", ""],
+        (Action::Relax, 0) => &["", "  (´_`)>～", "   _/\\_", "", ""],
+        (Action::Relax, _) => &["", "  (´ `)>～z", "   _/\\_", "", ""],
+    }
+}
+
+// --- Wild type ---
+
+// 25. メダマ - Giant eyeball creature
+fn medama_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ◎(⊙▽⊙)◎!", "   ┃┃┃┃", "", ""],
+        (MoodLevel::High, _) => &["", "!◎(⊙▽⊙)◎", "   ┃┃┃┃", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ◎(⊙_⊙)◎", "   ┃┃┃┃", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ◎(⊙_⊙)◎", "    ┃┃┃┃", "", ""],
+        (MoodLevel::Low, 0) => &["", " ◎(⊙ ⊙)◎", "   ┃┃┃┃", "", ""],
+        (MoodLevel::Low, _) => &["", " ◎(- -)◎", "   ┃┃┃┃", "", ""],
+    }
+}
+
+fn medama_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ◎(⊙_⊙)◎ﾉ", "   ┃┃┃┃", "", ""],
+        (Action::Talk, _) => &["", "ﾉ◎(⊙_⊙)◎", "   ┃┃┃┃", "", ""],
+        (Action::Play, 0) => &["", " ◎(⊙▽⊙)◎♪", "   ┃┃┃┃", "", ""],
+        (Action::Play, _) => &["", "♪◎(⊙▽⊙)◎", "    ┃┃┃┃", "", ""],
+        (Action::Train, 0) => &["", " ◎(⊙益⊙)◎!!", "   ┃┃┃┃", "", ""],
+        (Action::Train, _) => &["", " ◎(⊙益⊙)◎", "   ┃┃┃┃", "", ""],
+        (Action::Relax, 0) => &["", " ◎(⊙_⊙)◎～", "   ┃┃┃┃", "", ""],
+        (Action::Relax, _) => &["", " ◎(- -)◎～z", "   ┃┃┃┃", "", ""],
+    }
+}
+
+// 26. ケモノ - Feral beast with fangs
+fn kemono_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " 牙(⊙▽⊙)牙!", "   爪爪爪", "", ""],
+        (MoodLevel::High, _) => &["", "!牙(⊙▽⊙)牙", "   爪爪爪", "", ""],
+        (MoodLevel::Normal, 0) => &["", " 牙(⊙ω⊙)牙", "   爪爪爪", "", ""],
+        (MoodLevel::Normal, _) => &["", "  牙(⊙ω⊙)牙", "    爪爪爪", "", ""],
+        (MoodLevel::Low, 0) => &["", " 牙(⊙_⊙)牙", "   爪爪爪", "", ""],
+        (MoodLevel::Low, _) => &["", " 牙(- -)牙", "   爪爪爪", "", ""],
+    }
+}
+
+fn kemono_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " 牙(⊙ω⊙)牙ﾉ", "   爪爪爪", "", ""],
+        (Action::Talk, _) => &["", "ﾉ牙(⊙ω⊙)牙", "   爪爪爪", "", ""],
+        (Action::Play, 0) => &["", " 牙(⊙▽⊙)牙♪", "   爪爪爪", "", ""],
+        (Action::Play, _) => &["", "♪牙(⊙▽⊙)牙", "    爪爪爪", "", ""],
+        (Action::Train, 0) => &["", " 牙(⊙益⊙)牙!!", "   爪爪爪", "", ""],
+        (Action::Train, _) => &["", " 牙(⊙益⊙)牙", "   爪爪爪", "", ""],
+        (Action::Relax, 0) => &["", " 牙(⊙_⊙)牙～", "   爪爪爪", "", ""],
+        (Action::Relax, _) => &["", " 牙(- -)牙～z", "   爪爪爪", "", ""],
+    }
+}
+
+// 27. ヌシ - Imposing boss creature with crown
+fn nushi_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " 王(⊙▽⊙)王!", "  ╠████╣", "", ""],
+        (MoodLevel::High, _) => &["", "!王(⊙▽⊙)王", "  ╠████╣", "", ""],
+        (MoodLevel::Normal, 0) => &["", " 王(⊙益⊙)王", "  ╠████╣", "", ""],
+        (MoodLevel::Normal, _) => &["", "  王(⊙益⊙)王", "   ╠████╣", "", ""],
+        (MoodLevel::Low, 0) => &["", " 王(⊙_⊙)王", "  ╠████╣", "", ""],
+        (MoodLevel::Low, _) => &["", " 王(- -)王", "  ╠████╣", "", ""],
+    }
+}
+
+fn nushi_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " 王(⊙益⊙)王ﾉ", "  ╠████╣", "", ""],
+        (Action::Talk, _) => &["", "ﾉ王(⊙益⊙)王", "  ╠████╣", "", ""],
+        (Action::Play, 0) => &["", " 王(⊙▽⊙)王♪", "  ╠████╣", "", ""],
+        (Action::Play, _) => &["", "♪王(⊙▽⊙)王", "   ╠████╣", "", ""],
+        (Action::Train, 0) => &["", " 王(⊙益⊙)王!!", "  ╠████╣", "", ""],
+        (Action::Train, _) => &["", " 王(⊙益⊙)王", "  ╠████╣", "", ""],
+        (Action::Relax, 0) => &["", " 王(⊙_⊙)王～", "  ╠████╣", "", ""],
+        (Action::Relax, _) => &["", " 王(- -)王～z", "  ╠████╣", "", ""],
+    }
+}
+
+// 28. カゲ - Shadowy, barely visible creature
+fn kage_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ░(⊙▽⊙)░!", "   ▓▓▓▓", "", ""],
+        (MoodLevel::High, _) => &["", "!░(⊙▽⊙)░", "   ▓▓▓▓", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ░(⊙_⊙)░", "   ▓▓▓▓", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ░(⊙_⊙)░", "    ▓▓▓▓", "", ""],
+        (MoodLevel::Low, 0) => &["", " ░(- -)░", "   ▓▓▓▓", "", ""],
+        (MoodLevel::Low, _) => &["", " ░(  )░", "   ▓▓▓▓", "", ""],
+    }
+}
+
+fn kage_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ░(⊙_⊙)░ﾉ", "   ▓▓▓▓", "", ""],
+        (Action::Talk, _) => &["", "ﾉ░(⊙_⊙)░", "   ▓▓▓▓", "", ""],
+        (Action::Play, 0) => &["", " ░(⊙▽⊙)░♪", "   ▓▓▓▓", "", ""],
+        (Action::Play, _) => &["", "♪░(⊙▽⊙)░", "    ▓▓▓▓", "", ""],
+        (Action::Train, 0) => &["", " ░(⊙益⊙)░!!", "   ▓▓▓▓", "", ""],
+        (Action::Train, _) => &["", " ░(⊙益⊙)░", "   ▓▓▓▓", "", ""],
+        (Action::Relax, 0) => &["", " ░(⊙_⊙)░～", "   ▓▓▓▓", "", ""],
+        (Action::Relax, _) => &["", " ░(- -)░～z", "   ▓▓▓▓", "", ""],
+    }
+}
+
+// 29. ザワザワ - Eerie creature with many appendages
+fn zawazawa_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " ψ(⊙▽⊙)ψ!", "  ∫∫∫∫∫", "", ""],
+        (MoodLevel::High, _) => &["", "!ψ(⊙▽⊙)ψ", "  ∫∫∫∫∫", "", ""],
+        (MoodLevel::Normal, 0) => &["", " ψ(⊙_⊙)ψ", "  ∫∫∫∫∫", "", ""],
+        (MoodLevel::Normal, _) => &["", "  ψ(⊙_⊙)ψ", "   ∫∫∫∫∫", "", ""],
+        (MoodLevel::Low, 0) => &["", " ψ(- -)ψ", "  ∫∫∫∫∫", "", ""],
+        (MoodLevel::Low, _) => &["", " ψ(  )ψ", "  ∫∫∫∫∫", "", ""],
+    }
+}
+
+fn zawazawa_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " ψ(⊙_⊙)ψﾉ", "  ∫∫∫∫∫", "", ""],
+        (Action::Talk, _) => &["", "ﾉψ(⊙_⊙)ψ", "  ∫∫∫∫∫", "", ""],
+        (Action::Play, 0) => &["", " ψ(⊙▽⊙)ψ♪", "  ∫∫∫∫∫", "", ""],
+        (Action::Play, _) => &["", "♪ψ(⊙▽⊙)ψ", "   ∫∫∫∫∫", "", ""],
+        (Action::Train, 0) => &["", " ψ(⊙益⊙)ψ!!", "  ∫∫∫∫∫", "", ""],
+        (Action::Train, _) => &["", " ψ(⊙益⊙)ψ", "  ∫∫∫∫∫", "", ""],
+        (Action::Relax, 0) => &["", " ψ(⊙_⊙)ψ～", "  ∫∫∫∫∫", "", ""],
+        (Action::Relax, _) => &["", " ψ(- -)ψ～z", "  ∫∫∫∫∫", "", ""],
+    }
+}
+
+// 30. ヒトダマ - Ghost fire, floating will-o-wisp
+fn hitodama_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
+    match (mood, frame % 2) {
+        (MoodLevel::High, 0) => &["", " *(⊙▽⊙)*♪", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (MoodLevel::High, _) => &["", "♪*(⊙▽⊙)*", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (MoodLevel::Normal, 0) => &["", " *(⊙o⊙)*", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (MoodLevel::Normal, _) => &["", "  *(⊙o⊙)*", "    ﾟ.ﾟ.ﾟ", "", ""],
+        (MoodLevel::Low, 0) => &["", " *(- -)*", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (MoodLevel::Low, _) => &["", " *(  )*", "   ﾟ.ﾟ.ﾟ", "", ""],
+    }
+}
+
+fn hitodama_action(action: Action, frame: usize) -> &'static [&'static str] {
+    match (action, frame % 2) {
+        (Action::Talk, 0) => &["", " *(⊙o⊙)*ﾉ", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Talk, _) => &["", "ﾉ*(⊙o⊙)*", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Play, 0) => &["", " *(⊙▽⊙)*♪", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Play, _) => &["", "♪*(⊙▽⊙)*", "    ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Train, 0) => &["", " *(⊙益⊙)*!!", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Train, _) => &["", " *(⊙益⊙)*", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Relax, 0) => &["", " *(⊙_⊙)*～", "   ﾟ.ﾟ.ﾟ", "", ""],
+        (Action::Relax, _) => &["", " *(- -)*～z", "   ﾟ.ﾟ.ﾟ", "", ""],
+    }
+}
+
 // =====================================================================
-// Composable Art System for Stage 2+ (unique visuals per species)
+// Composable Art System for Stage 3+ (unique visuals per species)
 // =====================================================================
-//
-// Each species gets a unique visual through component combination:
-// - Face: unique eye characters per species (selected by index within group)
-// - Body: arm decorations, head/body/legs template (varies by evo type + sub-variant)
-//
-// Index within group is deterministic: based on position in the species array.
 
 // --- Face component ---
 struct FC {
