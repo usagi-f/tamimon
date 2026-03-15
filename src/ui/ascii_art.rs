@@ -62,7 +62,12 @@ pub fn get_art(species: &str, mood: MoodLevel, frame: usize) -> Vec<String> {
         "カゲ" => to_vec(kage_art(mood, frame)),
         "ザワザワ" => to_vec(zawazawa_art(mood, frame)),
         "ヒトダマ" => to_vec(hitodama_art(mood, frame)),
-        _ => compose_idle(species, mood, frame),
+        _ => {
+            if let Some(art) = super::ascii_art_s3::get_s3_art(species, mood, frame) {
+                return art;
+            }
+            compose_idle(species, mood, frame)
+        }
     }
 }
 
@@ -145,7 +150,12 @@ pub fn get_action_art(species: &str, action: Action, frame: usize) -> Vec<String
         "カゲ" => to_vec(kage_action(action, frame)),
         "ザワザワ" => to_vec(zawazawa_action(action, frame)),
         "ヒトダマ" => to_vec(hitodama_action(action, frame)),
-        _ => compose_action(species, action, frame),
+        _ => {
+            if let Some(art) = super::ascii_art_s3::get_s3_action_art(species, action, frame) {
+                return art;
+            }
+            compose_action(species, action, frame)
+        }
     }
 }
 
