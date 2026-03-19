@@ -443,29 +443,7 @@ pub fn get_standard_weight(species: &str) -> Option<f64> {
     None
 }
 
-/// Get evolution type from species name (Stage2: direct, Stage3/4: inferred from ancestors)
-pub fn get_evo_type(species: &str) -> Option<EvoType> {
-    for s in STAGE2_SPECIES {
-        if s.name == species {
-            return Some(s.evo_type);
-        }
-    }
-    for s in STAGE3_SPECIES {
-        if s.name == species {
-            if let Some(first_from) = s.allowed_from.first() {
-                return get_evo_type(first_from);
-            }
-        }
-    }
-    for s in STAGE4_SPECIES {
-        if s.name == species {
-            if let Some(first_from) = s.allowed_from.first() {
-                return get_evo_type(first_from);
-            }
-        }
-    }
-    None
-}
+
 
 /// Get stage number from species name
 pub fn get_stage(species: &str) -> Option<u8> {
