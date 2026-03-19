@@ -3,7 +3,7 @@
 //! Delegates to stage-specific modules for hand-crafted art:
 //! - `ascii_art_s1`: Stage 1 (egg + 10 baby species)
 //! - `ascii_art_s2`: Stage 2 (30 species, 5 evo types × 6)
-//! - `ascii_art_s3`: Stage 3 (100 species)
+//! - `ascii_art_s3`: Stage 3 (80 species)
 //! - `ascii_art_s4`: Stage 4 (8 mutation species)
 
 use crate::game::actions::Action;

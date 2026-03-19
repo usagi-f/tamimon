@@ -17,9 +17,11 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use crate::game::actions::Action;
     use crate::game::evolution::all_species_names;
     use crate::game::pet::MoodLevel;
     use crate::ui::ascii_art;
+
     #[test]
     fn all_species_have_unique_idle_art() {
         let names = all_species_names();
@@ -38,6 +40,31 @@ mod tests {
 
         if !dupes.is_empty() {
             panic!("Duplicate idle art found ({} pairs):\n{}", dupes.len(), dupes.join("\n"));
+        }
+    }
+
+    #[test]
+    fn all_species_have_action_art() {
+        let names = all_species_names();
+        let actions = [Action::Talk, Action::Play, Action::Train, Action::Relax];
+        let mut missing = Vec::new();
+
+        for name in &names {
+            for action in &actions {
+                let art = ascii_art::get_action_art(name, *action, 0);
+                let joined = art.join("");
+                if joined.contains("？_？") {
+                    missing.push(format!("  {} / {:?}", name, action));
+                }
+            }
+        }
+
+        if !missing.is_empty() {
+            panic!(
+                "Species missing action art ({} entries):\n{}",
+                missing.len(),
+                missing.join("\n")
+            );
         }
     }
 }

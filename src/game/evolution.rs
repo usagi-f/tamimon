@@ -443,8 +443,6 @@ pub fn get_standard_weight(species: &str) -> Option<f64> {
     None
 }
 
-
-
 /// Get stage number from species name
 pub fn get_stage(species: &str) -> Option<u8> {
     for s in STAGE2_SPECIES {
