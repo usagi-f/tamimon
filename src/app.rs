@@ -21,13 +21,18 @@ use crate::game::voice;
 use crate::save;
 use crate::save::schema::{AlbumEntry, SaveData};
 use crate::ui::{album, ascii_art, main_screen, naming};
+#[cfg(debug_assertions)]
+use crate::ui::debug_album;
 
 pub enum AppMode {
     Startup,
     Naming { input: String, farewell_name: Option<String> },
     Main,
+    ActionAnimation,
     ActionReaction,
     Album,
+    #[cfg(debug_assertions)]
+    DebugAlbum,
     Death,
     Evolution,
 }
@@ -52,10 +57,13 @@ pub struct AppState {
     pub speech_text: String,
     pub startup_info: Option<StartupInfo>,
     pub action_result: Option<ActionResult>,
+    pub action_animation_start: Option<Instant>,
     pub death_message: Option<String>,
     pub death_pet_name: Option<String>,
     pub evolution_message: Option<String>,
     pub album_state: album::AlbumState,
+    #[cfg(debug_assertions)]
+    pub debug_album_state: debug_album::DebugAlbumState,
     pub rng: ThreadRng,
 }
 
@@ -168,10 +176,13 @@ pub async fn run() -> Result<()> {
         speech_text,
         startup_info,
         action_result: None,
+        action_animation_start: None,
         death_message: None,
         death_pet_name: startup_death_pet_name,
         evolution_message: None,
         album_state: album::AlbumState::new(),
+        #[cfg(debug_assertions)]
+        debug_album_state: debug_album::DebugAlbumState::new(),
         rng: rand::thread_rng(),
     };
 
@@ -218,6 +229,16 @@ async fn run_loop(
             }
         }
 
+        // Auto-transition: ActionAnimation → ActionReaction after 2.5s
+        if matches!(state.mode, AppMode::ActionAnimation) {
+            if let Some(start) = state.action_animation_start {
+                if start.elapsed() >= Duration::from_millis(2500) {
+                    state.action_animation_start = None;
+                    state.mode = AppMode::ActionReaction;
+                }
+            }
+        }
+
         // Update animation frame (~2fps)
         if state.last_frame_time.elapsed() >= Duration::from_millis(500) {
             state.animation_frame = state.animation_frame.wrapping_add(1);
@@ -237,11 +258,18 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         AppMode::Main => {
             main_screen::render_main(f, state);
         }
+        AppMode::ActionAnimation => {
+            main_screen::render_action_animation(f, state);
+        }
         AppMode::ActionReaction => {
             main_screen::render_action_reaction(f, state);
         }
         AppMode::Album => {
             album::render_album(f, &state.save_data, &state.album_state);
+        }
+        #[cfg(debug_assertions)]
+        AppMode::DebugAlbum => {
+            debug_album::render_debug_album(f, &state.debug_album_state, state.animation_frame);
         }
         AppMode::Death => {
             render_death(f, state);
@@ -429,11 +457,21 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                 state.album_state = album::AlbumState::new();
                 state.mode = AppMode::Album;
             }
+            #[cfg(debug_assertions)]
+            KeyCode::Char('d') | KeyCode::Char('D') => {
+                state.debug_album_state = debug_album::DebugAlbumState::new();
+                state.mode = AppMode::DebugAlbum;
+            }
             KeyCode::Char('q') | KeyCode::Char('Q') => {
                 return Ok(InputResult::Quit);
             }
             _ => {}
         },
+        AppMode::ActionAnimation => {
+            // Any key → skip animation, go straight to result
+            state.action_animation_start = None;
+            state.mode = AppMode::ActionReaction;
+        }
         AppMode::ActionReaction => {
             // Any key → back to Main
             state.action_result = None;
@@ -454,6 +492,55 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             }
             _ => {}
         },
+        #[cfg(debug_assertions)]
+        AppMode::DebugAlbum => {
+            use debug_album::DebugAlbumView;
+            let ds = &mut state.debug_album_state;
+            match (&ds.view, key) {
+                // ── List view ──
+                (DebugAlbumView::List, KeyCode::Up) => {
+                    ds.cursor_up();
+                }
+                (DebugAlbumView::List, KeyCode::Down) => {
+                    let visible = 20; // approximate visible lines
+                    ds.cursor_down(visible);
+                }
+                (DebugAlbumView::List, KeyCode::Enter) => {
+                    ds.view = DebugAlbumView::Idle;
+                }
+                (DebugAlbumView::List, KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc) => {
+                    state.mode = AppMode::Main;
+                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                }
+                // ── Idle view ──
+                (DebugAlbumView::Idle, KeyCode::Left) => {
+                    ds.prev_species();
+                }
+                (DebugAlbumView::Idle, KeyCode::Right) => {
+                    ds.next_species();
+                }
+                (DebugAlbumView::Idle, KeyCode::Char('a') | KeyCode::Char('A')) => {
+                    ds.view = DebugAlbumView::Action { index: 0 };
+                }
+                (DebugAlbumView::Idle, KeyCode::Esc) => {
+                    ds.view = DebugAlbumView::List;
+                }
+                // ── Action view ──
+                (DebugAlbumView::Action { .. }, KeyCode::Right) => {
+                    ds.next_action();
+                }
+                (DebugAlbumView::Action { .. }, KeyCode::Left) => {
+                    ds.prev_action();
+                }
+                (DebugAlbumView::Action { .. }, KeyCode::Char('i') | KeyCode::Char('I')) => {
+                    ds.view = DebugAlbumView::Idle;
+                }
+                (DebugAlbumView::Action { .. }, KeyCode::Esc) => {
+                    ds.view = DebugAlbumView::List;
+                }
+                _ => {}
+            }
+        }
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
             // Get farewell name from death_pet_name (startup) or from live pet data
@@ -515,7 +602,8 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
                 action,
                 reaction_text: "（たまごは静かに揺れている…）".to_string(),
             });
-            state.mode = AppMode::ActionReaction;
+            state.action_animation_start = Some(Instant::now());
+            state.mode = AppMode::ActionAnimation;
             return Ok(());
         }
 
@@ -534,7 +622,8 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             action,
             reaction_text,
         });
-        state.mode = AppMode::ActionReaction;
+        state.action_animation_start = Some(Instant::now());
+        state.mode = AppMode::ActionAnimation;
 
         // Save after every action
         save::save(&state.save_data)?;

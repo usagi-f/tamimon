@@ -40,7 +40,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
 
     let header_line = Line::from(vec![
         Span::styled(
-            format!("  {}  ", nickname),
+            format!("  {}（{}）  ", nickname, pet.species),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ]);
@@ -102,9 +102,15 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
     f.render_widget(footer_block, chunks[2]);
 
     let footer_inner = inner_area(chunks[2], 0, 1);
+    #[cfg(not(debug_assertions))]
     let footer_lines = vec![
         Line::from("  [T]話しかける  [P]あそぶ  [R]特訓  [E]まったり"),
         Line::from("  [A]図鑑                                [Q]終了"),
+    ];
+    #[cfg(debug_assertions)]
+    let footer_lines = vec![
+        Line::from("  [T]話しかける  [P]あそぶ  [R]特訓  [E]まったり"),
+        Line::from("  [A]図鑑  [D]デバッグ図鑑                [Q]終了"),
     ];
     let footer = Paragraph::new(footer_lines);
     f.render_widget(footer, footer_inner);
@@ -221,6 +227,68 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
     f.render_widget(paragraph, f.area());
 }
 
+pub fn render_action_animation(
+    f: &mut Frame,
+    state: &AppState,
+) {
+    let action = match &state.action_result {
+        Some(r) => r.action,
+        None => return,
+    };
+
+    let pet = match &state.save_data.pet {
+        Some(p) => p,
+        None => return,
+    };
+
+    let nickname = if pet.nickname.is_empty() {
+        "なまえなし"
+    } else {
+        &pet.nickname
+    };
+
+    let art_lines = ascii_art::get_action_art(&pet.species, action, state.animation_frame);
+    let effect = ascii_art::get_action_effect(action, state.animation_frame);
+
+    // Progress dots based on elapsed time
+    let elapsed_ms = state.action_animation_start
+        .map(|s| s.elapsed().as_millis() as u64)
+        .unwrap_or(0);
+    let progress = if elapsed_ms < 800 {
+        "."
+    } else if elapsed_ms < 1600 {
+        ".."
+    } else {
+        "..."
+    };
+
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        format!("  [{}] {}{}", action_key(action), action.label(), progress),
+        Style::default().add_modifier(Modifier::BOLD),
+    )));
+    lines.push(Line::from(""));
+    lines.push(Line::from(format!(
+        "  {}の様子…",
+        nickname
+    )));
+    lines.push(Line::from(""));
+
+    for art_line in art_lines {
+        lines.push(Line::from(format!("        {}", art_line)));
+    }
+
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        format!("  {}", effect),
+        Style::default().fg(Color::Cyan),
+    )));
+
+    let paragraph = Paragraph::new(lines);
+    f.render_widget(paragraph, f.area());
+}
+
 pub fn render_action_reaction(
     f: &mut Frame,
     state: &AppState,
@@ -241,7 +309,8 @@ pub fn render_action_reaction(
         &pet.nickname
     };
 
-    let art_lines = ascii_art::get_action_art(&pet.species, action);
+    let mood = mood_level(pet.kimochi);
+    let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
 
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(""));
