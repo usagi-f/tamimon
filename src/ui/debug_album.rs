@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
@@ -125,7 +125,7 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
         .border_style(Style::default().fg(Color::Yellow));
     f.render_widget(header_block, chunks[0]);
 
-    let header_inner = inner_area(chunks[0], 0, 1);
+    let header_inner = super::inner_area(chunks[0], 0, 1);
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             header_text,
@@ -174,7 +174,7 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
         .border_style(Style::default().fg(Color::DarkGray));
     f.render_widget(footer_block, chunks[2]);
 
-    let footer_inner = inner_area(chunks[2], 0, 1);
+    let footer_inner = super::inner_area(chunks[2], 0, 1);
     let footer = Paragraph::new(Line::from(
         "  [↑↓] 選択  [Enter] プレビュー          [Q] 戻る",
     ));
@@ -203,7 +203,7 @@ fn render_idle(f: &mut Frame, state: &DebugAlbumState, animation_frame: usize) {
         .border_style(Style::default().fg(Color::Yellow));
     f.render_widget(header_block, chunks[0]);
 
-    let header_inner = inner_area(chunks[0], 0, 1);
+    let header_inner = super::inner_area(chunks[0], 0, 1);
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             header_text,
@@ -245,7 +245,7 @@ fn render_idle(f: &mut Frame, state: &DebugAlbumState, animation_frame: usize) {
         .border_style(Style::default().fg(Color::DarkGray));
     f.render_widget(footer_block, chunks[2]);
 
-    let footer_inner = inner_area(chunks[2], 0, 1);
+    let footer_inner = super::inner_area(chunks[2], 0, 1);
     let footer = Paragraph::new(Line::from(
         "  [←→] 前後  [A] アクション表示  [Esc] 一覧へ戻る",
     ));
@@ -285,7 +285,7 @@ fn render_action(
         .border_style(Style::default().fg(Color::Yellow));
     f.render_widget(header_block, chunks[0]);
 
-    let header_inner = inner_area(chunks[0], 0, 1);
+    let header_inner = super::inner_area(chunks[0], 0, 1);
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             header_text,
@@ -307,7 +307,7 @@ fn render_action(
     let nav_line: Vec<Span> = vec![
         Span::styled("  ◀ ", Style::default().fg(Color::DarkGray)),
         Span::styled(
-            format!("[{}] {}", action_key(action), action.label()),
+            format!("[{}] {}", action.key(), action.label()),
             Style::default()
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
@@ -340,27 +340,9 @@ fn render_action(
         .border_style(Style::default().fg(Color::DarkGray));
     f.render_widget(footer_block, chunks[2]);
 
-    let footer_inner = inner_area(chunks[2], 0, 1);
+    let footer_inner = super::inner_area(chunks[2], 0, 1);
     let footer = Paragraph::new(Line::from(
         "  [←→] アクション切替  [I] 待機へ  [Esc] 一覧へ戻る",
     ));
     f.render_widget(footer, footer_inner);
-}
-
-fn action_key(action: Action) -> &'static str {
-    match action {
-        Action::Talk => "T",
-        Action::Play => "P",
-        Action::Train => "R",
-        Action::Relax => "E",
-    }
-}
-
-fn inner_area(area: Rect, h_margin: u16, v_margin: u16) -> Rect {
-    Rect {
-        x: area.x + h_margin,
-        y: area.y + v_margin,
-        width: area.width.saturating_sub(h_margin * 2),
-        height: area.height.saturating_sub(v_margin * 2),
-    }
 }

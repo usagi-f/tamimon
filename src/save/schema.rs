@@ -44,6 +44,17 @@ pub struct PetData {
     pub last_stage4_check: u64,
 }
 
+impl PetData {
+    /// Returns the pet's display name, falling back to "なまえなし" if empty.
+    pub fn display_name(&self) -> &str {
+        if self.nickname.is_empty() {
+            "なまえなし"
+        } else {
+            &self.nickname
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeScores {
     pub chikara: u32,

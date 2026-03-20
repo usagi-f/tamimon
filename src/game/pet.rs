@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::save::schema::{PetData, TypeScores};
@@ -115,8 +116,7 @@ pub fn check_hatching(pet: &mut PetData, rng: &mut impl Rng) -> Option<HatchEven
         return None;
     }
 
-    let idx = rng.gen_range(0..STAGE1_SPECIES.len());
-    let species = &STAGE1_SPECIES[idx];
+    let species = STAGE1_SPECIES.choose(rng).unwrap();
 
     pet.species = species.name.to_string();
     pet.stage = 1;
