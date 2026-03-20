@@ -5,20 +5,72 @@ use crate::game::actions::Action;
 use crate::game::evolution::VoiceType;
 use crate::game::pet::MoodLevel;
 
+/// Adjust effective mood based on nakayoshi (bond level).
+/// High bond nudges toward more positive responses; low bond nudges toward more negative ones.
+fn bond_adjusted_mood(mood: MoodLevel, nakayoshi: f64, rng: &mut impl Rng) -> MoodLevel {
+    if nakayoshi >= 70.0 {
+        match mood {
+            MoodLevel::Normal => {
+                if rng.gen::<f64>() < 0.40 {
+                    MoodLevel::High
+                } else {
+                    MoodLevel::Normal
+                }
+            }
+            MoodLevel::Low => {
+                if rng.gen::<f64>() < 0.25 {
+                    MoodLevel::Normal
+                } else {
+                    MoodLevel::Low
+                }
+            }
+            MoodLevel::High => MoodLevel::High,
+        }
+    } else if nakayoshi <= 30.0 {
+        match mood {
+            MoodLevel::High => {
+                if rng.gen::<f64>() < 0.30 {
+                    MoodLevel::Normal
+                } else {
+                    MoodLevel::High
+                }
+            }
+            MoodLevel::Normal => {
+                if rng.gen::<f64>() < 0.20 {
+                    MoodLevel::Low
+                } else {
+                    MoodLevel::Normal
+                }
+            }
+            MoodLevel::Low => MoodLevel::Low,
+        }
+    } else {
+        mood
+    }
+}
+
 /// Get reaction text by voice type
 pub fn get_reaction(
     voice_type: VoiceType,
     action: Action,
     mood: MoodLevel,
+    nakayoshi: f64,
     rng: &mut impl Rng,
 ) -> String {
-    let pool = get_reaction_pool(voice_type, action, mood);
+    let effective_mood = bond_adjusted_mood(mood, nakayoshi, rng);
+    let pool = get_reaction_pool(voice_type, action, effective_mood);
     pool.choose(rng).unwrap().to_string()
 }
 
 /// Get idle speech by voice type
-pub fn get_idle_speech(voice_type: VoiceType, mood: MoodLevel, rng: &mut impl Rng) -> String {
-    let pool = get_idle_pool(voice_type, mood);
+pub fn get_idle_speech(
+    voice_type: VoiceType,
+    mood: MoodLevel,
+    nakayoshi: f64,
+    rng: &mut impl Rng,
+) -> String {
+    let effective_mood = bond_adjusted_mood(mood, nakayoshi, rng);
+    let pool = get_idle_pool(voice_type, effective_mood);
     pool.choose(rng).unwrap().to_string()
 }
 
