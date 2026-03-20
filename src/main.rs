@@ -6,13 +6,20 @@ mod ui;
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(name = "tamimon", version, about = "Terminal Monster - CLI育成放置ゲーム")]
+#[command(
+    name = "tamimon",
+    version,
+    about = "Terminal Monster - CLI育成放置ゲーム"
+)]
 struct Cli {}
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() {
     let _cli = Cli::parse();
-    app::run().await
+    if let Err(e) = app::run().await {
+        eprintln!("エラーが発生しました: {:#}", e);
+        std::process::exit(1);
+    }
 }
 
 #[cfg(test)]
@@ -39,7 +46,11 @@ mod tests {
         }
 
         if !dupes.is_empty() {
-            panic!("Duplicate idle art found ({} pairs):\n{}", dupes.len(), dupes.join("\n"));
+            panic!(
+                "Duplicate idle art found ({} pairs):\n{}",
+                dupes.len(),
+                dupes.join("\n")
+            );
         }
     }
 

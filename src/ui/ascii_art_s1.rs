@@ -44,13 +44,7 @@ pub fn get_s1_action_art(species: &str, action: Action, frame: usize) -> Option<
 // ===== Egg Art =====
 
 pub fn egg_art() -> &'static [&'static str] {
-    &[
-        "",
-        "     ／＼",
-        "    （ ？ ）",
-        "     ￣￣￣",
-        "",
-    ]
+    &["", "     ／＼", "    （ ？ ）", "     ￣￣￣", ""]
 }
 
 // ===== Stage 1 Species Art (hand-crafted, 1-line each) =====

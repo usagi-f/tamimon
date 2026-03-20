@@ -6,8 +6,8 @@ use ratatui::{
     Frame,
 };
 
-use crate::save::schema::SaveData;
 use crate::game::evolution;
+use crate::save::schema::SaveData;
 
 pub struct AlbumState {
     pub scroll: usize,
@@ -33,7 +33,7 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // header
+            Constraint::Length(3), // header
             Constraint::Min(4),    // body
             Constraint::Length(3), // footer
         ])
@@ -61,7 +61,10 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
 
     let encountered_count = encountered.len();
 
-    let header_text = format!("  📖 図鑑                              {} / {}+", encountered_count, total_species);
+    let header_text = format!(
+        "  📖 図鑑                              {} / {}+",
+        encountered_count, total_species
+    );
     let header_block = Block::default()
         .borders(Borders::TOP | Borders::BOTTOM)
         .border_style(Style::default().fg(Color::DarkGray));
@@ -93,12 +96,18 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
 
         if encountered.contains(*species_name) {
             // Find album entry for this species (most recent)
-            let album_entry = save_data.album.iter().rev()
-                .find(|e| e.evolution_line.contains(&species_name.to_string()) || e.species == *species_name);
+            let album_entry = save_data.album.iter().rev().find(|e| {
+                e.evolution_line.contains(&species_name.to_string()) || e.species == *species_name
+            });
 
             // Check if currently alive
-            let is_current = save_data.pet.as_ref()
-                .map(|p| p.species == *species_name || p.evolution_line.contains(&species_name.to_string()))
+            let is_current = save_data
+                .pet
+                .as_ref()
+                .map(|p| {
+                    p.species == *species_name
+                        || p.evolution_line.contains(&species_name.to_string())
+                })
                 .unwrap_or(false);
 
             if let Some(entry) = album_entry {

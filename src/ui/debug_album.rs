@@ -110,7 +110,7 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // header
-            Constraint::Min(4),   // body
+            Constraint::Min(4),    // body
             Constraint::Length(3), // footer
         ])
         .split(f.area());
@@ -119,10 +119,7 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
     let all_species = evolution::all_species_names();
     let total = all_species.len();
 
-    let header_text = format!(
-        "  🔧 デバッグ図鑑                       {} 種",
-        total
-    );
+    let header_text = format!("  🔧 デバッグ図鑑                       {} 種", total);
     let header_block = Block::default()
         .borders(Borders::TOP | Borders::BOTTOM)
         .border_style(Style::default().fg(Color::Yellow));
@@ -132,7 +129,9 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             header_text,
-            Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Yellow),
         ))),
         header_inner,
     );
@@ -141,7 +140,12 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
     let body_height = chunks[1].height as usize;
     let mut lines: Vec<Line> = Vec::new();
 
-    for (i, species_name) in all_species.iter().enumerate().skip(state.scroll).take(body_height) {
+    for (i, species_name) in all_species
+        .iter()
+        .enumerate()
+        .skip(state.scroll)
+        .take(body_height)
+    {
         let num = format!("#{:03}", i + 1);
         let stage = evolution::get_stage(species_name).unwrap_or(1);
 
@@ -151,7 +155,9 @@ fn render_list(f: &mut Frame, state: &DebugAlbumState) {
         let text = format!(" {} {} {} [S{}]", marker, num, species_name, stage);
 
         let style = if is_selected {
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::White)
         };
@@ -185,16 +191,13 @@ fn render_idle(f: &mut Frame, state: &DebugAlbumState, animation_frame: usize) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // header
-            Constraint::Min(8),   // body
+            Constraint::Min(8),    // body
             Constraint::Length(3), // footer
         ])
         .split(f.area());
 
     // --- Header ---
-    let header_text = format!(
-        "  {} [S{}] — 待機アニメーション",
-        species, stage
-    );
+    let header_text = format!("  {} [S{}] — 待機アニメーション", species, stage);
     let header_block = Block::default()
         .borders(Borders::TOP | Borders::BOTTOM)
         .border_style(Style::default().fg(Color::Yellow));
@@ -204,7 +207,9 @@ fn render_idle(f: &mut Frame, state: &DebugAlbumState, animation_frame: usize) {
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             header_text,
-            Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Yellow),
         ))),
         header_inner,
     );
@@ -249,7 +254,12 @@ fn render_idle(f: &mut Frame, state: &DebugAlbumState, animation_frame: usize) {
 
 // ─── Action animation view ───────────────────────────────
 
-fn render_action(f: &mut Frame, state: &DebugAlbumState, action_index: usize, animation_frame: usize) {
+fn render_action(
+    f: &mut Frame,
+    state: &DebugAlbumState,
+    action_index: usize,
+    animation_frame: usize,
+) {
     let species = state.selected_species();
     let stage = evolution::get_stage(species).unwrap_or(1);
     let action = ALL_ACTIONS[action_index];
@@ -258,7 +268,7 @@ fn render_action(f: &mut Frame, state: &DebugAlbumState, action_index: usize, an
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // header
-            Constraint::Min(8),   // body
+            Constraint::Min(8),    // body
             Constraint::Length(3), // footer
         ])
         .split(f.area());
@@ -266,7 +276,9 @@ fn render_action(f: &mut Frame, state: &DebugAlbumState, action_index: usize, an
     // --- Header ---
     let header_text = format!(
         "  {} [S{}] — {} アニメーション",
-        species, stage, action.label()
+        species,
+        stage,
+        action.label()
     );
     let header_block = Block::default()
         .borders(Borders::TOP | Borders::BOTTOM)
@@ -277,7 +289,9 @@ fn render_action(f: &mut Frame, state: &DebugAlbumState, action_index: usize, an
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             header_text,
-            Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Yellow),
         ))),
         header_inner,
     );
@@ -294,7 +308,9 @@ fn render_action(f: &mut Frame, state: &DebugAlbumState, action_index: usize, an
         Span::styled("  ◀ ", Style::default().fg(Color::DarkGray)),
         Span::styled(
             format!("[{}] {}", action_key(action), action.label()),
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
         ),
         Span::styled(" ▶", Style::default().fg(Color::DarkGray)),
         Span::styled(

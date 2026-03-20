@@ -235,7 +235,6 @@ pub fn get_s3_action_art(species: &str, action: Action, frame: usize) -> Option<
 // CHIKARA TYPE Stage 3 Species
 // ============================================================
 
-
 // ============================================================
 // CHIKARA TYPE Stage 3 Species
 // ============================================================
