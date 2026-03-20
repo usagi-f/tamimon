@@ -6,7 +6,7 @@ const DRIFT_THRESHOLD_MINUTES: i64 = 10;
 const API_TIMEOUT_SECS: u64 = 5;
 
 pub enum TimeSource {
-    WorldTimeApi,
+    TimeApi,
     LocalFallback,
 }
 
@@ -24,20 +24,12 @@ pub struct ElapsedResult {
 }
 
 #[derive(Deserialize)]
-struct WorldTimeResponse {
-    utc_datetime: String,
-}
-
-#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TimeApiResponse {
     date_time: String,
 }
 
-const TIME_APIS: &[&str] = &[
-    "https://timeapi.io/api/time/current/zone?timeZone=UTC",
-    "https://worldtimeapi.org/api/ip",
-];
+const TIME_API_URL: &str = "https://timeapi.io/api/time/current/zone?timeZone=UTC";
 
 pub async fn fetch_current_time() -> TimeResult {
     let local_now = Utc::now();
@@ -50,52 +42,44 @@ pub async fn fetch_current_time() -> TimeResult {
         Err(_) => return local_fallback(local_now),
     };
 
-    // Try each time API with a retry
-    for api_url in TIME_APIS {
-        for attempt in 0..2 {
-            if attempt > 0 {
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            }
+    // Retry up to 2 times on network failure
+    for attempt in 0..2 {
+        if attempt > 0 {
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
 
-            let resp = match client.get(*api_url).send().await {
-                Ok(r) => r,
-                Err(_) => continue,
+        let resp = match client.get(TIME_API_URL).send().await {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+
+        let data = match resp.json::<TimeApiResponse>().await {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+
+        // timeapi.io returns datetime without timezone suffix, append Z for UTC
+        let rfc3339 = format!("{}Z", data.date_time);
+        if let Ok(parsed) = DateTime::parse_from_rfc3339(&rfc3339) {
+            let api_utc: DateTime<Utc> = parsed.into();
+            let drift = (api_utc - local_now).num_minutes().abs();
+            let drift_warning = if drift >= DRIFT_THRESHOLD_MINUTES {
+                Some(format!(
+                    "ローカル時刻とサーバー時刻に{}分の差があります",
+                    drift
+                ))
+            } else {
+                None
             };
-
-            if let Some(api_utc) = parse_time_response(resp, *api_url).await {
-                let drift = (api_utc - local_now).num_minutes().abs();
-                let drift_warning = if drift >= DRIFT_THRESHOLD_MINUTES {
-                    Some(format!(
-                        "ローカル時刻とサーバー時刻に{}分の差があります",
-                        drift
-                    ))
-                } else {
-                    None
-                };
-                return TimeResult {
-                    now: api_utc,
-                    source: TimeSource::WorldTimeApi,
-                    drift_warning,
-                };
-            }
+            return TimeResult {
+                now: api_utc,
+                source: TimeSource::TimeApi,
+                drift_warning,
+            };
         }
     }
 
     local_fallback(local_now)
-}
-
-async fn parse_time_response(resp: reqwest::Response, api_url: &str) -> Option<DateTime<Utc>> {
-    if api_url.contains("timeapi.io") {
-        let data = resp.json::<TimeApiResponse>().await.ok()?;
-        // timeapi.io returns datetime without timezone suffix, append Z for UTC
-        let rfc3339 = format!("{}Z", data.date_time);
-        let parsed = DateTime::parse_from_rfc3339(&rfc3339).ok()?;
-        Some(parsed.into())
-    } else {
-        let data = resp.json::<WorldTimeResponse>().await.ok()?;
-        let parsed = DateTime::parse_from_rfc3339(&data.utc_datetime).ok()?;
-        Some(parsed.into())
-    }
 }
 
 fn local_fallback(now: DateTime<Utc>) -> TimeResult {
