@@ -4,8 +4,12 @@ use rand::Rng;
 use crate::save::schema::PetData;
 
 // --- Evolution timing constants ---
-const STAGE2_TICKS: u64 = 360; // 6 hours
-const STAGE3_TICKS: u64 = 1440; // 24 hours
+// Stage1→2: 6〜12時間（360〜720 ticks）
+const STAGE2_TICKS_MIN: u64 = 360;
+const STAGE2_TICKS_RANGE: u64 = 361; // 0..=360 offset
+// Stage2→3: 24〜48時間（1440〜2880 ticks）
+const STAGE3_TICKS_MIN: u64 = 1440;
+const STAGE3_TICKS_RANGE: u64 = 1441; // 0..=1440 offset
 const STAGE4_INTERVAL: u64 = 1440; // Check every 24 hours
 const STAGE4_CHANCE: f64 = 0.25; // 25%
 
@@ -1343,9 +1347,18 @@ pub fn check_evolution(pet: &mut PetData, rng: &mut impl Rng) -> Option<Evolutio
     }
 }
 
-/// Stage1 → Stage2 (at 6 hours elapsed, determined by type tendency)
+/// Derive a deterministic u64 from birth_timestamp for randomizing evolution timing.
+/// Uses a simple hash so the threshold is stable across calls for the same pet.
+fn birth_hash(pet: &PetData, salt: u64) -> u64 {
+    let seed = (pet.birth_timestamp.timestamp() as u64) ^ salt;
+    seed.wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407)
+}
+
+/// Stage1 → Stage2 (6〜12時間後、determined by type tendency)
 fn check_stage1_to_2(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
-    if pet.age_ticks < STAGE2_TICKS {
+    let threshold = STAGE2_TICKS_MIN + birth_hash(pet, 0) % STAGE2_TICKS_RANGE;
+    if pet.age_ticks < threshold {
         return None;
     }
 
@@ -1392,9 +1405,10 @@ fn determine_evo_type(chikara: u32, odayaka: u32, bouken: u32) -> EvoType {
     }
 }
 
-/// Stage2 → Stage3 (at 24 hours elapsed, determined by cosine similarity)
+/// Stage2 → Stage3 (24〜48時間後、determined by cosine similarity)
 fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
-    if pet.age_ticks < STAGE3_TICKS {
+    let threshold = STAGE3_TICKS_MIN + birth_hash(pet, 1) % STAGE3_TICKS_RANGE;
+    if pet.age_ticks < threshold {
         return None;
     }
 
@@ -1460,12 +1474,12 @@ fn check_stage2_to_3(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
 
 /// Stage3 → Stage4 (25% chance every 24 hours)
 fn check_stage3_to_4(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionEvent> {
-    if pet.age_ticks < STAGE3_TICKS + STAGE4_INTERVAL {
+    if pet.age_ticks < STAGE3_TICKS_MIN + STAGE4_INTERVAL {
         return None;
     }
 
-    // Calculate how many 24h intervals have passed since reaching Stage3
-    let ticks_since_stage3 = pet.age_ticks - STAGE3_TICKS;
+    // Calculate how many 24h intervals have passed since reaching Stage3 (approximate)
+    let ticks_since_stage3 = pet.age_ticks.saturating_sub(STAGE3_TICKS_MIN);
     let total_intervals = ticks_since_stage3 / STAGE4_INTERVAL;
 
     // Only check intervals that haven't been checked yet
