@@ -346,4 +346,3 @@ fn render_action(
     ));
     f.render_widget(footer, footer_inner);
 }
-

@@ -309,4 +309,3 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     let paragraph = Paragraph::new(lines);
     f.render_widget(paragraph, f.area());
 }
-

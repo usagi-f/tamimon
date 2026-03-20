@@ -559,10 +559,13 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
             // Get farewell name from death_pet_name (startup) or from live pet data
-            let farewell = state
-                .death_pet_name
-                .take()
-                .or_else(|| state.save_data.pet.as_ref().map(|p| p.display_name().to_string()));
+            let farewell = state.death_pet_name.take().or_else(|| {
+                state
+                    .save_data
+                    .pet
+                    .as_ref()
+                    .map(|p| p.display_name().to_string())
+            });
 
             // Record death if pet is still alive (startup deaths already recorded)
             if state.save_data.pet.is_some() {
