@@ -1,6 +1,6 @@
 use chrono::Utc;
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
@@ -47,7 +47,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
     let header_area = chunks[0];
     f.render_widget(header_block, header_area);
 
-    let header_inner = inner_area(header_area, 0, 1);
+    let header_inner = super::inner_area(header_area, 0, 1);
     let header_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
@@ -92,7 +92,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
 
     f.render_widget(footer_block, chunks[2]);
 
-    let footer_inner = inner_area(chunks[2], 0, 1);
+    let footer_inner = super::inner_area(chunks[2], 0, 1);
     #[cfg(not(debug_assertions))]
     let footer_lines = vec![
         Line::from("  [T]話しかける  [P]あそぶ  [R]特訓  [E]まったり"),
@@ -243,7 +243,7 @@ pub fn render_action_animation(f: &mut Frame, state: &AppState) {
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        format!("  [{}] {}{}", action_key(action), action.label(), progress),
+        format!("  [{}] {}{}", action.key(), action.label(), progress),
         Style::default().add_modifier(Modifier::BOLD),
     )));
     lines.push(Line::from(""));
@@ -283,7 +283,7 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        format!("  [{}] {} を選んだ", action_key(action), action.label()),
+        format!("  [{}] {} を選んだ", action.key(), action.label()),
         Style::default().add_modifier(Modifier::BOLD),
     )));
     lines.push(Line::from(""));
@@ -310,20 +310,3 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     f.render_widget(paragraph, f.area());
 }
 
-fn action_key(action: crate::game::actions::Action) -> &'static str {
-    match action {
-        crate::game::actions::Action::Talk => "T",
-        crate::game::actions::Action::Play => "P",
-        crate::game::actions::Action::Train => "R",
-        crate::game::actions::Action::Relax => "E",
-    }
-}
-
-fn inner_area(area: Rect, h_margin: u16, v_margin: u16) -> Rect {
-    Rect {
-        x: area.x + h_margin,
-        y: area.y + v_margin,
-        width: area.width.saturating_sub(h_margin * 2),
-        height: area.height.saturating_sub(v_margin * 2),
-    }
-}

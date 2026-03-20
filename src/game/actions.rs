@@ -21,6 +21,15 @@ impl Action {
             Action::Relax => "まったり",
         }
     }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            Action::Talk => "T",
+            Action::Play => "P",
+            Action::Train => "R",
+            Action::Relax => "E",
+        }
+    }
 }
 
 pub struct ActionResult {
