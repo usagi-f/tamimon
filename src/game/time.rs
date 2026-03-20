@@ -31,59 +31,57 @@ struct WorldTimeResponse {
 pub async fn fetch_current_time() -> TimeResult {
     let local_now = Utc::now();
 
-    let client = reqwest::Client::builder()
+    let client = match reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(API_TIMEOUT_SECS))
-        .build();
-
-    let client = match client {
+        .build()
+    {
         Ok(c) => c,
-        Err(_) => {
-            return TimeResult {
-                now: local_now,
-                source: TimeSource::LocalFallback,
-                drift_warning: None,
-            };
-        }
+        Err(_) => return local_fallback(local_now),
     };
 
-    match client.get("http://worldtimeapi.org/api/ip").send().await {
-        Ok(resp) => match resp.json::<WorldTimeResponse>().await {
-            Ok(data) => {
-                if let Ok(api_time) = DateTime::parse_from_rfc3339(&data.utc_datetime) {
-                    let api_utc: DateTime<Utc> = api_time.into();
-                    let drift = (api_utc - local_now).num_minutes().abs();
-                    let drift_warning = if drift >= DRIFT_THRESHOLD_MINUTES {
-                        Some(format!(
-                            "ローカル時刻とサーバー時刻に{}分の差があります",
-                            drift
-                        ))
-                    } else {
-                        None
-                    };
-                    TimeResult {
-                        now: api_utc,
-                        source: TimeSource::WorldTimeApi,
-                        drift_warning,
-                    }
-                } else {
-                    TimeResult {
-                        now: local_now,
-                        source: TimeSource::LocalFallback,
-                        drift_warning: None,
-                    }
-                }
-            }
-            Err(_) => TimeResult {
-                now: local_now,
-                source: TimeSource::LocalFallback,
-                drift_warning: None,
-            },
-        },
-        Err(_) => TimeResult {
-            now: local_now,
-            source: TimeSource::LocalFallback,
-            drift_warning: None,
-        },
+    // Retry up to 2 times on network failure
+    for attempt in 0..2 {
+        if attempt > 0 {
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
+
+        let resp = match client.get("http://worldtimeapi.org/api/ip").send().await {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+
+        let data = match resp.json::<WorldTimeResponse>().await {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+
+        if let Ok(api_time) = DateTime::parse_from_rfc3339(&data.utc_datetime) {
+            let api_utc: DateTime<Utc> = api_time.into();
+            let drift = (api_utc - local_now).num_minutes().abs();
+            let drift_warning = if drift >= DRIFT_THRESHOLD_MINUTES {
+                Some(format!(
+                    "ローカル時刻とサーバー時刻に{}分の差があります",
+                    drift
+                ))
+            } else {
+                None
+            };
+            return TimeResult {
+                now: api_utc,
+                source: TimeSource::WorldTimeApi,
+                drift_warning,
+            };
+        }
+    }
+
+    local_fallback(local_now)
+}
+
+fn local_fallback(now: DateTime<Utc>) -> TimeResult {
+    TimeResult {
+        now,
+        source: TimeSource::LocalFallback,
+        drift_warning: None,
     }
 }
 

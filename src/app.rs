@@ -198,12 +198,14 @@ pub async fn run() -> Result<()> {
     // 5. Event loop
     let result = run_loop(&mut terminal, &mut state).await;
 
-    // 6. Cleanup terminal
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    // 6. Cleanup terminal (always runs, even on error)
+    let _ = disable_raw_mode();
+    let _ = execute!(terminal.backend_mut(), LeaveAlternateScreen);
 
-    // 7. Final save
-    save::save(&state.save_data)?;
+    // 7. Final save (best-effort on error path)
+    if let Err(e) = save::save(&state.save_data) {
+        eprintln!("セーブに失敗しました: {:#}", e);
+    }
 
     result
 }

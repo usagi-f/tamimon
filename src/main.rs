@@ -10,9 +10,12 @@ use clap::Parser;
 struct Cli {}
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() {
     let _cli = Cli::parse();
-    app::run().await
+    if let Err(e) = app::run().await {
+        eprintln!("エラーが発生しました: {:#}", e);
+        std::process::exit(1);
+    }
 }
 
 #[cfg(test)]
