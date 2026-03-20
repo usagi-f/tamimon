@@ -4,7 +4,8 @@ use anyhow::{Context, Result};
 use std::path::PathBuf;
 
 pub fn save_dir() -> Result<PathBuf> {
-    let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("ホームディレクトリが見つかりません"))?;
+    let home =
+        dirs::home_dir().ok_or_else(|| anyhow::anyhow!("ホームディレクトリが見つかりません"))?;
     Ok(home.join(".tamimon"))
 }
 
@@ -73,8 +74,8 @@ pub fn save(data: &schema::SaveData) -> Result<()> {
     let path = save_path()?;
     let tmp_path = path.with_extension("json.tmp");
 
-    let content = serde_json::to_string_pretty(data)
-        .with_context(|| "セーブデータのシリアライズに失敗")?;
+    let content =
+        serde_json::to_string_pretty(data).with_context(|| "セーブデータのシリアライズに失敗")?;
 
     std::fs::write(&tmp_path, &content)
         .with_context(|| format!("一時ファイルの書き込みに失敗: {}", tmp_path.display()))?;
@@ -85,8 +86,7 @@ pub fn save(data: &schema::SaveData) -> Result<()> {
         std::fs::copy(&path, &bak).ok();
     }
 
-    std::fs::rename(&tmp_path, &path)
-        .with_context(|| "セーブファイルの更新に失敗")?;
+    std::fs::rename(&tmp_path, &path).with_context(|| "セーブファイルの更新に失敗")?;
 
     Ok(())
 }

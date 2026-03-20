@@ -6,7 +6,11 @@ mod ui;
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(name = "tamimon", version, about = "Terminal Monster - CLI育成放置ゲーム")]
+#[command(
+    name = "tamimon",
+    version,
+    about = "Terminal Monster - CLI育成放置ゲーム"
+)]
 struct Cli {}
 
 #[tokio::main]
@@ -42,7 +46,11 @@ mod tests {
         }
 
         if !dupes.is_empty() {
-            panic!("Duplicate idle art found ({} pairs):\n{}", dupes.len(), dupes.join("\n"));
+            panic!(
+                "Duplicate idle art found ({} pairs):\n{}",
+                dupes.len(),
+                dupes.join("\n")
+            );
         }
     }
 

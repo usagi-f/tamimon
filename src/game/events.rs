@@ -28,12 +28,10 @@ const POSITIVE_EVENTS: &[PositiveEvent] = &[
     PositiveEvent {
         probability: 0.10,
         message: "🔍 なにかを見つけたみたい！",
-        apply: |pet, rng| {
-            match rng.gen_range(0u8..3) {
-                0 => pet.kimochi = (pet.kimochi + 20.0).min(100.0),
-                1 => pet.genki = (pet.genki + 20.0).min(100.0),
-                _ => pet.nakayoshi = (pet.nakayoshi + 20.0).min(100.0),
-            }
+        apply: |pet, rng| match rng.gen_range(0u8..3) {
+            0 => pet.kimochi = (pet.kimochi + 20.0).min(100.0),
+            1 => pet.genki = (pet.genki + 20.0).min(100.0),
+            _ => pet.nakayoshi = (pet.nakayoshi + 20.0).min(100.0),
         },
     },
     PositiveEvent {
@@ -55,12 +53,10 @@ const POSITIVE_EVENTS: &[PositiveEvent] = &[
     PositiveEvent {
         probability: 0.05,
         message: "💭 不思議な夢を見たみたい！",
-        apply: |pet, rng| {
-            match rng.gen_range(0u8..3) {
-                0 => pet.type_scores.chikara += 1,
-                1 => pet.type_scores.odayaka += 1,
-                _ => pet.type_scores.bouken += 1,
-            }
+        apply: |pet, rng| match rng.gen_range(0u8..3) {
+            0 => pet.type_scores.chikara += 1,
+            1 => pet.type_scores.odayaka += 1,
+            _ => pet.type_scores.bouken += 1,
         },
     },
     PositiveEvent {

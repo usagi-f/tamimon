@@ -95,28 +95,14 @@ pub fn get_action_art(species: &str, action: Action, frame: usize) -> Vec<String
 
 pub fn get_idle_speech(species: &str, mood: MoodLevel) -> &'static [&'static str] {
     match (species, mood) {
-        ("たまご", _) => &[
-            "（ぴくっ…ぴくっ…）",
-            "（もぞもぞ…）",
-            "（かたかた…）",
-        ],
+        ("たまご", _) => &["（ぴくっ…ぴくっ…）", "（もぞもぞ…）", "（かたかた…）"],
         (_, MoodLevel::High) => &[
             "今日もげんきだよ！",
             "うれしい！",
             "なんかいい日！",
             "るんるん♪",
         ],
-        (_, MoodLevel::Normal) => &[
-            "…ぼーっとしてた",
-            "なんかいい日",
-            "ふぁ〜",
-            "…ん？",
-        ],
-        (_, MoodLevel::Low) => &[
-            "…",
-            "ねむい",
-            "…べつに",
-            "（ぼんやり）",
-        ],
+        (_, MoodLevel::Normal) => &["…ぼーっとしてた", "なんかいい日", "ふぁ〜", "…ん？"],
+        (_, MoodLevel::Low) => &["…", "ねむい", "…べつに", "（ぼんやり）"],
     }
 }

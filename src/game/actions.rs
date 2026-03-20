@@ -28,11 +28,7 @@ pub struct ActionResult {
 }
 
 /// Apply only action stat effects (reaction text handled separately)
-pub fn apply_action_effects(
-    action: Action,
-    pet: &mut PetData,
-    rng: &mut impl Rng,
-) {
+pub fn apply_action_effects(action: Action, pet: &mut PetData, rng: &mut impl Rng) {
     match action {
         Action::Talk => {
             pet.nakayoshi = (pet.nakayoshi + 5.0 + rng.gen_range(-3.0..8.0)).clamp(0.0, 100.0);
@@ -74,12 +70,9 @@ pub fn select_generic_reaction(action: Action, mood: MoodLevel, rng: &mut impl R
             "「…ぼーっとしてた」",
             "「なに？」",
         ],
-        (Action::Talk, MoodLevel::Low) => &[
-            "「…」",
-            "「……ねむい」",
-            "「べつに」",
-            "（こちらを見ない）",
-        ],
+        (Action::Talk, MoodLevel::Low) => {
+            &["「…」", "「……ねむい」", "「べつに」", "（こちらを見ない）"]
+        }
         (Action::Play, MoodLevel::High) => &[
             "「やったー！あそぼ！」",
             "「たのしい！もっかい！」",
@@ -122,12 +115,9 @@ pub fn select_generic_reaction(action: Action, mood: MoodLevel, rng: &mut impl R
             "「しあわせ…」",
             "「zzz...えへへ」",
         ],
-        (Action::Relax, MoodLevel::Normal) => &[
-            "「…zzz」",
-            "「のんびり〜」",
-            "「ふぁ〜」",
-            "「…いい天気」",
-        ],
+        (Action::Relax, MoodLevel::Normal) => {
+            &["「…zzz」", "「のんびり〜」", "「ふぁ〜」", "「…いい天気」"]
+        }
         (Action::Relax, MoodLevel::Low) => &[
             "「…」（丸くなった）",
             "「…ねる」",

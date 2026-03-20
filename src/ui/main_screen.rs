@@ -21,7 +21,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // header
+            Constraint::Length(3), // header
             Constraint::Min(8),    // body (art + speech)
             Constraint::Length(4), // footer
         ])
@@ -38,16 +38,11 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
         &pet.nickname
     };
 
-    let header_line = Line::from(vec![
-        Span::styled(
-            format!("  {}（{}）  ", nickname, pet.species),
-            Style::default().add_modifier(Modifier::BOLD),
-        ),
-    ]);
-    let header_right = Line::from(vec![Span::raw(format!(
-        "{}  ⚖ {}  ",
-        age_str, weight_str
-    ))]);
+    let header_line = Line::from(vec![Span::styled(
+        format!("  {}（{}）  ", nickname, pet.species),
+        Style::default().add_modifier(Modifier::BOLD),
+    )]);
+    let header_right = Line::from(vec![Span::raw(format!("{}  ⚖ {}  ", age_str, weight_str))]);
 
     let header_block = Block::default()
         .borders(Borders::TOP | Borders::BOTTOM)
@@ -150,10 +145,7 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
 
     if info.elapsed_ticks > 0 {
         lines.push(Line::from(""));
-        lines.push(Line::from(format!(
-            "  経過時間: {}",
-            info.elapsed_display
-        )));
+        lines.push(Line::from(format!("  経過時間: {}", info.elapsed_display)));
         lines.push(Line::from(""));
 
         if let Some(pet) = &state.save_data.pet {
@@ -182,7 +174,11 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
         if let Some(ref evolved) = info.evolved_species {
             lines.push(Line::from(""));
             let evo_msg = if let Some(ref pet) = state.save_data.pet {
-                let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+                let name = if pet.nickname.is_empty() {
+                    "なまえなし"
+                } else {
+                    &pet.nickname
+                };
                 format!("  ✨ {}が進化した！ → {}", name, evolved)
             } else {
                 format!("  ✨ 進化した！ → {}", evolved)
@@ -195,7 +191,9 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
     }
 
     // Show non-death event messages (death message will be shown on the Death screen)
-    let non_death_msgs: Vec<&String> = info.event_messages.iter()
+    let non_death_msgs: Vec<&String> = info
+        .event_messages
+        .iter()
         .filter(|m| info.death_message.as_ref() != Some(m))
         .collect();
     if !non_death_msgs.is_empty() {
@@ -227,10 +225,7 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
     f.render_widget(paragraph, f.area());
 }
 
-pub fn render_action_animation(
-    f: &mut Frame,
-    state: &AppState,
-) {
+pub fn render_action_animation(f: &mut Frame, state: &AppState) {
     let action = match &state.action_result {
         Some(r) => r.action,
         None => return,
@@ -251,7 +246,8 @@ pub fn render_action_animation(
     let effect = ascii_art::get_action_effect(action, state.animation_frame);
 
     // Progress dots based on elapsed time
-    let elapsed_ms = state.action_animation_start
+    let elapsed_ms = state
+        .action_animation_start
         .map(|s| s.elapsed().as_millis() as u64)
         .unwrap_or(0);
     let progress = if elapsed_ms < 800 {
@@ -269,10 +265,7 @@ pub fn render_action_animation(
         Style::default().add_modifier(Modifier::BOLD),
     )));
     lines.push(Line::from(""));
-    lines.push(Line::from(format!(
-        "  {}の様子…",
-        nickname
-    )));
+    lines.push(Line::from(format!("  {}の様子…", nickname)));
     lines.push(Line::from(""));
 
     for art_line in art_lines {
@@ -289,10 +282,7 @@ pub fn render_action_animation(
     f.render_widget(paragraph, f.area());
 }
 
-pub fn render_action_reaction(
-    f: &mut Frame,
-    state: &AppState,
-) {
+pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     let (action, reaction_text) = match &state.action_result {
         Some(r) => (r.action, &r.reaction_text),
         None => return,
@@ -319,10 +309,7 @@ pub fn render_action_reaction(
         Style::default().add_modifier(Modifier::BOLD),
     )));
     lines.push(Line::from(""));
-    lines.push(Line::from(format!(
-        "  {}がこちらを向いた。",
-        nickname
-    )));
+    lines.push(Line::from(format!("  {}がこちらを向いた。", nickname)));
     lines.push(Line::from(""));
 
     for art_line in art_lines {

@@ -20,13 +20,16 @@ use crate::game::time;
 use crate::game::voice;
 use crate::save;
 use crate::save::schema::{AlbumEntry, SaveData};
-use crate::ui::{album, ascii_art, main_screen, naming};
 #[cfg(debug_assertions)]
 use crate::ui::debug_album;
+use crate::ui::{album, ascii_art, main_screen, naming};
 
 pub enum AppMode {
     Startup,
-    Naming { input: String, farewell_name: Option<String> },
+    Naming {
+        input: String,
+        farewell_name: Option<String>,
+    },
     Main,
     ActionAnimation,
     ActionReaction,
@@ -121,7 +124,11 @@ pub async fn run() -> Result<()> {
                         if er.is_death {
                             death_message = Some(er.message.clone());
                             // Save pet name for Death screen display
-                            let name = if p.nickname.is_empty() { "なまえなし" } else { &p.nickname };
+                            let name = if p.nickname.is_empty() {
+                                "なまえなし"
+                            } else {
+                                &p.nickname
+                            };
                             death_pet_name = Some(name.to_string());
                         }
                         event_messages.push(er.message);
@@ -254,8 +261,16 @@ fn render(f: &mut ratatui::Frame, state: &AppState) {
         AppMode::Startup => {
             main_screen::render_startup(f, state);
         }
-        AppMode::Naming { input, farewell_name } => {
-            naming::render_naming_with_farewell(f, input, farewell_name.is_none(), farewell_name.as_deref());
+        AppMode::Naming {
+            input,
+            farewell_name,
+        } => {
+            naming::render_naming_with_farewell(
+                f,
+                input,
+                farewell_name.is_none(),
+                farewell_name.as_deref(),
+            );
         }
         AppMode::Main => {
             main_screen::render_main(f, state);
@@ -303,10 +318,15 @@ fn render_death(f: &mut ratatui::Frame, state: &AppState) {
     lines.push(Line::from(""));
 
     // Get pet name from death_pet_name (saved at startup) or from live pet data
-    let pet_name = state.death_pet_name.as_deref()
-        .or_else(|| state.save_data.pet.as_ref().map(|p| {
-            if p.nickname.is_empty() { "なまえなし" } else { p.nickname.as_str() }
-        }));
+    let pet_name = state.death_pet_name.as_deref().or_else(|| {
+        state.save_data.pet.as_ref().map(|p| {
+            if p.nickname.is_empty() {
+                "なまえなし"
+            } else {
+                p.nickname.as_str()
+            }
+        })
+    });
 
     if let Some(name) = pet_name {
         lines.push(Line::from(Span::styled(
@@ -336,7 +356,11 @@ fn render_evolution(f: &mut ratatui::Frame, state: &AppState) {
     lines.push(Line::from(""));
 
     if let Some(ref pet) = state.save_data.pet {
-        let name = if pet.nickname.is_empty() { "なまえなし" } else { &pet.nickname };
+        let name = if pet.nickname.is_empty() {
+            "なまえなし"
+        } else {
+            &pet.nickname
+        };
         lines.push(Line::from(Span::styled(
             format!("  {}が、なにかに気づいたような顔をした。", name),
             Style::default().add_modifier(Modifier::BOLD),
@@ -349,7 +373,9 @@ fn render_evolution(f: &mut ratatui::Frame, state: &AppState) {
 
         lines.push(Line::from(Span::styled(
             format!("  {}の様子が変わった。", name),
-            Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
         )));
         lines.push(Line::from(""));
 
@@ -363,7 +389,9 @@ fn render_evolution(f: &mut ratatui::Frame, state: &AppState) {
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
             format!("  → {} に進化した！", msg),
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )));
     }
 
@@ -408,40 +436,38 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             state.mode = AppMode::Main;
             state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
         }
-        AppMode::Naming { input, .. } => {
-            match key {
-                KeyCode::Enter => {
-                    let nickname = if input.is_empty() {
-                        String::new()
-                    } else {
-                        input.clone()
-                    };
+        AppMode::Naming { input, .. } => match key {
+            KeyCode::Enter => {
+                let nickname = if input.is_empty() {
+                    String::new()
+                } else {
+                    input.clone()
+                };
 
-                    let now = Utc::now();
-                    let new_pet = pet::new_egg(nickname, now);
-                    state.save_data.pet = Some(new_pet);
-                    state.save_data.last_check_time = now;
-                    state.save_data.records.total_monsters += 1;
-                    save::save(&state.save_data)?;
+                let now = Utc::now();
+                let new_pet = pet::new_egg(nickname, now);
+                state.save_data.pet = Some(new_pet);
+                state.save_data.last_check_time = now;
+                state.save_data.records.total_monsters += 1;
+                save::save(&state.save_data)?;
 
-                    state.mode = AppMode::Main;
-                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
-                }
-                KeyCode::Char(c) => {
-                    if let AppMode::Naming { input, .. } = &mut state.mode {
-                        if input.chars().count() < 20 {
-                            input.push(c);
-                        }
-                    }
-                }
-                KeyCode::Backspace => {
-                    if let AppMode::Naming { input, .. } = &mut state.mode {
-                        input.pop();
-                    }
-                }
-                _ => {}
+                state.mode = AppMode::Main;
+                state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
             }
-        }
+            KeyCode::Char(c) => {
+                if let AppMode::Naming { input, .. } = &mut state.mode {
+                    if input.chars().count() < 20 {
+                        input.push(c);
+                    }
+                }
+            }
+            KeyCode::Backspace => {
+                if let AppMode::Naming { input, .. } = &mut state.mode {
+                    input.pop();
+                }
+            }
+            _ => {}
+        },
         AppMode::Main => match key {
             KeyCode::Char('t') | KeyCode::Char('T') => {
                 do_action(Action::Talk, state)?;
@@ -546,10 +572,15 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
             // Get farewell name from death_pet_name (startup) or from live pet data
-            let farewell = state.death_pet_name.take()
-                .or_else(|| state.save_data.pet.as_ref().map(|p| {
-                    if p.nickname.is_empty() { "なまえなし".to_string() } else { p.nickname.clone() }
-                }));
+            let farewell = state.death_pet_name.take().or_else(|| {
+                state.save_data.pet.as_ref().map(|p| {
+                    if p.nickname.is_empty() {
+                        "なまえなし".to_string()
+                    } else {
+                        p.nickname.clone()
+                    }
+                })
+            });
 
             // Record death if pet is still alive (startup deaths already recorded)
             if state.save_data.pet.is_some() {
@@ -646,7 +677,11 @@ fn record_death(save_data: &mut SaveData, death_message: &str) {
         }
 
         let entry = AlbumEntry {
-            nickname: if pet.nickname.is_empty() { "なまえなし".to_string() } else { pet.nickname },
+            nickname: if pet.nickname.is_empty() {
+                "なまえなし".to_string()
+            } else {
+                pet.nickname
+            },
             species: pet.species,
             days_lived,
             weight_kg: pet.weight,

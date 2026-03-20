@@ -9,16 +9,46 @@ pub struct SpeciesInfo {
 }
 
 pub const STAGE1_SPECIES: [SpeciesInfo; 10] = [
-    SpeciesInfo { name: "コロコロ", standard_weight: 10.0 },
-    SpeciesInfo { name: "ニョロ", standard_weight: 8.0 },
-    SpeciesInfo { name: "フワ", standard_weight: 5.0 },
-    SpeciesInfo { name: "ツブ", standard_weight: 3.0 },
-    SpeciesInfo { name: "プク", standard_weight: 12.0 },
-    SpeciesInfo { name: "ミジン", standard_weight: 1.5 },
-    SpeciesInfo { name: "ネロ", standard_weight: 9.0 },
-    SpeciesInfo { name: "ボテ", standard_weight: 15.0 },
-    SpeciesInfo { name: "ピリリ", standard_weight: 4.0 },
-    SpeciesInfo { name: "モグモ", standard_weight: 7.0 },
+    SpeciesInfo {
+        name: "コロコロ",
+        standard_weight: 10.0,
+    },
+    SpeciesInfo {
+        name: "ニョロ",
+        standard_weight: 8.0,
+    },
+    SpeciesInfo {
+        name: "フワ",
+        standard_weight: 5.0,
+    },
+    SpeciesInfo {
+        name: "ツブ",
+        standard_weight: 3.0,
+    },
+    SpeciesInfo {
+        name: "プク",
+        standard_weight: 12.0,
+    },
+    SpeciesInfo {
+        name: "ミジン",
+        standard_weight: 1.5,
+    },
+    SpeciesInfo {
+        name: "ネロ",
+        standard_weight: 9.0,
+    },
+    SpeciesInfo {
+        name: "ボテ",
+        standard_weight: 15.0,
+    },
+    SpeciesInfo {
+        name: "ピリリ",
+        standard_weight: 4.0,
+    },
+    SpeciesInfo {
+        name: "モグモ",
+        standard_weight: 7.0,
+    },
 ];
 
 const HATCHING_TICKS: u64 = 60; // 1 hour
