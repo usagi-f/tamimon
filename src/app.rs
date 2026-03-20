@@ -51,6 +51,7 @@ pub struct StartupInfo {
     pub rollback_detected: bool,
     pub event_messages: Vec<String>,
     pub death_message: Option<String>,
+    pub new_longest_record: bool,
 }
 
 pub struct AppState {
@@ -64,6 +65,7 @@ pub struct AppState {
     pub action_animation_start: Option<Instant>,
     pub death_message: Option<String>,
     pub death_pet_name: Option<String>,
+    pub new_longest_record: bool,
     pub evolution_message: Option<String>,
     pub album_state: album::AlbumState,
     #[cfg(debug_assertions)]
@@ -98,6 +100,7 @@ pub async fn run() -> Result<()> {
             let mut event_messages = Vec::new();
             let mut death_message = None;
             let mut death_pet_name: Option<String> = None;
+            let mut startup_new_record = false;
 
             if !elapsed.rollback_detected {
                 if let Some(ref mut p) = data.pet {
@@ -134,7 +137,7 @@ pub async fn run() -> Result<()> {
                 // If death was detected, call record_death to maintain save data consistency
                 if death_message.is_some() {
                     let death_msg = death_message.as_deref().unwrap_or("");
-                    record_death(&mut data, death_msg);
+                    startup_new_record = record_death(&mut data, death_msg);
                 }
 
                 data.last_check_time = time_result.now;
@@ -151,6 +154,7 @@ pub async fn run() -> Result<()> {
                 rollback_detected: elapsed.rollback_detected,
                 event_messages,
                 death_message,
+                new_longest_record: startup_new_record,
             };
 
             (AppMode::Startup, data, Some(info), death_pet_name)
@@ -182,6 +186,7 @@ pub async fn run() -> Result<()> {
         action_animation_start: None,
         death_message: None,
         death_pet_name: startup_death_pet_name,
+        new_longest_record: false,
         evolution_message: None,
         album_state: album::AlbumState::new(),
         #[cfg(debug_assertions)]
@@ -326,6 +331,17 @@ fn render_death(f: &mut ratatui::Frame, state: &AppState) {
         )));
     }
 
+    // Show new longest survival record message
+    if state.new_longest_record {
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            "  🏆 最長生存記録を更新しました！",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )));
+    }
+
     lines.push(Line::from(""));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
@@ -406,6 +422,7 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             if let Some(ref info) = startup {
                 if let Some(ref death_msg) = info.death_message {
                     state.death_message = Some(death_msg.clone());
+                    state.new_longest_record = info.new_longest_record;
                     state.mode = AppMode::Death;
                     return Ok(InputResult::Continue);
                 }
@@ -570,11 +587,12 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             // Record death if pet is still alive (startup deaths already recorded)
             if state.save_data.pet.is_some() {
                 let death_msg = state.death_message.take().unwrap_or_default();
-                record_death(&mut state.save_data, &death_msg);
+                state.new_longest_record = record_death(&mut state.save_data, &death_msg);
                 save::save(&state.save_data)?;
             }
 
             state.death_message = None;
+            state.new_longest_record = false;
             state.mode = AppMode::Naming {
                 input: String::new(),
                 farewell_name: farewell,
@@ -650,14 +668,16 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     Ok(())
 }
 
-/// Record death to album and clear pet data
-fn record_death(save_data: &mut SaveData, death_message: &str) {
+/// Record death to album and clear pet data.
+/// Returns true if a new longest survival record was set.
+fn record_death(save_data: &mut SaveData, death_message: &str) -> bool {
     if let Some(pet) = save_data.pet.take() {
         let days_lived = (pet.age_ticks as f64 / 1440.0).ceil() as u32;
         let weight_label = pet::weight_label(&pet.species, pet.weight).to_string();
 
         // Update records
-        if pet.age_ticks > save_data.records.longest_survival_ticks {
+        let new_record = pet.age_ticks > save_data.records.longest_survival_ticks;
+        if new_record {
             save_data.records.longest_survival_ticks = pet.age_ticks;
         }
 
@@ -676,7 +696,9 @@ fn record_death(save_data: &mut SaveData, death_message: &str) {
 
         save_data.album.push(entry);
         save_data.pet = None;
+        return new_record;
     }
+    false
 }
 
 fn pick_idle_speech(save_data: &SaveData, rng: &mut impl Rng) -> String {
