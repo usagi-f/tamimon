@@ -93,7 +93,7 @@ pub fn apply_decay(pet: &mut PetData, ticks: u64, rng: &mut impl Rng) {
     let kimochi_change = -0.05 * ticks_f + rng.gen_range(-0.15..0.15) * sqrt_ticks;
     let genki_change = -0.03 * ticks_f + rng.gen_range(-0.10..0.10) * sqrt_ticks;
     let nakayoshi_change = -0.02 * ticks_f + rng.gen_range(-0.05..0.05) * sqrt_ticks;
-    let weight_change = rng.gen_range(-0.1..0.1) * sqrt_ticks * 0.1;
+    let weight_change = rng.gen_range(-0.1..0.1) * sqrt_ticks;
 
     pet.kimochi = (pet.kimochi + kimochi_change).clamp(0.0, 100.0);
     pet.genki = (pet.genki + genki_change).clamp(0.0, 100.0);
