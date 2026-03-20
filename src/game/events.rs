@@ -1,3 +1,4 @@
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::save::schema::PetData;
@@ -166,12 +167,8 @@ fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> 
 
         if rng.gen::<f64>() < survive_prob {
             pet.survived_accident = true;
-            let name = if pet.nickname.is_empty() {
-                "なまえなし"
-            } else {
-                &pet.nickname
-            };
-            let msg_template = SURVIVED_MESSAGES[rng.gen_range(0..SURVIVED_MESSAGES.len())];
+            let name = pet.display_name();
+            let msg_template = SURVIVED_MESSAGES.choose(rng).unwrap();
             let msg = msg_template.replace("{name}", name);
             return Some(EventResult {
                 message: msg,
@@ -182,17 +179,13 @@ fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> 
     }
 
     // Death confirmed
-    let name = if pet.nickname.is_empty() {
-        "なまえなし"
-    } else {
-        &pet.nickname
-    };
+    let name = pet.display_name();
 
     // At day_age 7+, longevity messages are more likely
     let msg_template = if day_age >= 7.0 && rng.gen::<f64>() < 0.4 {
-        LONGEVITY_MESSAGES[rng.gen_range(0..LONGEVITY_MESSAGES.len())]
+        LONGEVITY_MESSAGES.choose(rng).unwrap()
     } else {
-        ACCIDENT_MESSAGES[rng.gen_range(0..ACCIDENT_MESSAGES.len())]
+        ACCIDENT_MESSAGES.choose(rng).unwrap()
     };
     let msg = msg_template.replace("{name}", name);
 

@@ -1,3 +1,4 @@
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::save::schema::PetData;
@@ -1357,7 +1358,7 @@ fn check_stage1_to_2(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
         .filter(|s| s.evo_type == evo_type)
         .collect();
 
-    let species = candidates[rng.gen_range(0..candidates.len())];
+    let species = candidates.choose(rng).unwrap();
     apply_evolution(pet, species.name, 2, species.standard_weight);
 
     Some(EvolutionEvent {
@@ -1491,7 +1492,7 @@ fn check_stage3_to_4(pet: &mut PetData, rng: &mut impl Rng) -> Option<EvolutionE
         return None;
     }
 
-    let species = candidates[rng.gen_range(0..candidates.len())];
+    let species = candidates.choose(rng).unwrap();
     apply_evolution(pet, species.name, 4, species.standard_weight);
 
     Some(EvolutionEvent {
@@ -1521,65 +1522,39 @@ fn cosine_similarity(a: &[f64; 5], b: &[f64; 5]) -> f64 {
     dot / (mag_a * mag_b)
 }
 
-/// Get voice type from species name
-pub fn get_voice_type(species: &str) -> Option<VoiceType> {
-    // Stage1 uses default (Phase1 generic dialogue)
+/// Unified species lookup: returns (stage, standard_weight, voice_type) for Stage2+ species.
+fn find_species_info(species: &str) -> Option<(u8, f64, VoiceType)> {
     for s in STAGE2_SPECIES {
         if s.name == species {
-            return Some(s.voice_type);
+            return Some((2, s.standard_weight, s.voice_type));
         }
     }
     for s in STAGE3_SPECIES {
         if s.name == species {
-            return Some(s.voice_type);
+            return Some((3, s.standard_weight, s.voice_type));
         }
     }
     for s in STAGE4_SPECIES {
         if s.name == species {
-            return Some(s.voice_type);
+            return Some((4, s.standard_weight, s.voice_type));
         }
     }
     None
+}
+
+/// Get voice type from species name
+pub fn get_voice_type(species: &str) -> Option<VoiceType> {
+    find_species_info(species).map(|(_, _, vt)| vt)
 }
 
 /// Get standard weight from species name (Stage2+)
 pub fn get_standard_weight(species: &str) -> Option<f64> {
-    for s in STAGE2_SPECIES {
-        if s.name == species {
-            return Some(s.standard_weight);
-        }
-    }
-    for s in STAGE3_SPECIES {
-        if s.name == species {
-            return Some(s.standard_weight);
-        }
-    }
-    for s in STAGE4_SPECIES {
-        if s.name == species {
-            return Some(s.standard_weight);
-        }
-    }
-    None
+    find_species_info(species).map(|(_, w, _)| w)
 }
 
 /// Get stage number from species name
 pub fn get_stage(species: &str) -> Option<u8> {
-    for s in STAGE2_SPECIES {
-        if s.name == species {
-            return Some(2);
-        }
-    }
-    for s in STAGE3_SPECIES {
-        if s.name == species {
-            return Some(3);
-        }
-    }
-    for s in STAGE4_SPECIES {
-        if s.name == species {
-            return Some(4);
-        }
-    }
-    None
+    find_species_info(species).map(|(stage, _, _)| stage)
 }
 
 /// List all species names (for album)

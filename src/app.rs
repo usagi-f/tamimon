@@ -9,6 +9,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use rand::rngs::ThreadRng;
+use rand::seq::SliceRandom;
 use rand::Rng;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
@@ -124,12 +125,7 @@ pub async fn run() -> Result<()> {
                         if er.is_death {
                             death_message = Some(er.message.clone());
                             // Save pet name for Death screen display
-                            let name = if p.nickname.is_empty() {
-                                "なまえなし"
-                            } else {
-                                &p.nickname
-                            };
-                            death_pet_name = Some(name.to_string());
+                            death_pet_name = Some(p.display_name().to_string());
                         }
                         event_messages.push(er.message);
                     }
@@ -318,15 +314,10 @@ fn render_death(f: &mut ratatui::Frame, state: &AppState) {
     lines.push(Line::from(""));
 
     // Get pet name from death_pet_name (saved at startup) or from live pet data
-    let pet_name = state.death_pet_name.as_deref().or_else(|| {
-        state.save_data.pet.as_ref().map(|p| {
-            if p.nickname.is_empty() {
-                "なまえなし"
-            } else {
-                p.nickname.as_str()
-            }
-        })
-    });
+    let pet_name = state
+        .death_pet_name
+        .as_deref()
+        .or_else(|| state.save_data.pet.as_ref().map(|p| p.display_name()));
 
     if let Some(name) = pet_name {
         lines.push(Line::from(Span::styled(
@@ -356,11 +347,7 @@ fn render_evolution(f: &mut ratatui::Frame, state: &AppState) {
     lines.push(Line::from(""));
 
     if let Some(ref pet) = state.save_data.pet {
-        let name = if pet.nickname.is_empty() {
-            "なまえなし"
-        } else {
-            &pet.nickname
-        };
+        let name = pet.display_name();
         lines.push(Line::from(Span::styled(
             format!("  {}が、なにかに気づいたような顔をした。", name),
             Style::default().add_modifier(Modifier::BOLD),
@@ -572,15 +559,10 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         AppMode::Death => {
             // Process death: record to album, clear pet, go to naming
             // Get farewell name from death_pet_name (startup) or from live pet data
-            let farewell = state.death_pet_name.take().or_else(|| {
-                state.save_data.pet.as_ref().map(|p| {
-                    if p.nickname.is_empty() {
-                        "なまえなし".to_string()
-                    } else {
-                        p.nickname.clone()
-                    }
-                })
-            });
+            let farewell = state
+                .death_pet_name
+                .take()
+                .or_else(|| state.save_data.pet.as_ref().map(|p| p.display_name().to_string()));
 
             // Record death if pet is still alive (startup deaths already recorded)
             if state.save_data.pet.is_some() {
@@ -676,12 +658,9 @@ fn record_death(save_data: &mut SaveData, death_message: &str) {
             save_data.records.longest_survival_ticks = pet.age_ticks;
         }
 
+        let display = pet.display_name().to_string();
         let entry = AlbumEntry {
-            nickname: if pet.nickname.is_empty() {
-                "なまえなし".to_string()
-            } else {
-                pet.nickname
-            },
+            nickname: display,
             species: pet.species,
             days_lived,
             weight_kg: pet.weight,
@@ -708,11 +687,10 @@ fn pick_idle_speech(save_data: &SaveData, rng: &mut impl Rng) -> String {
 
         // Stage1: use generic idle speech from Phase 1
         let pool = ascii_art::get_idle_speech(&pet.species, mood);
-        if pool.is_empty() {
-            return String::new();
+        match pool.choose(rng) {
+            Some(s) => s.to_string(),
+            None => String::new(),
         }
-        let idx = rng.gen_range(0..pool.len());
-        pool[idx].to_string()
     } else {
         String::new()
     }

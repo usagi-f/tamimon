@@ -1,3 +1,4 @@
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::game::actions::Action;
@@ -12,15 +13,13 @@ pub fn get_reaction(
     rng: &mut impl Rng,
 ) -> String {
     let pool = get_reaction_pool(voice_type, action, mood);
-    let idx = rng.gen_range(0..pool.len());
-    pool[idx].to_string()
+    pool.choose(rng).unwrap().to_string()
 }
 
 /// Get idle speech by voice type
 pub fn get_idle_speech(voice_type: VoiceType, mood: MoodLevel, rng: &mut impl Rng) -> String {
     let pool = get_idle_pool(voice_type, mood);
-    let idx = rng.gen_range(0..pool.len());
-    pool[idx].to_string()
+    pool.choose(rng).unwrap().to_string()
 }
 
 fn get_reaction_pool(

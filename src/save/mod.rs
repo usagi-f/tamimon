@@ -17,6 +17,17 @@ fn backup_path() -> Result<PathBuf> {
     Ok(save_dir()?.join("save.json.bak"))
 }
 
+/// Move a corrupt save file aside and return None.
+fn quarantine_corrupt(path: &std::path::Path) -> Result<Option<schema::SaveData>> {
+    let corrupt = path.with_extension("json.corrupt");
+    std::fs::rename(path, &corrupt).ok();
+    eprintln!(
+        "セーブデータが破損しています。破損ファイルを {} に退避しました",
+        corrupt.display()
+    );
+    Ok(None)
+}
+
 pub fn load() -> Result<Option<schema::SaveData>> {
     let path = save_path()?;
     if !path.exists() {
@@ -42,25 +53,10 @@ pub fn load() -> Result<Option<schema::SaveData>> {
                         eprintln!("バックアップから復元しました");
                         Ok(Some(data))
                     }
-                    Err(_) => {
-                        // Both corrupted — rename corrupt file and start fresh
-                        let corrupt = path.with_extension("json.corrupt");
-                        std::fs::rename(&path, &corrupt).ok();
-                        eprintln!(
-                            "セーブデータが破損しています。破損ファイルを {} に退避しました",
-                            corrupt.display()
-                        );
-                        Ok(None)
-                    }
+                    Err(_) => quarantine_corrupt(&path),
                 }
             } else {
-                let corrupt = path.with_extension("json.corrupt");
-                std::fs::rename(&path, &corrupt).ok();
-                eprintln!(
-                    "セーブデータが破損しています。破損ファイルを {} に退避しました",
-                    corrupt.display()
-                );
-                Ok(None)
+                quarantine_corrupt(&path)
             }
         }
     }

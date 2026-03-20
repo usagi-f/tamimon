@@ -1,3 +1,4 @@
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::game::pet::MoodLevel;
@@ -126,6 +127,5 @@ pub fn select_generic_reaction(action: Action, mood: MoodLevel, rng: &mut impl R
         ],
     };
 
-    let idx = rng.gen_range(0..pool.len());
-    pool[idx].to_string()
+    pool.choose(rng).unwrap().to_string()
 }

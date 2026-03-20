@@ -32,11 +32,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
     let age_str = format_elapsed(pet.birth_timestamp, now);
     let w_label = weight_label(&pet.species, pet.weight);
     let weight_str = format!("{:.0}kg ({})", pet.weight, w_label);
-    let nickname = if pet.nickname.is_empty() {
-        "なまえなし"
-    } else {
-        &pet.nickname
-    };
+    let nickname = pet.display_name();
 
     let header_line = Line::from(vec![Span::styled(
         format!("  {}（{}）  ", nickname, pet.species),
@@ -149,14 +145,9 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
         lines.push(Line::from(""));
 
         if let Some(pet) = &state.save_data.pet {
-            let name = if pet.nickname.is_empty() {
-                "なまえなし"
-            } else {
-                &pet.nickname
-            };
             lines.push(Line::from(format!(
                 "  {}は自由気ままに過ごしていたよ！",
-                name
+                pet.display_name()
             )));
         }
     }
@@ -174,12 +165,7 @@ pub fn render_startup(f: &mut Frame, state: &AppState) {
         if let Some(ref evolved) = info.evolved_species {
             lines.push(Line::from(""));
             let evo_msg = if let Some(ref pet) = state.save_data.pet {
-                let name = if pet.nickname.is_empty() {
-                    "なまえなし"
-                } else {
-                    &pet.nickname
-                };
-                format!("  ✨ {}が進化した！ → {}", name, evolved)
+                format!("  ✨ {}が進化した！ → {}", pet.display_name(), evolved)
             } else {
                 format!("  ✨ 進化した！ → {}", evolved)
             };
@@ -236,11 +222,7 @@ pub fn render_action_animation(f: &mut Frame, state: &AppState) {
         None => return,
     };
 
-    let nickname = if pet.nickname.is_empty() {
-        "なまえなし"
-    } else {
-        &pet.nickname
-    };
+    let nickname = pet.display_name();
 
     let art_lines = ascii_art::get_action_art(&pet.species, action, state.animation_frame);
     let effect = ascii_art::get_action_effect(action, state.animation_frame);
@@ -293,11 +275,7 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
         None => return,
     };
 
-    let nickname = if pet.nickname.is_empty() {
-        "なまえなし"
-    } else {
-        &pet.nickname
-    };
+    let nickname = pet.display_name();
 
     let mood = mood_level(pet.kimochi);
     let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
