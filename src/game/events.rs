@@ -151,7 +151,7 @@ pub fn process_offline_events(
 /// Accident check
 /// Accident probability per tick = day_age × 0.00347%
 fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> {
-    let day_age = (pet.age_ticks as f64 / 1440.0).max(1.0);
+    let day_age = pet.age_ticks as f64 / 1440.0;
     let accident_prob_per_tick = day_age * 0.0000347;
     // Aggregate accident probability over 1 hour (60 ticks)
     let accident_prob = 1.0 - (1.0 - accident_prob_per_tick).powi(60);
