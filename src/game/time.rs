@@ -6,7 +6,7 @@ const DRIFT_THRESHOLD_MINUTES: i64 = 10;
 const API_TIMEOUT_SECS: u64 = 5;
 
 pub enum TimeSource {
-    WorldTimeApi,
+    TimeApi,
     LocalFallback,
 }
 
@@ -24,9 +24,12 @@ pub struct ElapsedResult {
 }
 
 #[derive(Deserialize)]
-struct WorldTimeResponse {
-    utc_datetime: String,
+#[serde(rename_all = "camelCase")]
+struct TimeApiResponse {
+    date_time: String,
 }
+
+const TIME_API_URL: &str = "https://timeapi.io/api/time/current/zone?timeZone=UTC";
 
 pub async fn fetch_current_time() -> TimeResult {
     let local_now = Utc::now();
@@ -45,18 +48,20 @@ pub async fn fetch_current_time() -> TimeResult {
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
 
-        let resp = match client.get("http://worldtimeapi.org/api/ip").send().await {
+        let resp = match client.get(TIME_API_URL).send().await {
             Ok(r) => r,
             Err(_) => continue,
         };
 
-        let data = match resp.json::<WorldTimeResponse>().await {
+        let data = match resp.json::<TimeApiResponse>().await {
             Ok(d) => d,
             Err(_) => continue,
         };
 
-        if let Ok(api_time) = DateTime::parse_from_rfc3339(&data.utc_datetime) {
-            let api_utc: DateTime<Utc> = api_time.into();
+        // timeapi.io returns datetime without timezone suffix, append Z for UTC
+        let rfc3339 = format!("{}Z", data.date_time);
+        if let Ok(parsed) = DateTime::parse_from_rfc3339(&rfc3339) {
+            let api_utc: DateTime<Utc> = parsed.into();
             let drift = (api_utc - local_now).num_minutes().abs();
             let drift_warning = if drift >= DRIFT_THRESHOLD_MINUTES {
                 Some(format!(
@@ -68,7 +73,7 @@ pub async fn fetch_current_time() -> TimeResult {
             };
             return TimeResult {
                 now: api_utc,
-                source: TimeSource::WorldTimeApi,
+                source: TimeSource::TimeApi,
                 drift_warning,
             };
         }

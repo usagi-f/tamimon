@@ -82,7 +82,7 @@ fn install_panic_hook() {
 pub async fn run() -> Result<()> {
     // 1. Fetch current time
     let time_result = time::fetch_current_time().await;
-    let api_success = matches!(time_result.source, time::TimeSource::WorldTimeApi);
+    let api_success = matches!(time_result.source, time::TimeSource::TimeApi);
 
     // 2. Load save data
     let existing_save = save::load()?;
