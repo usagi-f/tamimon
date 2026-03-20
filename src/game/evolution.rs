@@ -549,7 +549,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
             "ポワン",
             "ホワモコ",
         ],
-        vector: [2.0, 8.0, 5.0, 3.0, 2.0],
+        vector: [1.0, 7.0, 7.0, 2.0, 1.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Tetsugaku,
     },
