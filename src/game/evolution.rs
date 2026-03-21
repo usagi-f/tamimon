@@ -7,7 +7,7 @@ use crate::save::schema::PetData;
 // Stage1→2: 6〜12時間（360〜720 ticks）
 const STAGE2_TICKS_MIN: u64 = 360;
 const STAGE2_TICKS_RANGE: u64 = 361; // 0..=360 offset
-// Stage2→3: 24〜48時間（1440〜2880 ticks）
+                                     // Stage2→3: 24〜48時間（1440〜2880 ticks）
 const STAGE3_TICKS_MIN: u64 = 1440;
 const STAGE3_TICKS_RANGE: u64 = 1441; // 0..=1440 offset
 const STAGE4_INTERVAL: u64 = 1440; // Check every 24 hours

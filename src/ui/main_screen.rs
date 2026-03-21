@@ -32,11 +32,7 @@ fn apply_blink(lines: Vec<String>, blink_tick: u32) -> Vec<String> {
     }
     lines
         .into_iter()
-        .map(|l| {
-            l.replace('ω', "－")
-                .replace('ᵕ', "＿")
-                .replace("◉", "ー")
-        })
+        .map(|l| l.replace('ω', "－").replace('ᵕ', "＿").replace("◉", "ー"))
         .collect()
 }
 

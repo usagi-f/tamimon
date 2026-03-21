@@ -25,7 +25,9 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use crate::game::actions::Action;
-    use crate::game::evolution::{all_species_names, check_evolution, STAGE2_SPECIES, STAGE3_SPECIES};
+    use crate::game::evolution::{
+        all_species_names, check_evolution, STAGE2_SPECIES, STAGE3_SPECIES,
+    };
     use crate::game::pet::MoodLevel;
     use crate::save::schema::{PetData, TypeScores};
     use crate::ui::ascii_art;
@@ -71,7 +73,11 @@ mod tests {
             let group_species: Vec<_> = STAGE2_SPECIES[group.clone()].iter().collect();
             let stage3_in_group: Vec<_> = STAGE3_SPECIES
                 .iter()
-                .filter(|s| s.allowed_from.iter().any(|f| group_species.iter().any(|g| g.name == *f)))
+                .filter(|s| {
+                    s.allowed_from
+                        .iter()
+                        .any(|f| group_species.iter().any(|g| g.name == *f))
+                })
                 .collect();
 
             for _ in 0..SIMS_PER_GROUP {
