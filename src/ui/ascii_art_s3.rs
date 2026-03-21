@@ -1210,24 +1210,24 @@ fn jetto_action(action: Action, frame: usize) -> &'static [&'static str] {
 // --- ノーマル (noomaru) - Plain blocks, simplest shape ---
 fn noomaru_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &[" ■■■■■■■ ", " ■■■■■■■ ", " ■■■■■■■!", "", ""],
-        (MoodLevel::High, _) => &["!■■■■■■■ ", " ■■■■■■■ ", " ■■■■■■■ ", "", ""],
-        (MoodLevel::Normal, 0) => &["  ■■■■■  ", "  ■■■■■  ", "  ■■■■■  ", "", ""],
-        (MoodLevel::Normal, _) => &["  ■■■■■  ", "  ■■■■■  ", "  ■■■■■  ", "", ""],
-        (MoodLevel::Low, 0) => &["   ■■■   ", "   ■■■   ", "         ", "", ""],
-        (MoodLevel::Low, _) => &["   ■■■   ", "   ■■■   ", "         ", "", ""],
+        (MoodLevel::High, 0) => &[" ■■■■■■■ ", " ■(^▽^)■ ", " ■■■■■■■!", "", ""],
+        (MoodLevel::High, _) => &["!■■■■■■■ ", " ■(^▽^)■ ", " ■■■■■■■ ", "", ""],
+        (MoodLevel::Normal, 0) => &["  ■■■■■  ", "  ■ -_- ■ ", "  ■■■■■  ", "", ""],
+        (MoodLevel::Normal, _) => &["  ■■■■■  ", "  ■ -_- ■ ", "  ■■■■■  ", "", ""],
+        (MoodLevel::Low, 0) => &["   ■■■   ", "  ■u_u■  ", "         ", "", ""],
+        (MoodLevel::Low, _) => &["   ■■■   ", "  ■u_u■  ", "         ", "", ""],
     }
 }
 fn noomaru_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["  ■■■■■ ♪", "  ■■■■■  ", "  ■■■■■  ", "", ""],
-        (Action::Talk, _) => &["♫ ■■■■■  ", "  ■■■■■  ", "  ■■■■■  ", "", ""],
-        (Action::Play, 0) => &[" ~■■■■■~ ", "  ■■■■■  ", " ~■■■■■~ ", "", ""],
-        (Action::Play, _) => &["~ ■■■■■  ", "  ■■■■■ ~", "  ■■■■■  ", "", ""],
-        (Action::Train, 0) => &[" ■■■■■■■!", " ■■■■■■■ ", " ■■■■■■■ ", "", ""],
-        (Action::Train, _) => &["!■■■■■■■ ", " ■■■■■■■ ", " ■■■■■■■!", "", ""],
-        (Action::Relax, 0) => &["   ■■■   ", "   ■■■ z ", "   ■■■   ", "", ""],
-        (Action::Relax, _) => &["   ■■■   ", "   ■■■ zZ", "   ■■■   ", "", ""],
+        (Action::Talk, 0) => &["  ■■■■■ ♪", "  ■ -_- ■ ", "  ■■■■■  ", "", ""],
+        (Action::Talk, _) => &["♫ ■■■■■  ", "  ■ -_- ■ ", "  ■■■■■  ", "", ""],
+        (Action::Play, 0) => &[" ~■■■■■~ ", " ■(^▽^)■ ", " ~■■■■■~ ", "", ""],
+        (Action::Play, _) => &["~ ■■■■■  ", " ■(^▽^)■ ", "  ■■■■■ ~", "", ""],
+        (Action::Train, 0) => &[" ■■■■■■■!", " ■(>_<)■ ", " ■■■■■■■ ", "", ""],
+        (Action::Train, _) => &["!■■■■■■■ ", " ■(>_<)■ ", " ■■■■■■■!", "", ""],
+        (Action::Relax, 0) => &["   ■■■   ", "  ■u_u■z ", "   ■■■   ", "", ""],
+        (Action::Relax, _) => &["   ■■■   ", " ■u_u■ zZ", "   ■■■   ", "", ""],
     }
 }
 
@@ -1279,51 +1279,51 @@ fn tasogare_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- ニッコリ (nikkori) - Giant curved smile, NO eyes ---
+// --- ニッコリ (nikkori) - Giant curved smile arc, eyes above ---
 fn nikkori_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["         ", "╰━━━━━━━╯", "         ", "", ""],
-        (MoodLevel::High, _) => &["         ", " ╰━━━━━━━╯", "         ", "", ""],
-        (MoodLevel::Normal, 0) => &["         ", " ╰━━━━━╯ ", "         ", "", ""],
-        (MoodLevel::Normal, _) => &["         ", " ╰━━━━━╯ ", "         ", "", ""],
-        (MoodLevel::Low, 0) => &["         ", "  ╰- - -╯", "         ", "", ""],
-        (MoodLevel::Low, _) => &["         ", "  ╰- - -╯", "         ", "", ""],
+        (MoodLevel::High, 0) => &["  ^ .  ^  ", "╰━━━━━━━╯!", "         ", "", ""],
+        (MoodLevel::High, _) => &["   ^ .  ^ ", "╰━━━━━━━╯!", "         ", "", ""],
+        (MoodLevel::Normal, 0) => &["  ^   ^  ", " ╰━━━━━╯ ", "         ", "", ""],
+        (MoodLevel::Normal, _) => &["  ^   ^  ", "  ╰━━━━━╯", "         ", "", ""],
+        (MoodLevel::Low, 0) => &["  . _ .  ", "  ╰- - -╯", "         ", "", ""],
+        (MoodLevel::Low, _) => &["  . _ .  ", "   ╰- - -╯", "         ", "", ""],
     }
 }
 fn nikkori_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["        ♪", " ╰━━━━━╯ ", "         ", "", ""],
-        (Action::Talk, _) => &["♫        ", " ╰━━━━━╯ ", "         ", "", ""],
-        (Action::Play, 0) => &["         ", "╰━━━━━━━╯", "    ~    ", "", ""],
-        (Action::Play, _) => &["         ", " ╰━━━━━━━╯", "   ~     ", "", ""],
-        (Action::Train, 0) => &["   !     ", "╰━━━━━━━━━╯", "         ", "", ""],
-        (Action::Train, _) => &["         ", "╰━━━━━━━━━╯", "     !   ", "", ""],
-        (Action::Relax, 0) => &["         ", " ╰━━━━━╯z", "         ", "", ""],
-        (Action::Relax, _) => &["       zZ", " ╰━━━━━╯ ", "         ", "", ""],
+        (Action::Talk, 0) => &["  ^   ^ ♪", " ╰━━━━━╯ ", "         ", "", ""],
+        (Action::Talk, _) => &["♫ ^   ^  ", " ╰━━━━━╯ ", "         ", "", ""],
+        (Action::Play, 0) => &["  ^ .  ^  ", "╰━━━━━━━╯ ", "    ~    ", "", ""],
+        (Action::Play, _) => &["   ^ .  ^ ", " ╰━━━━━━━╯", "   ~     ", "", ""],
+        (Action::Train, 0) => &["  ^ .  ^! ", "╰━━━━━━━━━╯", "         ", "", ""],
+        (Action::Train, _) => &["  ^ .  ^  ", "╰━━━━━━━━━╯", "     !   ", "", ""],
+        (Action::Relax, 0) => &["  . _ . z ", "  ╰- - -╯", "         ", "", ""],
+        (Action::Relax, _) => &["  . _ .   ", "  ╰- - -╯zZ", "         ", "", ""],
     }
 }
 
-// --- ダラーン (daraan) - Melting/dripping creature ---
+// --- ダラーン (daraan) - Melting/dripping creature with expressive brows ---
 fn daraan_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["  ~~__~~ ", "  | || | ", " _/,,,,\\_", "", ""],
-        (MoodLevel::High, _) => &[" ~~__~~  ", "  | || |!", " _/,,,,\\_", "", ""],
-        (MoodLevel::Normal, 0) => &["  ~~__~~ ", "   | |   ", "  _/,,\\_ ", "", ""],
-        (MoodLevel::Normal, _) => &["  ~~__~~ ", "   | |   ", "  _/,,\\_ ", "", ""],
-        (MoodLevel::Low, 0) => &["  ~____~ ", "   |  |  ", " __/,,\\__", "", ""],
-        (MoodLevel::Low, _) => &["  ~____~ ", "    ||   ", " __/,,\\__", "", ""],
+        (MoodLevel::High, 0) => &["  ~~^^~~ ", "  | || | ", " _/,,,,\\_", "", ""],
+        (MoodLevel::High, _) => &[" ~~^^~~  ", "  | || |!", " _/,,,,\\_", "", ""],
+        (MoodLevel::Normal, 0) => &["  ~~--~~ ", "   | |   ", "  _/,,._ ", "", ""],
+        (MoodLevel::Normal, _) => &["  ~~--~~ ", "   | |   ", "  _/,,._ ", "", ""],
+        (MoodLevel::Low, 0) => &["  ~____~ ", "   |  |  ", " __/--\\__", "", ""],
+        (MoodLevel::Low, _) => &["  ~____~ ", "    ||   ", " __/--\\__", "", ""],
     }
 }
 fn daraan_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["  ~~__~~♪", "   | |   ", "  _/,,\\_ ", "", ""],
-        (Action::Talk, _) => &["♫ ~~__~~ ", "   | |   ", "  _/,,\\_ ", "", ""],
-        (Action::Play, 0) => &[" ~~~__~~~", "  | || | ", " _/,,,,\\_", "", ""],
-        (Action::Play, _) => &["~~~__~~~ ", "  | || | ", " _/,,,,\\_", "", ""],
-        (Action::Train, 0) => &["  ~~__~~!", "  | || | ", " _/,,,,\\_", "", ""],
-        (Action::Train, _) => &["! ~~__~~ ", "  | || | ", " _/,,,,\\_", "", ""],
-        (Action::Relax, 0) => &["  ~____~ ", "    ||  z", " __/,,\\__", "", ""],
-        (Action::Relax, _) => &["  ~____~ ", "    || zZ", " __/,,\\__", "", ""],
+        (Action::Talk, 0) => &["  ~~--~~♪", "   | |   ", "  _/,,._ ", "", ""],
+        (Action::Talk, _) => &["♫ ~~--~~ ", "   | |   ", "  _/,,._ ", "", ""],
+        (Action::Play, 0) => &[" ~~~^^~~~", "  | || | ", " _/,,,,\\_", "", ""],
+        (Action::Play, _) => &["~~~^^~~~ ", "  | || | ", " _/,,,,\\_", "", ""],
+        (Action::Train, 0) => &["  ~~^^~~!", "  | || | ", " _/,,,,\\_", "", ""],
+        (Action::Train, _) => &["! ~~^^~~ ", "  | || | ", " _/,,,,\\_", "", ""],
+        (Action::Relax, 0) => &["  ~____~ ", "    ||  z", " __/--\\__", "", ""],
+        (Action::Relax, _) => &["  ~____~ ", "    || zZ", " __/--\\__", "", ""],
     }
 }
 
@@ -1399,27 +1399,27 @@ fn maamaa_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- フニャ (funya) - Pancake, barely any height ---
+// --- フニャ (funya) - Pancake, face squished into flat body ---
 fn funya_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["    ^    ", "___________", "         ", "", ""],
-        (MoodLevel::High, _) => &["   ^     ", "___________", "         ", "", ""],
-        (MoodLevel::Normal, 0) => &["         ", " _________ ", "         ", "", ""],
-        (MoodLevel::Normal, _) => &["         ", " _________ ", "         ", "", ""],
-        (MoodLevel::Low, 0) => &["         ", "___________", "         ", "", ""],
-        (MoodLevel::Low, _) => &["         ", "___________", "         ", "", ""],
+        (MoodLevel::High, 0) => &["    ^    ", "_(^v^)____", "         ", "", ""],
+        (MoodLevel::High, _) => &["   ^     ", "___(^v^)__", "         ", "", ""],
+        (MoodLevel::Normal, 0) => &["         ", " _(- w -)_ ", "         ", "", ""],
+        (MoodLevel::Normal, _) => &["         ", " _(- w -)_ ", "         ", "", ""],
+        (MoodLevel::Low, 0) => &["         ", "__(._..)__", "         ", "", ""],
+        (MoodLevel::Low, _) => &["         ", "___(._.)__", "         ", "", ""],
     }
 }
 fn funya_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["        ♪", " _________ ", "         ", "", ""],
-        (Action::Talk, _) => &["♫        ", " _________ ", "         ", "", ""],
-        (Action::Play, 0) => &["   ~     ", "~_________~", "         ", "", ""],
-        (Action::Play, _) => &["     ~   ", " ~_______~ ", "         ", "", ""],
-        (Action::Train, 0) => &["    ^!   ", "___________", "         ", "", ""],
-        (Action::Train, _) => &["   !^    ", "___________", "         ", "", ""],
-        (Action::Relax, 0) => &["         ", "__________z", "         ", "", ""],
-        (Action::Relax, _) => &["       zZ", "___________", "         ", "", ""],
+        (Action::Talk, 0) => &["       ♪ ", " _(- w -)_ ", "         ", "", ""],
+        (Action::Talk, _) => &["♫        ", " _(- w -)_ ", "         ", "", ""],
+        (Action::Play, 0) => &["   ~  ^  ", "~(^v^)~~~~ ", "         ", "", ""],
+        (Action::Play, _) => &["    ^ ~  ", "~~~(^v^)~~ ", "         ", "", ""],
+        (Action::Train, 0) => &["    ^!   ", "_(>o<)____!", "         ", "", ""],
+        (Action::Train, _) => &["   !^    ", "!__(>o<)___", "         ", "", ""],
+        (Action::Relax, 0) => &["         ", "__(._.)___z", "         ", "", ""],
+        (Action::Relax, _) => &["       zZ", "___(._..)__", "         ", "", ""],
     }
 }
 
@@ -1471,27 +1471,27 @@ fn naanaa_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- ポツリ (potsuri) - Single teardrop ---
+// --- ポツリ (potsuri) - Single teardrop with crying face inside ---
 fn potsuri_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["    .    ", "   / \\   ", "  ( * )  ", "", ""],
-        (MoodLevel::High, _) => &["    .    ", "   / \\   ", "  ( * )  ", "", ""],
-        (MoodLevel::Normal, 0) => &["    .    ", "   / \\   ", "  (   )  ", "", ""],
-        (MoodLevel::Normal, _) => &["    .    ", "   / \\   ", "  (   )  ", "", ""],
-        (MoodLevel::Low, 0) => &["    .    ", "   / \\   ", "  (   )  ", "", ""],
-        (MoodLevel::Low, _) => &["    .    ", "   / \\   ", "  (   )  ", "", ""],
+        (MoodLevel::High, 0) => &["    .    ", "   / \\   ", "  (;v;)  ", "", ""],
+        (MoodLevel::High, _) => &["    .    ", "   / \\   ", "  (;v;)  ", "", ""],
+        (MoodLevel::Normal, 0) => &["    .    ", "   / \\   ", "  (;_;)  ", "", ""],
+        (MoodLevel::Normal, _) => &["    .    ", "   / \\   ", "  (;_;)  ", "", ""],
+        (MoodLevel::Low, 0) => &["    .    ", "   / \\   ", "  (T_T)  ", "", ""],
+        (MoodLevel::Low, _) => &["    .    ", "   / \\   ", "  (ToT)  ", "", ""],
     }
 }
 fn potsuri_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["    .  ♪ ", "   / \\   ", "  (   )  ", "", ""],
-        (Action::Talk, _) => &[" ♫  .    ", "   / \\   ", "  (   )  ", "", ""],
-        (Action::Play, 0) => &["    .    ", "  ~/ \\~  ", "  (   )  ", "", ""],
-        (Action::Play, _) => &["    .    ", "   / \\   ", " ~(   )~ ", "", ""],
-        (Action::Train, 0) => &["    .  ! ", "   / \\   ", "  ( * )  ", "", ""],
-        (Action::Train, _) => &[" !  .    ", "   / \\   ", "  ( * )  ", "", ""],
-        (Action::Relax, 0) => &["    .  z ", "   / \\   ", "  (   )  ", "", ""],
-        (Action::Relax, _) => &["    . zZ ", "   / \\   ", "  (   )  ", "", ""],
+        (Action::Talk, 0) => &["    .  ♪ ", "   / \\   ", "  (;_;)  ", "", ""],
+        (Action::Talk, _) => &[" ♫  .    ", "   / \\   ", "  (;_;)  ", "", ""],
+        (Action::Play, 0) => &["    .    ", "  ~/ \\~  ", "  (;v;)  ", "", ""],
+        (Action::Play, _) => &["    .    ", "   / \\   ", " ~(;v;)~ ", "", ""],
+        (Action::Train, 0) => &["    .  ! ", "   / \\   ", "  (;*;)  ", "", ""],
+        (Action::Train, _) => &[" !  .    ", "   / \\   ", "  (;*;)  ", "", ""],
+        (Action::Relax, 0) => &["    .  z ", "   / \\   ", "  (T_T)  ", "", ""],
+        (Action::Relax, _) => &["    . zZ ", "   / \\   ", "  (ToT)  ", "", ""],
     }
 }
 
@@ -1543,27 +1543,27 @@ fn unun_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- チャッカリ (chakkari) - Fox with pointed ears and tail ---
+// --- チャッカリ (chakkari) - Fox with pointed ears, face embedded in arrow body ---
 fn chakkari_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["/\\    /\\ ", " ▷────>  ", "   \\_/   ", "", ""],
-        (MoodLevel::High, _) => &[" /\\  /\\ !", "  ▷────> ", "    \\_/  ", "", ""],
-        (MoodLevel::Normal, 0) => &[" /\\  /\\  ", "  ▷───>  ", "   \\_/   ", "", ""],
-        (MoodLevel::Normal, _) => &[" /\\  /\\  ", "  ▷───>  ", "    \\_/  ", "", ""],
-        (MoodLevel::Low, 0) => &["  /\\ /\\  ", "   ▷──>  ", "    \\_/  ", "", ""],
-        (MoodLevel::Low, _) => &["  /\\ /\\  ", "   ▷──>  ", "   \\_/   ", "", ""],
+        (MoodLevel::High, 0) => &["/\\    /\\ ", " ▷-^ω^->!", "   \\_/   ", "", ""],
+        (MoodLevel::High, _) => &[" /\\  /\\ !", "  ▷-^ω^-> ", "    \\_/  ", "", ""],
+        (MoodLevel::Normal, 0) => &[" /\\  /\\  ", "  ▷--ω--> ", "   \\_/   ", "", ""],
+        (MoodLevel::Normal, _) => &[" /\\  /\\  ", "  ▷--ω--> ", "    \\_/  ", "", ""],
+        (MoodLevel::Low, 0) => &["  /\\ /\\  ", "  ▷-u_u-> ", "    \\_/  ", "", ""],
+        (MoodLevel::Low, _) => &["  /\\ /\\  ", "  ▷-u_u-> ", "   \\_/   ", "", ""],
     }
 }
 fn chakkari_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &[" /\\  /\\ ♪", "  ▷───>  ", "   \\_/   ", "", ""],
-        (Action::Talk, _) => &["♫/\\  /\\  ", "  ▷───>  ", "   \\_/   ", "", ""],
-        (Action::Play, 0) => &["/\\    /\\ ", " ▷────>~ ", "   \\_/   ", "", ""],
-        (Action::Play, _) => &[" /\\  /\\  ", "~▷────>  ", "    \\_/  ", "", ""],
-        (Action::Train, 0) => &["/\\    /\\!", " ▷────>  ", "   \\_/   ", "", ""],
-        (Action::Train, _) => &["!/\\  /\\  ", "  ▷────> ", "   \\_/   ", "", ""],
-        (Action::Relax, 0) => &["  /\\ /\\ z", "   ▷──>  ", "    \\_/  ", "", ""],
-        (Action::Relax, _) => &["  /\\ /\\zZ", "   ▷──>  ", "   \\_/   ", "", ""],
+        (Action::Talk, 0) => &[" /\\  /\\ ♪", "  ▷--ω--> ", "   \\_/   ", "", ""],
+        (Action::Talk, _) => &["♫/\\  /\\  ", "  ▷--ω--> ", "   \\_/   ", "", ""],
+        (Action::Play, 0) => &["/\\    /\\ ", " ▷-^ω^->~ ", "   \\_/   ", "", ""],
+        (Action::Play, _) => &[" /\\  /\\  ", "~▷-^ω^->  ", "    \\_/  ", "", ""],
+        (Action::Train, 0) => &["/\\    /\\!", " ▷->_<->  ", "   \\_/   ", "", ""],
+        (Action::Train, _) => &["!/\\  /\\  ", "  ▷->_<-> ", "   \\_/   ", "", ""],
+        (Action::Relax, 0) => &["  /\\ /\\ z", "  ▷-u_u-> ", "    \\_/  ", "", ""],
+        (Action::Relax, _) => &["  /\\ /\\zZ", "  ▷-u_u-> ", "   \\_/   ", "", ""],
     }
 }
 
@@ -1591,27 +1591,27 @@ fn nururi_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- ヤレヤレ (yareyare) - Deflated balloon with string ---
+// --- ヤレヤレ (yareyare) - Deflated balloon with weary face inside ---
 fn yareyare_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["   .--.  ", "  (    ) ", "  '--'s  ", "", ""],
-        (MoodLevel::High, _) => &["  .--.   ", " (    )  ", " '--'s   ", "", ""],
-        (MoodLevel::Normal, 0) => &["   .-.   ", "  (   )  ", "  '-'s   ", "", ""],
-        (MoodLevel::Normal, _) => &["   .-.   ", "  (   )  ", "   '-'s  ", "", ""],
-        (MoodLevel::Low, 0) => &["   .~.   ", "  ( ~ )  ", "  '--'s  ", "", ""],
-        (MoodLevel::Low, _) => &["   .~.   ", "  (~ ~)  ", "  '--'s  ", "", ""],
+        (MoodLevel::High, 0) => &["   .--.  ", "  (^_^;) ", "  '--'s  ", "", ""],
+        (MoodLevel::High, _) => &["  .--.   ", " (^_^;)  ", " '--'s   ", "", ""],
+        (MoodLevel::Normal, 0) => &["   .-.   ", "  (-_-)  ", "  '-'s   ", "", ""],
+        (MoodLevel::Normal, _) => &["   .-.   ", "   (-_-) ", "   '-'s  ", "", ""],
+        (MoodLevel::Low, 0) => &["   .~.   ", "  (=_=)  ", "  '--'s  ", "", ""],
+        (MoodLevel::Low, _) => &["   .~.   ", "  (~_~)  ", "  '--'s  ", "", ""],
     }
 }
 fn yareyare_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["   .-. ♪ ", "  (   )  ", "  '-'s   ", "", ""],
-        (Action::Talk, _) => &[" ♫ .-.   ", "  (   )  ", "  '-'s   ", "", ""],
-        (Action::Play, 0) => &["   .--.  ", " ~(    )~", "  '--'s  ", "", ""],
-        (Action::Play, _) => &["  .--.   ", " (    )  ", " ~'--'s~ ", "", ""],
-        (Action::Train, 0) => &["   .--.! ", "  (    ) ", "  '--'s  ", "", ""],
-        (Action::Train, _) => &["  !.--.  ", "  (    ) ", "  '--'s  ", "", ""],
-        (Action::Relax, 0) => &["   .~. z ", "  ( ~ )  ", "  '--'s  ", "", ""],
-        (Action::Relax, _) => &["   .~. zZ", "  (~ ~)  ", "  '--'s  ", "", ""],
+        (Action::Talk, 0) => &["   .-. ♪ ", "  (-_-)  ", "  '-'s   ", "", ""],
+        (Action::Talk, _) => &[" ♫ .-.   ", "  (-_-)  ", "  '-'s   ", "", ""],
+        (Action::Play, 0) => &["   .--.  ", " ~(^_^;)~", "  '--'s  ", "", ""],
+        (Action::Play, _) => &["  .--.   ", " (^_^;)  ", " ~'--'s~ ", "", ""],
+        (Action::Train, 0) => &["   .--.! ", "  (>_<;) ", "  '--'s  ", "", ""],
+        (Action::Train, _) => &["  !.--.  ", "  (>_<;) ", "  '--'s  ", "", ""],
+        (Action::Relax, 0) => &["   .~. z ", "  (=_=)  ", "  '--'s  ", "", ""],
+        (Action::Relax, _) => &["   .~. zZ", "  (~_~)  ", "  '--'s  ", "", ""],
     }
 }
 
@@ -1663,27 +1663,27 @@ fn pappa_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- オットリ (ottori) - Round pillow, soft edges ---
+// --- オットリ (ottori) - Round pillow with gentle face inside ---
 fn ottori_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &[" .~~~~.  ", "(      ) ", " '~~~~'  ", "", ""],
-        (MoodLevel::High, _) => &["  .~~~~. ", " (      )", "  '~~~~' ", "", ""],
-        (MoodLevel::Normal, 0) => &["  .~~~~. ", " (      )", "  '~~~~' ", "", ""],
-        (MoodLevel::Normal, _) => &["  .~~~~. ", " (      )", "  '~~~~' ", "", ""],
-        (MoodLevel::Low, 0) => &["   .~~.  ", "  (    ) ", "   '~~'  ", "", ""],
-        (MoodLevel::Low, _) => &["   .~~.  ", "  (    ) ", "   '~~'  ", "", ""],
+        (MoodLevel::High, 0) => &[" .~~~~.  ", "( ^u^  ) ", " '~~~~'  ", "", ""],
+        (MoodLevel::High, _) => &["  .~~~~. ", " ( ^u^ )", "  '~~~~' ", "", ""],
+        (MoodLevel::Normal, 0) => &["  .~~~~. ", " (-u-  )", "  '~~~~' ", "", ""],
+        (MoodLevel::Normal, _) => &["  .~~~~. ", " (-u-  )", "  '~~~~' ", "", ""],
+        (MoodLevel::Low, 0) => &["   .~~.  ", "  (._.) ", "   '~~'  ", "", ""],
+        (MoodLevel::Low, _) => &["   .~~.  ", "  (._.) ", "   '~~'  ", "", ""],
     }
 }
 fn ottori_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["  .~~~~.♪", " (      )", "  '~~~~' ", "", ""],
-        (Action::Talk, _) => &["♫ .~~~~. ", " (      )", "  '~~~~' ", "", ""],
-        (Action::Play, 0) => &[" ~.~~~~.~", " (      )", "  '~~~~' ", "", ""],
-        (Action::Play, _) => &["  .~~~~. ", "~(      )~", "  '~~~~' ", "", ""],
-        (Action::Train, 0) => &["  .~~~~.!", " (      )", "  '~~~~' ", "", ""],
-        (Action::Train, _) => &["!.~~~~.  ", "(      ) ", " '~~~~'  ", "", ""],
-        (Action::Relax, 0) => &["   .~~. z", "  (    ) ", "   '~~'  ", "", ""],
-        (Action::Relax, _) => &["   .~~.zZ", "  (    ) ", "   '~~'  ", "", ""],
+        (Action::Talk, 0) => &["  .~~~~.♪", " (-u-  )", "  '~~~~' ", "", ""],
+        (Action::Talk, _) => &["♫ .~~~~. ", " (-u-  )", "  '~~~~' ", "", ""],
+        (Action::Play, 0) => &[" ~.~~~~.~", "( ^u^  )", "  '~~~~' ", "", ""],
+        (Action::Play, _) => &["  .~~~~. ", "~( ^u^ )~", "  '~~~~' ", "", ""],
+        (Action::Train, 0) => &["  .~~~~.!", "( >u<  )", "  '~~~~' ", "", ""],
+        (Action::Train, _) => &["!.~~~~.  ", "( >u<  )", " '~~~~'  ", "", ""],
+        (Action::Relax, 0) => &["   .~~. z", "  (._.) ", "   '~~'  ", "", ""],
+        (Action::Relax, _) => &["   .~~.zZ", "  (._.) ", "   '~~'  ", "", ""],
     }
 }
 
@@ -1763,27 +1763,27 @@ fn mokomoko_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- ネンネ (nenne) - Wrapped cocoon, NO features ---
+// --- ネンネ (nenne) - Wrapped cocoon with sleeping face peeking out ---
 fn nenne_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["   ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (MoodLevel::High, _) => &["   ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (MoodLevel::Normal, 0) => &["   ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (MoodLevel::Normal, _) => &["   ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (MoodLevel::Low, 0) => &["   ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (MoodLevel::Low, _) => &["   ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
+        (MoodLevel::High, 0) => &["   ╭╮   ", " ╭(~ω~)╮ ", "   ╰╯   ", "", ""],
+        (MoodLevel::High, _) => &["   ╭╮   ", " ╭(~ω~)╮ ", "   ╰╯   ", "", ""],
+        (MoodLevel::Normal, 0) => &["   ╭╮   ", "  ╭-_-╮  ", "   ╰╯   ", "", ""],
+        (MoodLevel::Normal, _) => &["   ╭╮   ", "  ╭-_-╮  ", "   ╰╯   ", "", ""],
+        (MoodLevel::Low, 0) => &["   ╭╮   ", "  ╭. .╮  ", "   ╰╯   ", "", ""],
+        (MoodLevel::Low, _) => &["   ╭╮   ", "  ╭. .╮  ", "   ╰╯   ", "", ""],
     }
 }
 fn nenne_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["   ╭╮  ♪", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (Action::Talk, _) => &[" ♫ ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (Action::Play, 0) => &["  ~╭╮~  ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (Action::Play, _) => &["   ╭╮   ", " ~╭╋╋╮~ ", "   ╰╯   ", "", ""],
-        (Action::Train, 0) => &["   ╭╮  !", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (Action::Train, _) => &[" ! ╭╮   ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (Action::Relax, 0) => &["   ╭╮  z", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
-        (Action::Relax, _) => &["   ╭╮ zZ", "  ╭╋╋╮  ", "   ╰╯   ", "", ""],
+        (Action::Talk, 0) => &["   ╭╮  ♪", "  ╭-_-╮  ", "   ╰╯   ", "", ""],
+        (Action::Talk, _) => &[" ♫ ╭╮   ", "  ╭-_-╮  ", "   ╰╯   ", "", ""],
+        (Action::Play, 0) => &["  ~╭╮~  ", " ╭(~ω~)╮ ", "   ╰╯   ", "", ""],
+        (Action::Play, _) => &["   ╭╮   ", "~╭(~ω~)╮~", "   ╰╯   ", "", ""],
+        (Action::Train, 0) => &["   ╭╮  !", " ╭(o_o)╮ ", "   ╰╯   ", "", ""],
+        (Action::Train, _) => &[" ! ╭╮   ", " ╭(o_o)╮ ", "   ╰╯   ", "", ""],
+        (Action::Relax, 0) => &["   ╭╮  z", "  ╭-_-╮  ", "   ╰╯   ", "", ""],
+        (Action::Relax, _) => &["   ╭╮ zZ", "  ╭. .╮  ", "   ╰╯   ", "", ""],
     }
 }
 
@@ -1811,27 +1811,27 @@ fn poyon_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- スヤスヤ (suyasuya) - Crescent Moon ---
+// --- スヤスヤ (suyasuya) - Crescent moons floating around a sleepy face ---
 fn suyasuya_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["   ☽    ", "  ☽☽    ", "   zzZ  ", "", ""],
-        (MoodLevel::High, _) => &["    ☽   ", "   ☽☽   ", "  zzZ   ", "", ""],
-        (MoodLevel::Normal, 0) => &["   ☽    ", "  ☽☽    ", "    zZ  ", "", ""],
-        (MoodLevel::Normal, _) => &["    ☽   ", "   ☽☽   ", "   zZ   ", "", ""],
-        (MoodLevel::Low, 0) => &["   ☽    ", "  ☽     ", "    z   ", "", ""],
-        (MoodLevel::Low, _) => &["   ☽    ", "  ☽     ", "   z    ", "", ""],
+        (MoodLevel::High, 0) => &["   ☽☽   ", " ☽(z_z)☽ ", "   zzZZ  ", "", ""],
+        (MoodLevel::High, _) => &["  ☽☽    ", " ☽(z_z)☽ ", "  zzZ    ", "", ""],
+        (MoodLevel::Normal, 0) => &["   ☽    ", " ☽(-.-)  ", "    zZ   ", "", ""],
+        (MoodLevel::Normal, _) => &["    ☽   ", "  (.-.)☽ ", "   zZ    ", "", ""],
+        (MoodLevel::Low, 0) => &["   ☽    ", "  ☽(. .) ", "    z    ", "", ""],
+        (MoodLevel::Low, _) => &["   ☽    ", "  (. .)☽ ", "   z     ", "", ""],
     }
 }
 fn suyasuya_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["   ☽   ♪", "  ☽☽    ", "    zZ  ", "", ""],
-        (Action::Talk, _) => &[" ♫ ☽    ", "  ☽☽    ", "    zZ  ", "", ""],
-        (Action::Play, 0) => &["  ~☽~   ", "  ☽☽    ", "   zzZ  ", "", ""],
-        (Action::Play, _) => &["   ☽    ", " ~☽☽~   ", "  zzZ   ", "", ""],
-        (Action::Train, 0) => &["   ☽  ! ", "  ☽☽    ", "   zzZ  ", "", ""],
-        (Action::Train, _) => &[" ! ☽    ", "  ☽☽    ", "   zzZ  ", "", ""],
-        (Action::Relax, 0) => &["   ☽    ", "  ☽   z ", "    z   ", "", ""],
-        (Action::Relax, _) => &["   ☽    ", "  ☽  zZ ", "   z    ", "", ""],
+        (Action::Talk, 0) => &["   ☽   ♪", " ☽(-.-)  ", "    zZ   ", "", ""],
+        (Action::Talk, _) => &[" ♫ ☽    ", " ☽(-.-)  ", "    zZ   ", "", ""],
+        (Action::Play, 0) => &["  ~☽~   ", " ☽(z_z)☽ ", "   zzZ   ", "", ""],
+        (Action::Play, _) => &["   ☽    ", "~☽(z_z)☽~", "  zzZ    ", "", ""],
+        (Action::Train, 0) => &["   ☽  ! ", " ☽(z_z)☽ ", "   zzZ   ", "", ""],
+        (Action::Train, _) => &[" ! ☽    ", " ☽(z_z)☽ ", "   zzZ   ", "", ""],
+        (Action::Relax, 0) => &["   ☽    ", "  ☽(-.-) ", "    z    ", "", ""],
+        (Action::Relax, _) => &["   ☽    ", "  (.-.)☽ ", "   zzZ   ", "", ""],
     }
 }
 
@@ -1979,27 +1979,27 @@ fn kororin_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- ムニャ (munya) - Faint wisp of fireflies ---
+// --- ムニャ (munya) - Firefly wisps surrounding a dreamy face ---
 fn munya_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &[". *  . * ", " .  *  . ", "* .  * . ", "", ""],
-        (MoodLevel::High, _) => &[" *  . *  ", ".  *  .  ", " . *  . *", "", ""],
-        (MoodLevel::Normal, 0) => &["  *  .   ", " .    *  ", "   .  *  ", "", ""],
-        (MoodLevel::Normal, _) => &["   .  *  ", "  *    . ", "  .  *   ", "", ""],
-        (MoodLevel::Low, 0) => &["     .   ", "  .      ", "     .   ", "", ""],
-        (MoodLevel::Low, _) => &["   .     ", "      .  ", "   .     ", "", ""],
+        (MoodLevel::High, 0) => &[". *  . * ", " .(u_u). ", "* .  * . ", "", ""],
+        (MoodLevel::High, _) => &[" *  . *  ", " .(u_u). ", " . *  . *", "", ""],
+        (MoodLevel::Normal, 0) => &["  *  .   ", " .(u.u). ", "   .  *  ", "", ""],
+        (MoodLevel::Normal, _) => &["   .  *  ", " .(u.u). ", "  *    . ", "", ""],
+        (MoodLevel::Low, 0) => &["     .   ", "  .(._.) ", "  .      ", "", ""],
+        (MoodLevel::Low, _) => &["   .     ", "  .(._.) ", "      .  ", "", ""],
     }
 }
 fn munya_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["  *  .  ♪", " .    *  ", "   .  *  ", "", ""],
-        (Action::Talk, _) => &["♫ .  *   ", "  *    . ", "  .  *   ", "", ""],
-        (Action::Play, 0) => &[". *  . * ", "~.  *  .~", "* .  * . ", "", ""],
-        (Action::Play, _) => &[" *  . *  ", " .  *  . ", "~. *  . *~", "", ""],
-        (Action::Train, 0) => &[". *  . *!", " .  *  . ", "* .  * . ", "", ""],
-        (Action::Train, _) => &["! *  . * ", ".  *  .  ", " . *  . *", "", ""],
-        (Action::Relax, 0) => &["     .  z", "  .      ", "     .   ", "", ""],
-        (Action::Relax, _) => &["   .   zZ", "      .  ", "   .     ", "", ""],
+        (Action::Talk, 0) => &["  *  .  ♪", " .(u.u). ", "   .  *  ", "", ""],
+        (Action::Talk, _) => &["♫ .  *   ", " .(u.u). ", "  *    . ", "", ""],
+        (Action::Play, 0) => &[". *  . * ", "~.(u_u).~", "* .  * . ", "", ""],
+        (Action::Play, _) => &[" *  . *  ", " .(u_u). ", "~. *  . *~", "", ""],
+        (Action::Train, 0) => &[". *  . *!", " .(o_o). ", "* .  * . ", "", ""],
+        (Action::Train, _) => &["! *  . * ", " .(o_o). ", ".  *  .  ", "", ""],
+        (Action::Relax, 0) => &["     .  z", "  .(._.) ", "     .   ", "", ""],
+        (Action::Relax, _) => &["   .   zZ", "  .(._.) ", "      .  ", "", ""],
     }
 }
 
@@ -2099,27 +2099,27 @@ fn mogumogu_action(action: Action, frame: usize) -> &'static [&'static str] {
     }
 }
 
-// --- トロン (toron) - Snail with spiral shell ---
+// --- トロン (toron) - Snail with spiral shell, face in head ---
 fn toron_art(mood: MoodLevel, frame: usize) -> &'static [&'static str] {
     match (mood, frame % 2) {
-        (MoodLevel::High, 0) => &["   @     ", "  /@/ )  ", " ...===  ", "", ""],
-        (MoodLevel::High, _) => &["    @    ", "   /@/ ) ", "  ...=== ", "", ""],
-        (MoodLevel::Normal, 0) => &["   @     ", "  /@/ )  ", "  ..===  ", "", ""],
-        (MoodLevel::Normal, _) => &["    @    ", "   /@/ ) ", "   ..=== ", "", ""],
-        (MoodLevel::Low, 0) => &["   @     ", "  /@/ )  ", "  .==    ", "", ""],
-        (MoodLevel::Low, _) => &["   @     ", "  /@/ )  ", "  .==    ", "", ""],
+        (MoodLevel::High, 0) => &["   @     ", "  /@/^u^)", " ...===  ", "", ""],
+        (MoodLevel::High, _) => &["    @    ", "   /@/^u^)", "  ...=== ", "", ""],
+        (MoodLevel::Normal, 0) => &["   @     ", "  /@/-_-)", "  ..===  ", "", ""],
+        (MoodLevel::Normal, _) => &["    @    ", "   /@/-_-)", "   ..=== ", "", ""],
+        (MoodLevel::Low, 0) => &["   @     ", "  /@/u_u)", "  .==    ", "", ""],
+        (MoodLevel::Low, _) => &["   @     ", "  /@/u_u)", "  .==    ", "", ""],
     }
 }
 fn toron_action(action: Action, frame: usize) -> &'static [&'static str] {
     match (action, frame % 2) {
-        (Action::Talk, 0) => &["   @   ♪ ", "  /@/ )  ", "  ..===  ", "", ""],
-        (Action::Talk, _) => &[" ♫ @     ", "  /@/ )  ", "  ..===  ", "", ""],
-        (Action::Play, 0) => &["   @~    ", "  /@/ )  ", " ~..===~ ", "", ""],
-        (Action::Play, _) => &["  ~@     ", "  /@/ )  ", "  ..===  ", "", ""],
-        (Action::Train, 0) => &["   @   ! ", "  /@/ )  ", " ...===  ", "", ""],
-        (Action::Train, _) => &[" ! @     ", "  /@/ )  ", " ...===  ", "", ""],
-        (Action::Relax, 0) => &["   @   z ", "  /@/ )  ", "  .==    ", "", ""],
-        (Action::Relax, _) => &["   @  zZ ", "  /@/ )  ", "  .==    ", "", ""],
+        (Action::Talk, 0) => &["   @   ♪ ", "  /@/-_-)", "  ..===  ", "", ""],
+        (Action::Talk, _) => &[" ♫ @     ", "  /@/-_-)", "  ..===  ", "", ""],
+        (Action::Play, 0) => &["   @~    ", "  /@/^u^)", " ~..===~ ", "", ""],
+        (Action::Play, _) => &["  ~@     ", "  /@/^u^)", "  ..===  ", "", ""],
+        (Action::Train, 0) => &["   @   ! ", "  /@/>o<)", " ...===  ", "", ""],
+        (Action::Train, _) => &[" ! @     ", "  /@/>o<)", " ...===  ", "", ""],
+        (Action::Relax, 0) => &["   @   z ", "  /@/u_u)", "  .==    ", "", ""],
+        (Action::Relax, _) => &["   @  zZ ", "  /@/u_u)", "  .==    ", "", ""],
     }
 }
 
