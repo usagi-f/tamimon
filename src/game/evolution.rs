@@ -31,6 +31,21 @@ pub struct Stage2Species {
     pub voice_type: VoiceType,
 }
 
+// --- Body type category ---
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BodyType {
+    Marukko,     // まるっこ系: round and small
+    Nagai,       // ながい系: vertically long / snake-like
+    Hiroi,       // ひろい系: horizontally wide / flat
+    Togari,      // とがり系: pointy / spiky
+    Fuwafuwa,    // ふわふわ系: fluffy / feathery
+    Karadanashi, // からだなし系: floating face/eyes only
+    Nagare,      // ながれ系: ghost / slime
+    AshiOoi,     // あし多い系: many limbs
+    ChisaiOokii, // ちいさい+おおきい系: tiny body with big decoration
+    Noppo,       // のっぽ系: tall and thin
+}
+
 // --- Stage3 species definition ---
 pub struct Stage3Species {
     pub name: &'static str,
@@ -38,6 +53,15 @@ pub struct Stage3Species {
     pub vector: [f64; 5],                      // [chikara, odayaka, bouken, nakayoshi, frequency]
     pub standard_weight: f64,
     pub voice_type: VoiceType,
+    pub body_type: BodyType,
+}
+
+/// Look up the body type for a species by name (Stage3 only; returns None for other stages).
+pub fn get_body_type(species: &str) -> Option<BodyType> {
+    STAGE3_SPECIES
+        .iter()
+        .find(|s| s.name == species)
+        .map(|s| s.body_type)
 }
 
 // --- Stage4 species definition ---
@@ -271,6 +295,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [9.0, 1.0, 3.0, 4.0, 6.0],
         standard_weight: 80.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "タワーン",
@@ -285,6 +310,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 4.0, 2.0, 8.0, 8.0],
         standard_weight: 60.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Noppo,
     },
     Stage3Species {
         name: "ゴウケン",
@@ -299,6 +325,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [10.0, 0.0, 2.0, 3.0, 5.0],
         standard_weight: 90.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "テッカイ",
@@ -313,6 +340,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [8.0, 2.0, 4.0, 2.0, 4.0],
         standard_weight: 100.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ブンブン",
@@ -327,6 +355,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [8.0, 1.0, 5.0, 5.0, 7.0],
         standard_weight: 55.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::AshiOoi,
     },
     Stage3Species {
         name: "ガンテツ",
@@ -341,6 +370,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [9.0, 3.0, 1.0, 6.0, 3.0],
         standard_weight: 120.0,
         voice_type: VoiceType::Oyaji,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ドスコイ",
@@ -355,6 +385,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 2.0, 1.0, 7.0, 9.0],
         standard_weight: 150.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::Hiroi,
     },
     Stage3Species {
         name: "バリバリ",
@@ -369,6 +400,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [8.0, 0.0, 6.0, 3.0, 8.0],
         standard_weight: 65.0,
         voice_type: VoiceType::Kajou,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "メガトン",
@@ -383,6 +415,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [10.0, 1.0, 1.0, 5.0, 5.0],
         standard_weight: 200.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "グランド",
@@ -397,6 +430,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 3.0, 3.0, 7.0, 7.0],
         standard_weight: 85.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Hiroi,
     },
     Stage3Species {
         name: "イカヅチ",
@@ -411,6 +445,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [9.0, 0.0, 5.0, 2.0, 6.0],
         standard_weight: 70.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "ゴリラン",
@@ -425,6 +460,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [8.0, 2.0, 3.0, 8.0, 4.0],
         standard_weight: 95.0,
         voice_type: VoiceType::Oyaji,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ダイガン",
@@ -439,6 +475,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [10.0, 2.0, 2.0, 1.0, 3.0],
         standard_weight: 130.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "カチワリ",
@@ -453,6 +490,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [9.0, 1.0, 4.0, 4.0, 9.0],
         standard_weight: 68.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "マッスル",
@@ -467,6 +505,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [10.0, 0.0, 3.0, 6.0, 10.0],
         standard_weight: 78.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "イワオ",
@@ -481,6 +520,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 5.0, 1.0, 5.0, 1.0],
         standard_weight: 160.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ゴロゴロ",
@@ -495,6 +535,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 3.0, 2.0, 4.0, 5.0],
         standard_weight: 110.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "テツジン",
@@ -509,6 +550,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [10.0, 1.0, 2.0, 3.0, 4.0],
         standard_weight: 85.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Noppo,
     },
     Stage3Species {
         name: "ドゴン",
@@ -523,6 +565,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [8.0, 0.0, 5.0, 2.0, 8.0],
         standard_weight: 75.0,
         voice_type: VoiceType::Kajou,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "バンカー",
@@ -537,6 +580,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [9.0, 2.0, 3.0, 1.0, 3.0],
         standard_weight: 140.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Hiroi,
     },
     // --- Evolved from Odayaka type (16 species) ---
     Stage3Species {
@@ -552,6 +596,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 7.0, 7.0, 2.0, 1.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "フワリン",
@@ -566,6 +611,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 9.0, 2.0, 7.0, 6.0],
         standard_weight: 10.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Fuwafuwa,
     },
     Stage3Species {
         name: "モコモコ",
@@ -580,6 +626,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 10.0, 1.0, 8.0, 7.0],
         standard_weight: 25.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Fuwafuwa,
     },
     Stage3Species {
         name: "ネンネ",
@@ -594,6 +641,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [0.0, 9.0, 1.0, 5.0, 3.0],
         standard_weight: 30.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ポヨン",
@@ -608,6 +656,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 7.0, 4.0, 6.0, 5.0],
         standard_weight: 18.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "スヤスヤ",
@@ -622,6 +671,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [0.0, 10.0, 0.0, 4.0, 1.0],
         standard_weight: 35.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "カスミ",
@@ -636,6 +686,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 8.0, 3.0, 2.0, 4.0],
         standard_weight: 5.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ノドカ",
@@ -650,6 +701,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 8.0, 2.0, 9.0, 8.0],
         standard_weight: 22.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ユメミ",
@@ -664,6 +716,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 7.0, 3.0, 6.0, 4.0],
         standard_weight: 15.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ボンヤリ",
@@ -678,6 +731,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [0.0, 8.0, 2.0, 3.0, 2.0],
         standard_weight: 28.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "コロリン",
@@ -692,6 +746,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 9.0, 2.0, 7.0, 6.0],
         standard_weight: 16.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ムニャ",
@@ -706,6 +761,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 10.0, 1.0, 4.0, 3.0],
         standard_weight: 32.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "マッタリ",
@@ -720,6 +776,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 8.0, 1.0, 8.0, 9.0],
         standard_weight: 26.0,
         voice_type: VoiceType::Oyaji,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ホワワ",
@@ -734,6 +791,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [0.0, 9.0, 3.0, 5.0, 5.0],
         standard_weight: 12.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Fuwafuwa,
     },
     Stage3Species {
         name: "シズカ",
@@ -748,6 +806,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 9.0, 1.0, 6.0, 4.0],
         standard_weight: 24.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ソヨカゼ",
@@ -762,6 +821,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [0.0, 7.0, 5.0, 3.0, 4.0],
         standard_weight: 8.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ヒラタ",
@@ -776,6 +836,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 9.0, 2.0, 5.0, 3.0],
         standard_weight: 18.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Hiroi,
     },
     Stage3Species {
         name: "モグモグ",
@@ -790,6 +851,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 8.0, 2.0, 7.0, 7.0],
         standard_weight: 22.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "トロン",
@@ -804,6 +866,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [0.0, 10.0, 1.0, 3.0, 2.0],
         standard_weight: 28.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ユッタリ",
@@ -818,6 +881,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 8.0, 3.0, 6.0, 4.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Marukko,
     },
     // --- Evolved from Bouken type (16 species) ---
     Stage3Species {
@@ -833,6 +897,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 1.0, 9.0, 4.0, 6.0],
         standard_weight: 30.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::AshiOoi,
     },
     Stage3Species {
         name: "トビオ",
@@ -847,6 +912,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 2.0, 10.0, 5.0, 7.0],
         standard_weight: 25.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::ChisaiOokii,
     },
     Stage3Species {
         name: "マルマル",
@@ -861,6 +927,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 3.0, 8.0, 6.0, 5.0],
         standard_weight: 35.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ハヤテ",
@@ -875,6 +942,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 0.0, 10.0, 3.0, 8.0],
         standard_weight: 22.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::Nagai,
     },
     Stage3Species {
         name: "グルグルン",
@@ -889,6 +957,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 3.0, 8.0, 7.0, 6.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "カゼノコ",
@@ -903,6 +972,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 4.0, 9.0, 5.0, 4.0],
         standard_weight: 15.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ドカーン",
@@ -917,6 +987,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [6.0, 0.0, 9.0, 2.0, 7.0],
         standard_weight: 45.0,
         voice_type: VoiceType::Kajou,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "スイスイ",
@@ -931,6 +1002,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 5.0, 8.0, 6.0, 5.0],
         standard_weight: 18.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "サスライ",
@@ -945,6 +1017,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 2.0, 10.0, 1.0, 3.0],
         standard_weight: 28.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Nagai,
     },
     Stage3Species {
         name: "ピカッ",
@@ -959,6 +1032,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 1.0, 8.0, 8.0, 9.0],
         standard_weight: 16.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "バサバサ",
@@ -973,6 +1047,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 2.0, 9.0, 4.0, 6.0],
         standard_weight: 32.0,
         voice_type: VoiceType::Oyaji,
+        body_type: BodyType::ChisaiOokii,
     },
     Stage3Species {
         name: "ウロチョロ",
@@ -987,6 +1062,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 3.0, 7.0, 5.0, 8.0],
         standard_weight: 14.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::AshiOoi,
     },
     Stage3Species {
         name: "ゴーゴー",
@@ -1001,6 +1077,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [6.0, 1.0, 8.0, 3.0, 9.0],
         standard_weight: 40.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "クモノス",
@@ -1015,6 +1092,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 4.0, 7.0, 4.0, 4.0],
         standard_weight: 12.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::AshiOoi,
     },
     Stage3Species {
         name: "ホシゾラ",
@@ -1029,6 +1107,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 5.0, 9.0, 7.0, 5.0],
         standard_weight: 10.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "ブッチギリ",
@@ -1043,6 +1122,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 0.0, 10.0, 2.0, 10.0],
         standard_weight: 38.0,
         voice_type: VoiceType::Kajou,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "ワタリ",
@@ -1057,6 +1137,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 4.0, 8.0, 2.0, 2.0],
         standard_weight: 24.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::ChisaiOokii,
     },
     Stage3Species {
         name: "ヒュー",
@@ -1071,6 +1152,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 1.0, 9.0, 5.0, 7.0],
         standard_weight: 12.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::Nagai,
     },
     Stage3Species {
         name: "タンケン",
@@ -1085,6 +1167,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 2.0, 9.0, 6.0, 5.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ジェット",
@@ -1099,6 +1182,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 0.0, 10.0, 1.0, 8.0],
         standard_weight: 26.0,
         voice_type: VoiceType::Taiiku,
+        body_type: BodyType::Togari,
     },
     // --- Evolved from Normal type (16 species) ---
     Stage3Species {
@@ -1107,6 +1191,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 5.0, 5.0, 5.0, 5.0],
         standard_weight: 40.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ヘイボン",
@@ -1114,6 +1199,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 5.0, 4.0, 6.0, 6.0],
         standard_weight: 35.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "タソガレ",
@@ -1121,6 +1207,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 6.0, 4.0, 4.0, 3.0],
         standard_weight: 30.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "ニッコリ",
@@ -1128,6 +1215,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 4.0, 4.0, 8.0, 8.0],
         standard_weight: 32.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ダラーン",
@@ -1135,6 +1223,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 7.0, 3.0, 5.0, 2.0],
         standard_weight: 45.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "キッチリ",
@@ -1142,6 +1231,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [6.0, 4.0, 5.0, 6.0, 7.0],
         standard_weight: 38.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ボチボチ",
@@ -1149,6 +1239,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 5.0, 5.0, 4.0, 4.0],
         standard_weight: 36.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "マアマア",
@@ -1156,6 +1247,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 4.0, 4.0, 5.0, 5.0],
         standard_weight: 42.0,
         voice_type: VoiceType::Oyaji,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "フニャ",
@@ -1163,6 +1255,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 6.0, 3.0, 7.0, 6.0],
         standard_weight: 28.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Fuwafuwa,
     },
     Stage3Species {
         name: "テンテン",
@@ -1170,6 +1263,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 3.0, 6.0, 5.0, 7.0],
         standard_weight: 34.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "ナァナァ",
@@ -1177,6 +1271,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 5.0, 4.0, 3.0, 3.0],
         standard_weight: 39.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ポツリ",
@@ -1184,6 +1279,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 4.0, 5.0, 4.0, 4.0],
         standard_weight: 26.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ソレナリ",
@@ -1191,6 +1287,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 5.0, 5.0, 6.0, 6.0],
         standard_weight: 37.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ウンウン",
@@ -1198,6 +1295,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 5.0, 3.0, 7.0, 7.0],
         standard_weight: 33.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "チャッカリ",
@@ -1205,6 +1303,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 3.0, 6.0, 6.0, 8.0],
         standard_weight: 31.0,
         voice_type: VoiceType::Gal,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ヌルリ",
@@ -1212,6 +1311,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 5.0, 5.0, 5.0, 3.0],
         standard_weight: 34.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ヤレヤレ",
@@ -1219,6 +1319,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 6.0, 3.0, 4.0, 3.0],
         standard_weight: 38.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ドッコイ",
@@ -1226,6 +1327,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 4.0, 4.0, 5.0, 5.0],
         standard_weight: 33.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "パッパ",
@@ -1233,6 +1335,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 4.0, 5.0, 5.0, 7.0],
         standard_weight: 28.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "オットリ",
@@ -1240,6 +1343,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 7.0, 2.0, 6.0, 4.0],
         standard_weight: 42.0,
         voice_type: VoiceType::Keigo,
+        body_type: BodyType::Marukko,
     },
     // --- Evolved from Wild type (16 species) ---
     Stage3Species {
@@ -1248,6 +1352,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 3.0, 5.0, 1.0, 1.0],
         standard_weight: 15.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "オオヌシ",
@@ -1255,6 +1360,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 2.0, 4.0, 2.0, 1.0],
         standard_weight: 100.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Noppo,
     },
     Stage3Species {
         name: "バケモノ",
@@ -1262,6 +1368,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 1.0, 7.0, 1.0, 2.0],
         standard_weight: 60.0,
         voice_type: VoiceType::Kajou,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ユウレイ",
@@ -1269,6 +1376,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [1.0, 5.0, 4.0, 2.0, 1.0],
         standard_weight: 3.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ヤセイジ",
@@ -1276,6 +1384,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [6.0, 1.0, 6.0, 0.0, 0.0],
         standard_weight: 45.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "シンエン",
@@ -1283,6 +1392,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 6.0, 3.0, 1.0, 1.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "ノラクロ",
@@ -1290,6 +1400,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 3.0, 6.0, 3.0, 2.0],
         standard_weight: 35.0,
         voice_type: VoiceType::Kansai,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "モノノケ",
@@ -1297,6 +1408,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 4.0, 5.0, 2.0, 1.0],
         standard_weight: 10.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "クライ",
@@ -1304,6 +1416,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 5.0, 3.0, 1.0, 1.0],
         standard_weight: 8.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "アヤシイ",
@@ -1311,6 +1424,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 2.0, 6.0, 3.0, 3.0],
         standard_weight: 25.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ムジナ",
@@ -1318,6 +1432,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 3.0, 5.0, 2.0, 2.0],
         standard_weight: 30.0,
         voice_type: VoiceType::Tameguchi,
+        body_type: BodyType::Marukko,
     },
     Stage3Species {
         name: "ヌエ",
@@ -1325,6 +1440,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [6.0, 2.0, 5.0, 1.0, 1.0],
         standard_weight: 55.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::ChisaiOokii,
     },
     Stage3Species {
         name: "フルエ",
@@ -1332,6 +1448,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 3.0, 4.0, 4.0, 3.0],
         standard_weight: 12.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ケダマ",
@@ -1339,6 +1456,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 4.0, 4.0, 2.0, 2.0],
         standard_weight: 22.0,
         voice_type: VoiceType::Tennen,
+        body_type: BodyType::Fuwafuwa,
     },
     Stage3Species {
         name: "ジゴク",
@@ -1346,6 +1464,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [7.0, 1.0, 5.0, 0.0, 0.0],
         standard_weight: 70.0,
         voice_type: VoiceType::Kogo,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "ムゲン",
@@ -1353,6 +1472,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 5.0, 5.0, 2.0, 1.0],
         standard_weight: 1.0,
         voice_type: VoiceType::Tetsugaku,
+        body_type: BodyType::Karadanashi,
     },
     Stage3Species {
         name: "カマイタチ",
@@ -1360,6 +1480,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [4.0, 2.0, 7.0, 1.0, 2.0],
         standard_weight: 8.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Togari,
     },
     Stage3Species {
         name: "ドロドロ",
@@ -1367,6 +1488,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [3.0, 4.0, 4.0, 2.0, 1.0],
         standard_weight: 25.0,
         voice_type: VoiceType::Negative,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "ヒノタマ",
@@ -1374,6 +1496,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [2.0, 3.0, 6.0, 3.0, 3.0],
         standard_weight: 5.0,
         voice_type: VoiceType::Kajou,
+        body_type: BodyType::Nagare,
     },
     Stage3Species {
         name: "シノビ",
@@ -1381,6 +1504,7 @@ pub const STAGE3_SPECIES: &[Stage3Species] = &[
         vector: [5.0, 2.0, 6.0, 1.0, 1.0],
         standard_weight: 20.0,
         voice_type: VoiceType::Mukuchi,
+        body_type: BodyType::Marukko,
     },
 ];
 
