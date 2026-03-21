@@ -329,7 +329,11 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
         Style::default().add_modifier(Modifier::BOLD),
     )));
     lines.push(Line::from(""));
-    lines.push(Line::from(format!("  {}がこちらを向いた。", nickname)));
+    let facing = match action {
+        Action::Train => format!("  {}が構えた。", nickname),
+        _ => format!("  {}がこちらを向いた。", nickname),
+    };
+    lines.push(Line::from(facing));
     lines.push(Line::from(""));
 
     for art_line in art_lines {
@@ -383,25 +387,41 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
             }
         }
         Action::Train => {
-            let elapsed = state
-                .reaction_anim_start
-                .map(|s| s.elapsed().as_millis())
-                .unwrap_or(u128::MAX);
-            // Variable delays: prep(0ms) → peak(1000ms) → aftermath(1600ms)
-            const DELAYS: [u128; 3] = [0, 1000, 1600];
-            let revealed = DELAYS[..reaction_lines.len().min(3)]
-                .iter()
-                .filter(|&&d| elapsed >= d)
-                .count();
-            for text in reaction_lines.iter().take(revealed) {
+            const TRAIN_REPS: usize = 3;
+            if current_line < TRAIN_REPS {
+                // Effort phase: show current rep text and counter
+                if let Some(text) = reaction_lines.get(current_line) {
+                    lines.push(Line::from(Span::styled(
+                        format!("  {}", text),
+                        Style::default().fg(Color::Yellow),
+                    )));
+                }
+                lines.push(Line::from(""));
                 lines.push(Line::from(Span::styled(
-                    format!("  {}", text),
-                    Style::default().fg(Color::Yellow),
+                    format!("  × {} / {}", current_line + 1, TRAIN_REPS),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
                 )));
-            }
-            lines.push(Line::from(""));
-            lines.push(Line::from(""));
-            if revealed >= reaction_lines.len() {
+                lines.push(Line::from(""));
+                lines.push(Line::from(Span::styled(
+                    "  → [any key] もう一回！",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            } else {
+                // Completion phase: show completion text
+                if let Some(text) = reaction_lines.get(TRAIN_REPS) {
+                    lines.push(Line::from(Span::styled(
+                        format!("  {}", text),
+                        Style::default().fg(Color::Yellow),
+                    )));
+                }
+                lines.push(Line::from(""));
+                lines.push(Line::from(Span::styled(
+                    format!("  ✓ {} / {} 完了", TRAIN_REPS, TRAIN_REPS),
+                    Style::default().fg(Color::Green),
+                )));
+                lines.push(Line::from(""));
                 lines.push(Line::from(Span::styled(
                     "  Press any key...",
                     Style::default().fg(Color::DarkGray),

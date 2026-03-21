@@ -255,7 +255,7 @@ async fn run_loop(
                     state.action_animation_start = None;
                     if matches!(
                         state.action_result.as_ref().map(|r| r.action),
-                        Some(Action::Play) | Some(Action::Train)
+                        Some(Action::Play)
                     ) {
                         state.reaction_anim_start = Some(Instant::now());
                     }
@@ -520,7 +520,7 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             let action = state.action_result.as_ref().map(|r| r.action);
             if !matches!(action, Some(Action::Relax)) {
                 state.action_animation_start = None;
-                if matches!(action, Some(Action::Play) | Some(Action::Train)) {
+                if matches!(action, Some(Action::Play)) {
                     state.reaction_anim_start = Some(Instant::now());
                 }
                 state.mode = AppMode::ActionReaction;
@@ -561,18 +561,18 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                     // else: key press during reveal is ignored
                 }
                 Action::Train => {
-                    let elapsed = state
-                        .reaction_anim_start
-                        .map(|s| s.elapsed().as_millis())
-                        .unwrap_or(u128::MAX);
-                    let revealed = train_revealed(elapsed, lines_count);
-                    if revealed >= lines_count {
+                    // Rep 0-2: each key press advances one rep.
+                    // current_line 3 = completion screen; next key returns to Main.
+                    const TRAIN_REPS: usize = 3;
+                    if current_line < TRAIN_REPS {
+                        if let Some(ref mut r) = state.action_result {
+                            r.current_line += 1;
+                        }
+                    } else {
                         state.action_result = None;
-                        state.reaction_anim_start = None;
                         state.mode = AppMode::Main;
                         state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
                     }
-                    // else: key press during reveal is ignored
                 }
                 Action::Relax => {
                     state.action_result = None;
@@ -681,15 +681,6 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
     Ok(InputResult::Continue)
 }
 
-/// Variable-delay reveal for Train: preparation(0ms) → peak(1000ms) → aftermath(1600ms).
-fn train_revealed(elapsed_ms: u128, total: usize) -> usize {
-    const DELAYS: [u128; 3] = [0, 1000, 1600];
-    DELAYS[..total.min(3)]
-        .iter()
-        .filter(|&&d| elapsed_ms >= d)
-        .count()
-}
-
 fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     if let Some(ref mut pet_data) = state.save_data.pet {
         // Pull-based time check: calculate elapsed since last check
@@ -752,7 +743,7 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
                 vec![],
             ),
             Action::Train => (
-                crate::game::actions::select_train_beats(mood, &mut state.rng),
+                crate::game::actions::select_train_lines(mood, &mut state.rng),
                 vec![],
             ),
             Action::Relax => {
