@@ -35,6 +35,8 @@ impl Action {
 pub struct ActionResult {
     pub action: Action,
     pub reaction_lines: Vec<String>,
+    /// For Talk: what the player "says" before each pet response.
+    pub player_lines: Vec<String>,
     pub current_line: usize,
 }
 
@@ -47,6 +49,73 @@ pub fn talk_line_count(nakayoshi: f64) -> usize {
     } else {
         1
     }
+}
+
+/// Player lines for each Talk turn.
+/// count=1 → [opening]; count=2 → [opening, closing]; count=3 → [opening, middle, closing]
+pub fn select_talk_player_lines(count: usize, rng: &mut impl Rng) -> Vec<String> {
+    let opening: &[&str] = &[
+        "「ねえ！」",
+        "「やほー！」",
+        "「ちょっといい？」",
+        "「げんきー？」",
+        "「あのさ」",
+        "「いたいた！」",
+    ];
+    let middle: &[&str] = &[
+        "「最近どう？」",
+        "「なにしてた？」",
+        "「たのしい？」",
+        "「ちゃんとねてる？」",
+        "「おなかへった？」",
+    ];
+    let closing: &[&str] = &[
+        "「またね！」",
+        "「じゃあね」",
+        "「またはなそうね」",
+        "「またくるよ！」",
+        "「ばいばい！」",
+    ];
+    match count {
+        1 => vec![opening.choose(rng).unwrap().to_string()],
+        2 => vec![
+            opening.choose(rng).unwrap().to_string(),
+            closing.choose(rng).unwrap().to_string(),
+        ],
+        _ => vec![
+            opening.choose(rng).unwrap().to_string(),
+            middle.choose(rng).unwrap().to_string(),
+            closing.choose(rng).unwrap().to_string(),
+        ],
+    }
+}
+
+/// Multiple distinct generic reactions for Talk (no repeats).
+pub fn select_generic_reactions_distinct(
+    action: Action,
+    mood: MoodLevel,
+    count: usize,
+    rng: &mut impl Rng,
+) -> Vec<String> {
+    let pool: &[&str] = match (action, mood) {
+        (Action::Talk, MoodLevel::High) => &[
+            "「あ、きた！きた！」",
+            "「うれしい！話そ話そ！」",
+            "「まってたよ！」",
+            "「なんか楽しいね！」",
+        ],
+        (Action::Talk, MoodLevel::Normal) => &[
+            "「…ん？」",
+            "「あ、いたの」",
+            "「…ぼーっとしてた」",
+            "「なに？」",
+        ],
+        (Action::Talk, MoodLevel::Low) => {
+            &["「…」", "「……ねむい」", "「べつに」", "（こちらを見ない）"]
+        }
+        _ => return vec![select_generic_reaction(action, mood, rng)],
+    };
+    pick_distinct(pool, count, rng)
 }
 
 fn pick_distinct(pool: &[&str], n: usize, rng: &mut impl Rng) -> Vec<String> {
@@ -86,33 +155,70 @@ pub fn select_play_exclamations(mood: MoodLevel, rng: &mut impl Rng) -> Vec<Stri
     pick_distinct(pool, 3, rng)
 }
 
-/// Short exclamations for Train コマ送り (Stage 1 generic).
-pub fn select_train_exclamations(mood: MoodLevel, rng: &mut impl Rng) -> Vec<String> {
-    let pool: &[&str] = match mood {
-        MoodLevel::High => &[
-            "「ふんっ！」",
-            "「もっとだ！」",
-            "「いくぞ！」",
-            "「まだいける！」",
-            "「はあっ！！」",
-            "「よっしゃ！」",
-        ],
-        MoodLevel::Normal => &[
-            "「んっ…」",
-            "「がんばる…」",
-            "「ふぅ…」",
-            "「こんなもんか」",
-            "「やるか…」",
-        ],
-        MoodLevel::Low => &[
-            "「むり…」",
-            "「つらい…」",
-            "「うぅ…」",
-            "「ぜーはー…」",
-            "「…もうだめ」",
-        ],
+/// Three-beat training arc: preparation → peak effort → aftermath.
+pub fn select_train_beats(mood: MoodLevel, rng: &mut impl Rng) -> Vec<String> {
+    let (prep, peak, after): (&[&str], &[&str], &[&str]) = match mood {
+        MoodLevel::High => (
+            &[
+                "「いくぞ！」",
+                "「さあ始める！」",
+                "「気合い入れる！」",
+                "「よし、やるか！」",
+            ],
+            &[
+                "「はあっ！！！」",
+                "「ふんぬー！！」",
+                "「えいっ！！」",
+                "「うりゃあ！！」",
+            ],
+            &[
+                "「よっしゃ！」",
+                "「やったぞ！」",
+                "「いい汗だ！」",
+                "「やりきった！」",
+            ],
+        ),
+        MoodLevel::Normal => (
+            &[
+                "「んー、やるか」",
+                "「まあ、いこう」",
+                "「じゃあ、はじめる」",
+                "「ふむ…」",
+            ],
+            &["「んっ！！」", "「はっ！」", "「ふんっ！」", "「んー！」"],
+            &[
+                "「ふぅ…」",
+                "「まあまあかな」",
+                "「こんなもんか」",
+                "「…がんばった」",
+            ],
+        ),
+        MoodLevel::Low => (
+            &[
+                "「…やるか」",
+                "「はぁ…」",
+                "「いやだけど…」",
+                "「むり…でもやる」",
+            ],
+            &[
+                "「うぅ…！」",
+                "「つらい…！」",
+                "「ぜーはー…」",
+                "「むぐ…！」",
+            ],
+            &[
+                "「…もうだめ」",
+                "「ぜーはー…」",
+                "「やっと終わり…」",
+                "「つかれた…」",
+            ],
+        ),
     };
-    pick_distinct(pool, 3, rng)
+    vec![
+        prep.choose(rng).unwrap().to_string(),
+        peak.choose(rng).unwrap().to_string(),
+        after.choose(rng).unwrap().to_string(),
+    ]
 }
 
 /// Apply only action stat effects (reaction text handled separately)

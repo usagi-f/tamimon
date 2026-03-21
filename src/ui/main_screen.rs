@@ -340,9 +340,17 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
 
     match action {
         Action::Talk => {
-            if let Some(text) = reaction_lines.get(current_line) {
+            let player_line = result.player_lines.get(current_line);
+            let pet_line = reaction_lines.get(current_line);
+            if let Some(pl) = player_line {
                 lines.push(Line::from(Span::styled(
-                    format!("  {}", text),
+                    format!("  あなた: {}", pl),
+                    Style::default().fg(Color::Cyan),
+                )));
+            }
+            if let Some(text) = pet_line {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}: {}", nickname, text),
                     Style::default().fg(Color::Yellow),
                 )));
             }
@@ -350,7 +358,7 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
             lines.push(Line::from(""));
             if current_line + 1 < reaction_lines.len() {
                 lines.push(Line::from(Span::styled(
-                    "  ……",
+                    "  → [any key] 次の話題へ",
                     Style::default().fg(Color::DarkGray),
                 )));
             } else {
@@ -360,14 +368,38 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
                 )));
             }
         }
-        Action::Play | Action::Train => {
-            let interval_ms: u128 = if action == Action::Play { 600 } else { 900 };
+        Action::Play => {
             let elapsed = state
                 .reaction_anim_start
                 .map(|s| s.elapsed().as_millis())
                 .unwrap_or(u128::MAX);
-            let revealed = ((elapsed / interval_ms + 1) as usize).min(reaction_lines.len());
-
+            let revealed = ((elapsed / 600 + 1) as usize).min(reaction_lines.len());
+            for text in reaction_lines.iter().take(revealed) {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            if revealed >= reaction_lines.len() {
+                lines.push(Line::from(Span::styled(
+                    "  Press any key...",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            }
+        }
+        Action::Train => {
+            let elapsed = state
+                .reaction_anim_start
+                .map(|s| s.elapsed().as_millis())
+                .unwrap_or(u128::MAX);
+            // Variable delays: prep(0ms) → peak(1000ms) → aftermath(1600ms)
+            const DELAYS: [u128; 3] = [0, 1000, 1600];
+            let revealed = DELAYS[..reaction_lines.len().min(3)]
+                .iter()
+                .filter(|&&d| elapsed >= d)
+                .count();
             for text in reaction_lines.iter().take(revealed) {
                 lines.push(Line::from(Span::styled(
                     format!("  {}", text),

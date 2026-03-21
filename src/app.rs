@@ -546,27 +546,33 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                     state.mode = AppMode::Main;
                     state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
                 }
-                Action::Play | Action::Train => {
-                    let interval_ms: u128 = if action == Action::Play { 600 } else { 900 };
+                Action::Play => {
                     let elapsed = state
                         .reaction_anim_start
                         .map(|s| s.elapsed().as_millis())
                         .unwrap_or(u128::MAX);
-                    let revealed = ((elapsed / interval_ms + 1) as usize).min(lines_count);
+                    let revealed = ((elapsed / 600 + 1) as usize).min(lines_count);
                     if revealed >= lines_count {
                         state.action_result = None;
                         state.reaction_anim_start = None;
                         state.mode = AppMode::Main;
                         state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
-                    } else {
-                        // Skip reveal: set start to far in the past so all lines show
-                        state.reaction_anim_start = Some(
-                            Instant::now()
-                                - Duration::from_millis(
-                                    interval_ms as u64 * lines_count as u64 + 1000,
-                                ),
-                        );
                     }
+                    // else: key press during reveal is ignored
+                }
+                Action::Train => {
+                    let elapsed = state
+                        .reaction_anim_start
+                        .map(|s| s.elapsed().as_millis())
+                        .unwrap_or(u128::MAX);
+                    let revealed = train_revealed(elapsed, lines_count);
+                    if revealed >= lines_count {
+                        state.action_result = None;
+                        state.reaction_anim_start = None;
+                        state.mode = AppMode::Main;
+                        state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                    }
+                    // else: key press during reveal is ignored
                 }
                 Action::Relax => {
                     state.action_result = None;
@@ -675,6 +681,15 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
     Ok(InputResult::Continue)
 }
 
+/// Variable-delay reveal for Train: preparation(0ms) → peak(1000ms) → aftermath(1600ms).
+fn train_revealed(elapsed_ms: u128, total: usize) -> usize {
+    const DELAYS: [u128; 3] = [0, 1000, 1600];
+    DELAYS[..total.min(3)]
+        .iter()
+        .filter(|&&d| elapsed_ms >= d)
+        .count()
+}
+
 fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     if let Some(ref mut pet_data) = state.save_data.pet {
         // Pull-based time check: calculate elapsed since last check
@@ -703,6 +718,7 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             state.action_result = Some(ActionResult {
                 action,
                 reaction_lines: vec!["（たまごは静かに揺れている…）".to_string()],
+                player_lines: vec![],
                 current_line: 0,
             });
             state.action_animation_start = Some(Instant::now());
@@ -714,12 +730,12 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         let mood = pet::mood_level(pet_data.kimochi);
         crate::game::actions::apply_action_effects(action, pet_data, &mut state.rng);
 
-        let reaction_lines: Vec<String> = match action {
+        let (reaction_lines, player_lines): (Vec<String>, Vec<String>) = match action {
             Action::Talk => {
                 let count = crate::game::actions::talk_line_count(pet_data.nakayoshi);
-                (0..count)
-                    .map(|_| {
-                        if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+                let pet_lines = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+                    (0..count)
+                        .map(|_| {
                             voice::get_reaction(
                                 vt,
                                 action,
@@ -728,18 +744,27 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
                                 &pet_data.species,
                                 &mut state.rng,
                             )
-                        } else {
-                            crate::game::actions::select_generic_reaction(
-                                action,
-                                mood,
-                                &mut state.rng,
-                            )
-                        }
-                    })
-                    .collect()
+                        })
+                        .collect()
+                } else {
+                    crate::game::actions::select_generic_reactions_distinct(
+                        action,
+                        mood,
+                        count,
+                        &mut state.rng,
+                    )
+                };
+                let pl = crate::game::actions::select_talk_player_lines(count, &mut state.rng);
+                (pet_lines, pl)
             }
-            Action::Play => crate::game::actions::select_play_exclamations(mood, &mut state.rng),
-            Action::Train => crate::game::actions::select_train_exclamations(mood, &mut state.rng),
+            Action::Play => (
+                crate::game::actions::select_play_exclamations(mood, &mut state.rng),
+                vec![],
+            ),
+            Action::Train => (
+                crate::game::actions::select_train_beats(mood, &mut state.rng),
+                vec![],
+            ),
             Action::Relax => {
                 let text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
                     voice::get_reaction(
@@ -753,13 +778,14 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
                 } else {
                     crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
                 };
-                vec![text]
+                (vec![text], vec![])
             }
         };
 
         state.action_result = Some(ActionResult {
             action,
             reaction_lines,
+            player_lines,
             current_line: 0,
         });
         state.action_animation_start = Some(Instant::now());
