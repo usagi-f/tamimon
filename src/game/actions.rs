@@ -34,7 +34,85 @@ impl Action {
 
 pub struct ActionResult {
     pub action: Action,
-    pub reaction_text: String,
+    pub reaction_lines: Vec<String>,
+    pub current_line: usize,
+}
+
+/// Number of Talk conversation turns based on bond level.
+pub fn talk_line_count(nakayoshi: f64) -> usize {
+    if nakayoshi >= 70.0 {
+        3
+    } else if nakayoshi >= 40.0 {
+        2
+    } else {
+        1
+    }
+}
+
+fn pick_distinct(pool: &[&str], n: usize, rng: &mut impl Rng) -> Vec<String> {
+    use rand::seq::SliceRandom;
+    let n = n.min(pool.len());
+    let mut indices: Vec<usize> = (0..pool.len()).collect();
+    indices.shuffle(rng);
+    indices[..n].iter().map(|&i| pool[i].to_string()).collect()
+}
+
+/// Short exclamations for Play コマ送り (Stage 1 generic).
+pub fn select_play_exclamations(mood: MoodLevel, rng: &mut impl Rng) -> Vec<String> {
+    let pool: &[&str] = match mood {
+        MoodLevel::High => &[
+            "「わーい！」",
+            "「きゃー！」",
+            "「もっかい！」",
+            "「たのしい！」",
+            "「えへへ！」",
+            "「さいこう！」",
+        ],
+        MoodLevel::Normal => &[
+            "「まあ、いっか」",
+            "「ふーん…」",
+            "「…お？」",
+            "「おもしろいかも」",
+            "「もうちょい」",
+        ],
+        MoodLevel::Low => &[
+            "「…やるか」",
+            "「だるい…」",
+            "「ふぅ…」",
+            "「つかれた」",
+            "「…まあ」",
+        ],
+    };
+    pick_distinct(pool, 3, rng)
+}
+
+/// Short exclamations for Train コマ送り (Stage 1 generic).
+pub fn select_train_exclamations(mood: MoodLevel, rng: &mut impl Rng) -> Vec<String> {
+    let pool: &[&str] = match mood {
+        MoodLevel::High => &[
+            "「ふんっ！」",
+            "「もっとだ！」",
+            "「いくぞ！」",
+            "「まだいける！」",
+            "「はあっ！！」",
+            "「よっしゃ！」",
+        ],
+        MoodLevel::Normal => &[
+            "「んっ…」",
+            "「がんばる…」",
+            "「ふぅ…」",
+            "「こんなもんか」",
+            "「やるか…」",
+        ],
+        MoodLevel::Low => &[
+            "「むり…」",
+            "「つらい…」",
+            "「うぅ…」",
+            "「ぜーはー…」",
+            "「…もうだめ」",
+        ],
+    };
+    pick_distinct(pool, 3, rng)
 }
 
 /// Apply only action stat effects (reaction text handled separately)

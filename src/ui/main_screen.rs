@@ -305,10 +305,13 @@ pub fn render_action_animation(f: &mut Frame, state: &AppState) {
 }
 
 pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
-    let (action, reaction_text) = match &state.action_result {
-        Some(r) => (r.action, &r.reaction_text),
+    let result = match &state.action_result {
+        Some(r) => r,
         None => return,
     };
+    let action = result.action;
+    let reaction_lines = &result.reaction_lines;
+    let current_line = result.current_line;
 
     let pet = match &state.save_data.pet {
         Some(p) => p,
@@ -316,7 +319,6 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     };
 
     let nickname = pet.display_name();
-
     let mood = mood_level(pet.kimochi);
     let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
 
@@ -335,16 +337,67 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     }
 
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(
-        format!("  {}", reaction_text),
-        Style::default().fg(Color::Yellow),
-    )));
-    lines.push(Line::from(""));
-    lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(
-        "  Press any key...",
-        Style::default().fg(Color::DarkGray),
-    )));
+
+    match action {
+        Action::Talk => {
+            if let Some(text) = reaction_lines.get(current_line) {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            if current_line + 1 < reaction_lines.len() {
+                lines.push(Line::from(Span::styled(
+                    "  ……",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            } else {
+                lines.push(Line::from(Span::styled(
+                    "  Press any key...",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            }
+        }
+        Action::Play | Action::Train => {
+            let interval_ms: u128 = if action == Action::Play { 600 } else { 900 };
+            let elapsed = state
+                .reaction_anim_start
+                .map(|s| s.elapsed().as_millis())
+                .unwrap_or(u128::MAX);
+            let revealed = ((elapsed / interval_ms + 1) as usize).min(reaction_lines.len());
+
+            for text in reaction_lines.iter().take(revealed) {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            if revealed >= reaction_lines.len() {
+                lines.push(Line::from(Span::styled(
+                    "  Press any key...",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            }
+        }
+        Action::Relax => {
+            if let Some(text) = reaction_lines.first() {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(
+                "  Press any key...",
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+    }
 
     let paragraph = Paragraph::new(lines);
     f.render_widget(paragraph, f.area());

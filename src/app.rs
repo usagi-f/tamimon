@@ -64,6 +64,7 @@ pub struct AppState {
     pub startup_info: Option<StartupInfo>,
     pub action_result: Option<ActionResult>,
     pub action_animation_start: Option<Instant>,
+    pub reaction_anim_start: Option<Instant>,
     pub death_message: Option<String>,
     pub death_pet_name: Option<String>,
     pub new_longest_record: bool,
@@ -186,6 +187,7 @@ pub async fn run() -> Result<()> {
         startup_info,
         action_result: None,
         action_animation_start: None,
+        reaction_anim_start: None,
         death_message: None,
         death_pet_name: startup_death_pet_name,
         new_longest_record: false,
@@ -251,6 +253,12 @@ async fn run_loop(
                 };
                 if start.elapsed() >= duration {
                     state.action_animation_start = None;
+                    if matches!(
+                        state.action_result.as_ref().map(|r| r.action),
+                        Some(Action::Play) | Some(Action::Train)
+                    ) {
+                        state.reaction_anim_start = Some(Instant::now());
+                    }
                     state.mode = AppMode::ActionReaction;
                 }
             }
@@ -509,20 +517,64 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
         },
         AppMode::ActionAnimation => {
             // Relax cannot be skipped; any key skips other actions
-            let is_relax = matches!(
-                state.action_result.as_ref().map(|r| r.action),
-                Some(Action::Relax)
-            );
-            if !is_relax {
+            let action = state.action_result.as_ref().map(|r| r.action);
+            if !matches!(action, Some(Action::Relax)) {
                 state.action_animation_start = None;
+                if matches!(action, Some(Action::Play) | Some(Action::Train)) {
+                    state.reaction_anim_start = Some(Instant::now());
+                }
                 state.mode = AppMode::ActionReaction;
             }
         }
         AppMode::ActionReaction => {
-            // Any key → back to Main
-            state.action_result = None;
-            state.mode = AppMode::Main;
-            state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+            let (action, lines_count, current_line) = match &state.action_result {
+                Some(r) => (r.action, r.reaction_lines.len(), r.current_line),
+                None => {
+                    state.mode = AppMode::Main;
+                    return Ok(InputResult::Continue);
+                }
+            };
+            match action {
+                Action::Talk => {
+                    if current_line + 1 < lines_count {
+                        if let Some(ref mut r) = state.action_result {
+                            r.current_line += 1;
+                        }
+                        return Ok(InputResult::Continue);
+                    }
+                    state.action_result = None;
+                    state.mode = AppMode::Main;
+                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                }
+                Action::Play | Action::Train => {
+                    let interval_ms: u128 = if action == Action::Play { 600 } else { 900 };
+                    let elapsed = state
+                        .reaction_anim_start
+                        .map(|s| s.elapsed().as_millis())
+                        .unwrap_or(u128::MAX);
+                    let revealed = ((elapsed / interval_ms + 1) as usize).min(lines_count);
+                    if revealed >= lines_count {
+                        state.action_result = None;
+                        state.reaction_anim_start = None;
+                        state.mode = AppMode::Main;
+                        state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                    } else {
+                        // Skip reveal: set start to far in the past so all lines show
+                        state.reaction_anim_start = Some(
+                            Instant::now()
+                                - Duration::from_millis(
+                                    interval_ms as u64 * lines_count as u64 + 1000,
+                                ),
+                        );
+                    }
+                }
+                Action::Relax => {
+                    state.action_result = None;
+                    state.reaction_anim_start = None;
+                    state.mode = AppMode::Main;
+                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                }
+            }
         }
         AppMode::Album => match key {
             KeyCode::Up => {
@@ -650,7 +702,8 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         if pet_data.stage == 0 {
             state.action_result = Some(ActionResult {
                 action,
-                reaction_text: "（たまごは静かに揺れている…）".to_string(),
+                reaction_lines: vec!["（たまごは静かに揺れている…）".to_string()],
+                current_line: 0,
             });
             state.action_animation_start = Some(Instant::now());
             state.mode = AppMode::ActionAnimation;
@@ -661,23 +714,53 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         let mood = pet::mood_level(pet_data.kimochi);
         crate::game::actions::apply_action_effects(action, pet_data, &mut state.rng);
 
-        let reaction_text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
-            voice::get_reaction(
-                vt,
-                action,
-                mood,
-                pet_data.nakayoshi,
-                &pet_data.species,
-                &mut state.rng,
-            )
-        } else {
-            // Stage1 fallback: use Phase1 generic reactions
-            crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
+        let reaction_lines: Vec<String> = match action {
+            Action::Talk => {
+                let count = crate::game::actions::talk_line_count(pet_data.nakayoshi);
+                (0..count)
+                    .map(|_| {
+                        if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+                            voice::get_reaction(
+                                vt,
+                                action,
+                                mood,
+                                pet_data.nakayoshi,
+                                &pet_data.species,
+                                &mut state.rng,
+                            )
+                        } else {
+                            crate::game::actions::select_generic_reaction(
+                                action,
+                                mood,
+                                &mut state.rng,
+                            )
+                        }
+                    })
+                    .collect()
+            }
+            Action::Play => crate::game::actions::select_play_exclamations(mood, &mut state.rng),
+            Action::Train => crate::game::actions::select_train_exclamations(mood, &mut state.rng),
+            Action::Relax => {
+                let text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+                    voice::get_reaction(
+                        vt,
+                        action,
+                        mood,
+                        pet_data.nakayoshi,
+                        &pet_data.species,
+                        &mut state.rng,
+                    )
+                } else {
+                    crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
+                };
+                vec![text]
+            }
         };
 
         state.action_result = Some(ActionResult {
             action,
-            reaction_text,
+            reaction_lines,
+            current_line: 0,
         });
         state.action_animation_start = Some(Instant::now());
         state.mode = AppMode::ActionAnimation;
