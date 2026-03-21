@@ -241,10 +241,15 @@ async fn run_loop(
             }
         }
 
-        // Auto-transition: ActionAnimation → ActionReaction after 2.5s
+        // Auto-transition: ActionAnimation → ActionReaction
+        // Relax takes 5s (non-skippable), others take 2.5s
         if matches!(state.mode, AppMode::ActionAnimation) {
             if let Some(start) = state.action_animation_start {
-                if start.elapsed() >= Duration::from_millis(2500) {
+                let duration = match state.action_result.as_ref().map(|r| r.action) {
+                    Some(Action::Relax) => Duration::from_millis(5000),
+                    _ => Duration::from_millis(2500),
+                };
+                if start.elapsed() >= duration {
                     state.action_animation_start = None;
                     state.mode = AppMode::ActionReaction;
                 }
@@ -503,9 +508,15 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             _ => {}
         },
         AppMode::ActionAnimation => {
-            // Any key → skip animation, go straight to result
-            state.action_animation_start = None;
-            state.mode = AppMode::ActionReaction;
+            // Relax cannot be skipped; any key skips other actions
+            let is_relax = matches!(
+                state.action_result.as_ref().map(|r| r.action),
+                Some(Action::Relax)
+            );
+            if !is_relax {
+                state.action_animation_start = None;
+                state.mode = AppMode::ActionReaction;
+            }
         }
         AppMode::ActionReaction => {
             // Any key → back to Main

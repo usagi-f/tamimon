@@ -8,6 +8,7 @@ use ratatui::{
 };
 
 use crate::app::AppState;
+use crate::game::actions::Action;
 use crate::game::evolution::{get_body_type, BodyType};
 use crate::game::pet::{mood_level, weight_label};
 use crate::game::time::format_elapsed;
@@ -256,19 +257,27 @@ pub fn render_action_animation(f: &mut Frame, state: &AppState) {
     let nickname = pet.display_name();
 
     let art_lines = ascii_art::get_action_art(&pet.species, action, state.animation_frame);
-    let effect = ascii_art::get_action_effect(action, state.animation_frame);
 
-    // Progress dots based on elapsed time
     let elapsed_ms = state
         .action_animation_start
         .map(|s| s.elapsed().as_millis() as u64)
         .unwrap_or(0);
-    let progress = if elapsed_ms < 800 {
-        "."
-    } else if elapsed_ms < 1600 {
-        ".."
+
+    // For Relax: grow ～ slowly over 5s (no progress dots, non-skippable)
+    // For others: use frame-based effect + progress dots
+    let (effect, progress) = if action == Action::Relax {
+        let count = ((elapsed_ms * 22 / 5000) as usize + 1).min(22);
+        ("～".repeat(count), "")
     } else {
-        "..."
+        let e = ascii_art::get_action_effect(action, state.animation_frame).to_string();
+        let p = if elapsed_ms < 800 {
+            "."
+        } else if elapsed_ms < 1600 {
+            ".."
+        } else {
+            "..."
+        };
+        (e, p)
     };
 
     let mut lines: Vec<Line> = Vec::new();
