@@ -651,7 +651,14 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         crate::game::actions::apply_action_effects(action, pet_data, &mut state.rng);
 
         let reaction_text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
-            voice::get_reaction(vt, action, mood, pet_data.nakayoshi, &mut state.rng)
+            voice::get_reaction(
+                vt,
+                action,
+                mood,
+                pet_data.nakayoshi,
+                &pet_data.species,
+                &mut state.rng,
+            )
         } else {
             // Stage1 fallback: use Phase1 generic reactions
             crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)

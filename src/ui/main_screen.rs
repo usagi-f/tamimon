@@ -27,7 +27,7 @@ fn sway_offset(body_type: BodyType, frame: usize) -> usize {
 /// Blink triggers for 1 frame every ~4 seconds (every 8 frames at 2fps).
 fn apply_blink(lines: Vec<String>, blink_tick: u32) -> Vec<String> {
     // Active for 1 frame every 8 frames (once per ~4s at 2fps)
-    if blink_tick % 8 != 0 {
+    if !blink_tick.is_multiple_of(8) {
         return lines;
     }
     lines

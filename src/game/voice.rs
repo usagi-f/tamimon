@@ -49,15 +49,22 @@ fn bond_adjusted_mood(mood: MoodLevel, nakayoshi: f64, rng: &mut impl Rng) -> Mo
     }
 }
 
-/// Get reaction text by voice type
+/// Get reaction text by voice type, optionally blending species-specific lines.
 pub fn get_reaction(
     voice_type: VoiceType,
     action: Action,
     mood: MoodLevel,
     nakayoshi: f64,
+    species: &str,
     rng: &mut impl Rng,
 ) -> String {
     let effective_mood = bond_adjusted_mood(mood, nakayoshi, rng);
+    // 35% chance to use species-specific lines when available
+    if rng.gen::<f64>() < 0.35 {
+        if let Some(pool) = get_species_pool(species, action, effective_mood) {
+            return pool.choose(rng).unwrap().to_string();
+        }
+    }
     let pool = get_reaction_pool(voice_type, action, effective_mood);
     pool.choose(rng).unwrap().to_string()
 }
