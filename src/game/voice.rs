@@ -5,20 +5,79 @@ use crate::game::actions::Action;
 use crate::game::evolution::VoiceType;
 use crate::game::pet::MoodLevel;
 
-/// Get reaction text by voice type
+/// Adjust effective mood based on nakayoshi (bond level).
+/// High bond nudges toward more positive responses; low bond nudges toward more negative ones.
+fn bond_adjusted_mood(mood: MoodLevel, nakayoshi: f64, rng: &mut impl Rng) -> MoodLevel {
+    if nakayoshi >= 70.0 {
+        match mood {
+            MoodLevel::Normal => {
+                if rng.gen::<f64>() < 0.40 {
+                    MoodLevel::High
+                } else {
+                    MoodLevel::Normal
+                }
+            }
+            MoodLevel::Low => {
+                if rng.gen::<f64>() < 0.25 {
+                    MoodLevel::Normal
+                } else {
+                    MoodLevel::Low
+                }
+            }
+            MoodLevel::High => MoodLevel::High,
+        }
+    } else if nakayoshi <= 30.0 {
+        match mood {
+            MoodLevel::High => {
+                if rng.gen::<f64>() < 0.30 {
+                    MoodLevel::Normal
+                } else {
+                    MoodLevel::High
+                }
+            }
+            MoodLevel::Normal => {
+                if rng.gen::<f64>() < 0.20 {
+                    MoodLevel::Low
+                } else {
+                    MoodLevel::Normal
+                }
+            }
+            MoodLevel::Low => MoodLevel::Low,
+        }
+    } else {
+        mood
+    }
+}
+
+/// Get reaction text by voice type, optionally blending species-specific lines.
 pub fn get_reaction(
     voice_type: VoiceType,
     action: Action,
     mood: MoodLevel,
+    nakayoshi: f64,
+    species: &str,
     rng: &mut impl Rng,
 ) -> String {
-    let pool = get_reaction_pool(voice_type, action, mood);
+    let effective_mood = bond_adjusted_mood(mood, nakayoshi, rng);
+    // 35% chance to use species-specific lines when available
+    if rng.gen::<f64>() < 0.35 {
+        if let Some(pool) = get_species_pool(species, action, effective_mood) {
+            return pool.choose(rng).unwrap().to_string();
+        }
+    }
+    let pool = get_reaction_pool(voice_type, action, effective_mood);
     pool.choose(rng).unwrap().to_string()
 }
 
 /// Get idle speech by voice type
-pub fn get_idle_speech(voice_type: VoiceType, mood: MoodLevel, rng: &mut impl Rng) -> String {
-    let pool = get_idle_pool(voice_type, mood);
+pub fn get_idle_speech(
+    voice_type: VoiceType,
+    mood: MoodLevel,
+    nakayoshi: f64,
+    rng: &mut impl Rng,
+) -> String {
+    let effective_mood = bond_adjusted_mood(mood, nakayoshi, rng);
+    let pool = get_idle_pool(voice_type, effective_mood);
     pool.choose(rng).unwrap().to_string()
 }
 
@@ -35,6 +94,11 @@ fn get_reaction_pool(
             "「ふーん、で？」",
             "「話しかけてきた」",
             "「まあいっか」",
+            "「…なんか用？」",
+            "「あ、そ」",
+            "「別にいいけど」",
+            "「…ん、なに」",
+            "「声かけんな…ってことはないけど」",
         ],
         (VoiceType::Tameguchi, Action::Talk, MoodLevel::Normal) => &[
             "「なに」",
@@ -42,6 +106,10 @@ fn get_reaction_pool(
             "「ふーん」",
             "「…あっそ」",
             "「べつに」",
+            "「…で？」",
+            "「知らんし」",
+            "「そーなんだ」",
+            "「…まあね」",
         ],
         (VoiceType::Tameguchi, Action::Talk, MoodLevel::Low) => &[
             "「…」",
@@ -49,49 +117,101 @@ fn get_reaction_pool(
             "「しつこい」",
             "「ほっとけ」",
             "「はぁ」",
+            "「…あっちいけ」",
+            "「今じゃないし」",
+            "「…ほんとうるさい」",
+            "「黙って」",
         ],
         (VoiceType::Tameguchi, Action::Play, MoodLevel::High) => &[
             "「まあ、つきあってやるよ」",
             "「しょうがないな」",
             "「やるか」",
             "「…ちょっとだけな」",
+            "「まあ悪くなかったし」",
+            "「…楽しかったとか言わないからね」",
+            "「もっかいやる？別にいいけど」",
+            "「ちょっとだけ面白かった」",
         ],
         (VoiceType::Tameguchi, Action::Play, MoodLevel::Normal) => &[
             "「はいはい」",
             "「めんどくさ」",
             "「…やるけど」",
             "「てきとーにやるわ」",
+            "「まあ普通だった」",
+            "「…ふーん」",
+            "「やったよ、満足？」",
+            "「別にそんな楽しくないし」",
         ],
-        (VoiceType::Tameguchi, Action::Play, MoodLevel::Low) => {
-            &["「むり」", "「やだ」", "「かってにやれば」", "「…」"]
-        }
+        (VoiceType::Tameguchi, Action::Play, MoodLevel::Low) => &[
+            "「むり」",
+            "「やだ」",
+            "「かってにやれば」",
+            "「…」",
+            "「今日は無理」",
+            "「あとで」",
+            "「…気分じゃない」",
+            "「ほっといて」",
+        ],
         (VoiceType::Tameguchi, Action::Train, MoodLevel::High) => &[
             "「やってやるよ」",
             "「余裕だし」",
             "「こんなもんか」",
             "「次は？」",
+            "「…まあ、悪くない」",
+            "「もっかいやる」",
+            "「ちょっと本気出した」",
+            "「…強くなった気がする」",
         ],
         (VoiceType::Tameguchi, Action::Train, MoodLevel::Normal) => &[
             "「だるい」",
             "「…やるけど」",
             "「はぁ…まあいいけど」",
             "「てきとー」",
+            "「…やれってんなら」",
+            "「別に負けてないし」",
+            "「疲れたし」",
+            "「まあこんなもんか」",
         ],
-        (VoiceType::Tameguchi, Action::Train, MoodLevel::Low) => {
-            &["「むり」", "「やめろ」", "「…」", "「しぬ」"]
-        }
+        (VoiceType::Tameguchi, Action::Train, MoodLevel::Low) => &[
+            "「むり」",
+            "「やめろ」",
+            "「…」",
+            "「しぬ」",
+            "「今日は無理すぎ」",
+            "「体が動かない」",
+            "「…勘弁して」",
+            "「なんでこんなことしてんの」",
+        ],
         (VoiceType::Tameguchi, Action::Relax, MoodLevel::High) => &[
             "「まあ、たまにはいいか」",
             "「ぼーっとする」",
             "「ふぁ〜」",
             "「…ん」",
+            "「…悪くない時間」",
+            "「こういうのはいい」",
+            "「ずっとこうしてたい」",
+            "「…ねむ」",
         ],
-        (VoiceType::Tameguchi, Action::Relax, MoodLevel::Normal) => {
-            &["「…zzz」", "「ねる」", "「おやすみ」", "「…」"]
-        }
-        (VoiceType::Tameguchi, Action::Relax, MoodLevel::Low) => {
-            &["「もう寝る」", "「ほっとけ」", "「…zzz」", "「うるさい」"]
-        }
+        (VoiceType::Tameguchi, Action::Relax, MoodLevel::Normal) => &[
+            "「…zzz」",
+            "「ねる」",
+            "「おやすみ」",
+            "「…」",
+            "「勝手に寝るから」",
+            "「…ぼーっとしてる」",
+            "「…ふぁ」",
+            "「別に何もしたくない」",
+        ],
+        (VoiceType::Tameguchi, Action::Relax, MoodLevel::Low) => &[
+            "「もう寝る」",
+            "「ほっとけ」",
+            "「…zzz」",
+            "「うるさい」",
+            "「電気消して」",
+            "「…なんで起こすの」",
+            "「触らないで」",
+            "「…zzz…zzz」",
+        ],
 
         // ===== Keigo (polite) =====
         (VoiceType::Keigo, Action::Talk, MoodLevel::High) => &[
@@ -99,72 +219,123 @@ fn get_reaction_pool(
             "「失礼ですが、うれしいです」",
             "「ありがとうございます」",
             "「恐縮です」",
+            "「お話しいただけて嬉しゅうございます」",
+            "「ご連絡いただきありがとうございます」",
+            "「おかげさまで、とても嬉しいです」",
+            "「いつもお気にかけてくださり感謝です」",
+            "「よろしくお願いいたします」",
         ],
         (VoiceType::Keigo, Action::Talk, MoodLevel::Normal) => &[
             "「失礼ですが、今少しお眠いです」",
             "「ありがとうございます。特に何もありません」",
             "「…はい」",
             "「恐縮ですが、少しだけほっといてください」",
+            "「承知いたしました」",
+            "「…なにかご用でしょうか」",
+            "「おっしゃる通りかと」",
+            "「…そうですね」",
+            "「ご連絡ありがとうございます」",
         ],
         (VoiceType::Keigo, Action::Talk, MoodLevel::Low) => &[
             "「申し訳ございません、今はちょっと…」",
             "「…失礼します」",
             "「恐れ入りますが…」",
             "「…はい」",
+            "「大変申し訳ないのですが…」",
+            "「少々お時間をいただけますか…」",
+            "「…ご容赦くださいませ」",
+            "「今は少し…お時間いただいてもよいでしょうか」",
         ],
         (VoiceType::Keigo, Action::Play, MoodLevel::High) => &[
             "「楽しゅうございました」",
             "「お付き合いいただき感謝です」",
             "「またよろしくお願いします」",
             "「光栄です」",
+            "「大変楽しゅうございました！」",
+            "「ご一緒できて嬉しいです」",
+            "「またぜひお願いします」",
+            "「こんなに楽しいのは久しぶりです」",
+            "「ありがとうございます、またぜひ」",
         ],
         (VoiceType::Keigo, Action::Play, MoodLevel::Normal) => &[
             "「ありがとうございました」",
             "「そうですね、まあまあでした」",
             "「お疲れ様です」",
             "「はい、以上です」",
+            "「…まあ、こんな感じですね」",
+            "「参加させていただきました」",
+            "「…恐縮ですが、普通でした」",
+            "「お付き合いありがとうございました」",
         ],
         (VoiceType::Keigo, Action::Play, MoodLevel::Low) => &[
             "「申し訳ございません…」",
             "「ちょっと厳しいです」",
             "「…失礼」",
             "「恐縮ですが…」",
+            "「今日はちょっと…ご勘弁を」",
+            "「…大変失礼いたしました」",
+            "「体の具合が…申し訳ございません」",
+            "「…また今度お付き合いください」",
         ],
         (VoiceType::Keigo, Action::Train, MoodLevel::High) => &[
             "「精進いたします」",
             "「はい、もう一度お願いします」",
             "「ありがとうございます」",
             "「鍛えていただき感謝です」",
+            "「もっと頑張れる気がします！」",
+            "「ご指導ありがとうございます」",
+            "「おかげさまで成長できました」",
+            "「引き続きよろしくお願いします」",
         ],
         (VoiceType::Keigo, Action::Train, MoodLevel::Normal) => &[
             "「承知しました」",
             "「はい…」",
             "「もう少しだけ…」",
             "「お疲れ様でした」",
+            "「…頑張ります」",
+            "「ご指示通りにいたします」",
+            "「…もう少し続けます」",
+            "「恐縮ですが、やってみます」",
         ],
         (VoiceType::Keigo, Action::Train, MoodLevel::Low) => &[
             "「限界でございます…」",
             "「申し訳ございません…」",
             "「ご勘弁を…」",
             "「…」",
+            "「体が…大変失礼いたします」",
+            "「…もはや限界かと」",
+            "「休ませていただけますか…」",
+            "「誠に申し訳ございません…」",
         ],
         (VoiceType::Keigo, Action::Relax, MoodLevel::High) => &[
             "「素敵なお時間ですね」",
             "「心が洗われます」",
             "「ゆっくりさせていただきます」",
             "「ありがとうございます」",
+            "「こういう時間が大切ですね」",
+            "「穏やかで心地よいですね」",
+            "「おかげさまでゆっくりできます」",
+            "「感謝して休ませていただきます」",
         ],
         (VoiceType::Keigo, Action::Relax, MoodLevel::Normal) => &[
             "「…失礼、少しウトウトしました」",
             "「穏やかですね」",
             "「ゆっくりしております」",
             "「…zzz」",
+            "「…少し休ませてください」",
+            "「失礼いたします…」",
+            "「…うとうとしております」",
+            "「のんびりさせていただいております」",
         ],
         (VoiceType::Keigo, Action::Relax, MoodLevel::Low) => &[
             "「…休ませていただきます」",
             "「…zzz」",
             "「…失礼します」",
             "「…」",
+            "「…大変申し訳ございません」",
+            "「しばらくお休みをいただきます…」",
+            "「…ご迷惑をおかけします」",
+            "「…zzz…失礼…」",
         ],
 
         // ===== Gal =====
@@ -173,61 +344,126 @@ fn get_reaction_pool(
             "「きゃー！話そ話そ！」",
             "「やばくない！？」",
             "「テンション上がる〜！」",
+            "「え、来てくれたの！？めっちゃうれしいんだけど！」",
+            "「やばやばやば！話しかけてきた！」",
+            "「ずっと待ってたんだよ〜！」",
+            "「えーかわいい♡ありがと！」",
+            "「じゃあなに話す！？全部聞きたい！」",
         ],
         (VoiceType::Gal, Action::Talk, MoodLevel::Normal) => &[
             "「あーね」",
             "「それな」",
             "「ふーん、で？」",
             "「まあいっか」",
+            "「え、なに？」",
+            "「そっかそっか〜」",
+            "「まじで〜？」",
+            "「あっそなんだ」",
+            "「ちょい待って〜」",
         ],
-        (VoiceType::Gal, Action::Talk, MoodLevel::Low) => {
-            &["「無理…」", "「だる…」", "「え、今？」", "「…」"]
-        }
+        (VoiceType::Gal, Action::Talk, MoodLevel::Low) => &[
+            "「無理…」",
+            "「だる…」",
+            "「え、今？」",
+            "「…」",
+            "「ちょっとほっといて」",
+            "「今それどころじゃないし」",
+            "「…あとで」",
+            "「話しかけんといて…」",
+        ],
         (VoiceType::Gal, Action::Play, MoodLevel::High) => &[
             "「えーやばい！たのしー！！」",
             "「もっかいやろ！絶対！」",
             "「え待って今の何？ウケるんだけど」",
             "「あたしそういうの好き」",
+            "「まじで最高！やばすぎ！」",
+            "「えーもっかいもっかい！」",
+            "「これ絶対インスタ映えじゃん！」",
+            "「あたしってセンスあるくない？」",
+            "「てかこれもっとやりたい！」",
         ],
         (VoiceType::Gal, Action::Play, MoodLevel::Normal) => &[
             "「まあまあかな」",
             "「ふつー」",
             "「つかれたんだけどぉ〜」",
             "「もうちょいがんばる」",
+            "「まあ悪くはないか」",
+            "「なんか微妙じゃない？」",
+            "「とりあえずやっとく」",
+            "「眠いけどやる〜」",
         ],
-        (VoiceType::Gal, Action::Play, MoodLevel::Low) => {
-            &["「むりぃ〜」", "「やだ」", "「帰りたい」", "「…」"]
-        }
+        (VoiceType::Gal, Action::Play, MoodLevel::Low) => &[
+            "「むりぃ〜」",
+            "「やだ」",
+            "「帰りたい」",
+            "「…」",
+            "「もう無理じゃん…」",
+            "「ほんと勘弁して」",
+            "「疲れすぎて動けん」",
+            "「また今度でいい？」",
+        ],
         (VoiceType::Gal, Action::Train, MoodLevel::High) => &[
             "「いけるいける！」",
             "「あたし強くない！？」",
             "「やばっ！できた！」",
             "「もっとやる！」",
+            "「え、あたしって実はすごいんじゃん！」",
+            "「これ楽しすぎる！汗かいてもOK！」",
+            "「筋トレってこんな気持ちいいんだ！」",
+            "「もう一回！全然いける！」",
+            "「なんか体軽くなった気がする！」",
         ],
         (VoiceType::Gal, Action::Train, MoodLevel::Normal) => &[
             "「えー筋肉痛なるやん」",
             "「まあやるけど」",
             "「しんど」",
             "「つら」",
+            "「汗かくのちょっとやだな〜」",
+            "「まあ美容のためと思えば…」",
+            "「あとどのくらいあるん？」",
+            "「なんとかやるわ」",
         ],
-        (VoiceType::Gal, Action::Train, MoodLevel::Low) => {
-            &["「絶対むり」", "「無理無理無理」", "「…」", "「帰る」"]
-        }
+        (VoiceType::Gal, Action::Train, MoodLevel::Low) => &[
+            "「絶対むり」",
+            "「無理無理無理」",
+            "「…」",
+            "「帰る」",
+            "「ほんとにむり、今日は」",
+            "「体が動かない…」",
+            "「やる気ゼロなんだけど」",
+            "「明日にしていい？」",
+        ],
         (VoiceType::Gal, Action::Relax, MoodLevel::High) => &[
             "「きもちいい〜！」",
             "「最高じゃん！」",
             "「あーしあわせ」",
             "「エモい…」",
+            "「これ最高の時間すぎる〜！」",
+            "「ずっとこうしてたい…」",
+            "「天国じゃん？」",
+            "「まじで幸せ〜♡」",
+            "「今日これだけでよかった！」",
         ],
         (VoiceType::Gal, Action::Relax, MoodLevel::Normal) => &[
             "「まったり〜」",
             "「zzz…はっ！寝てた」",
             "「ふぁ〜」",
             "「まあいっか」",
+            "「のんびりするか〜」",
+            "「ちょっと休憩」",
+            "「眠いな〜…」",
+            "「何もしたくない日ってあるよね」",
         ],
-        (VoiceType::Gal, Action::Relax, MoodLevel::Low) => {
-            &["「もう寝る…」", "「…zzz」", "「おやすみ…」", "「…」"]
-        }
+        (VoiceType::Gal, Action::Relax, MoodLevel::Low) => &[
+            "「もう寝る…」",
+            "「…zzz」",
+            "「おやすみ…」",
+            "「…」",
+            "「電気消して…」",
+            "「起こさないで…」",
+            "「…もう限界」",
+            "「zzz…zzz…」",
+        ],
 
         // ===== Oyaji (old man) =====
         (VoiceType::Oyaji, Action::Talk, MoodLevel::High) => &[
@@ -235,64 +471,126 @@ fn get_reaction_pool(
             "「むかしはなあ…」",
             "「いい天気だなあ」",
             "「まあ座れ座れ」",
+            "「なんだ、来たのか。まあいい」",
+            "「おお、ちょうどよかった。聞いてくれ」",
+            "「昔の仲間もよく来たもんだ」",
+            "「そういやな、昔の話があってな」",
+            "「まあ茶でも飲め」",
         ],
         (VoiceType::Oyaji, Action::Talk, MoodLevel::Normal) => &[
             "「ん？なんだ？」",
             "「あーはいはい」",
             "「そういうこともある」",
             "「まあな」",
+            "「ふむ…そうか」",
+            "「おう、なんだ」",
+            "「…まあそんなもんだろ」",
+            "「あ？あーそういうことか」",
+            "「…うむ、知ってる」",
         ],
-        (VoiceType::Oyaji, Action::Talk, MoodLevel::Low) => {
-            &["「…今はちょっと」", "「疲れたわ」", "「腰が痛い」", "「…」"]
-        }
+        (VoiceType::Oyaji, Action::Talk, MoodLevel::Low) => &[
+            "「…今はちょっと」",
+            "「疲れたわ」",
+            "「腰が痛い」",
+            "「…」",
+            "「今日はもう勘弁してくれ」",
+            "「…あとにしてくれ」",
+            "「頭が痛い」",
+            "「…年はとりたくないもんだ」",
+        ],
         (VoiceType::Oyaji, Action::Play, MoodLevel::High) => &[
             "「わしもまだまだ現役じゃ」",
             "「いい汗かいたわ」",
             "「昔はもっとできたんだがな」",
             "「なかなかやるな」",
+            "「こういうの嫌いじゃないぞ」",
+            "「ふん、このくらいは余裕だ」",
+            "「若い者には負けんぞ」",
+            "「まだまだやれるわ」",
+            "「楽しいな、こういうの」",
         ],
         (VoiceType::Oyaji, Action::Play, MoodLevel::Normal) => &[
             "「まあ、こんなもんだろ」",
             "「ふぅ…」",
             "「歳は取りたくないもんだ」",
             "「…うむ」",
+            "「昔ならもっとできたんだが…」",
+            "「まあやれることをやるだけだ」",
+            "「…ま、こんなもんか」",
+            "「昔取った杵柄ってやつだ」",
         ],
         (VoiceType::Oyaji, Action::Play, MoodLevel::Low) => &[
             "「無理させんな」",
             "「腰がな…」",
             "「…」",
             "「もう若くないんだ」",
+            "「膝がきつい…」",
+            "「頼むから休ませてくれ」",
+            "「…こんな日もある」",
+            "「昔はできたんだがな…」",
         ],
         (VoiceType::Oyaji, Action::Train, MoodLevel::High) => &[
             "「むかしはなあ、こういう鍛練を毎日やったもんだ」",
             "「若いうちの苦労は買ってでもしろ」",
             "「いい汗かいたわ」",
             "「これがほんとの根性ってもんだ」",
+            "「ふん、まだいけるぞ」",
+            "「体を動かすのは気持ちいいもんだ」",
+            "「わしだって鍛えてきたんだ」",
+            "「こういう日は体が軽い」",
+            "「よし、もう一発やるか」",
         ],
         (VoiceType::Oyaji, Action::Train, MoodLevel::Normal) => &[
             "「まあ、こんなもんだろ」",
             "「ふぅ…」",
             "「体が資本だからな」",
             "「…うむ」",
+            "「無理はしないのが一番だ」",
+            "「…ほどほどにやっておこう」",
+            "「体に鞭打ってやるか」",
+            "「まあ、やれるだけやる」",
         ],
-        (VoiceType::Oyaji, Action::Train, MoodLevel::Low) => {
-            &["「もう勘弁してくれ」", "「腰が…」", "「…」", "「休ませろ」"]
-        }
+        (VoiceType::Oyaji, Action::Train, MoodLevel::Low) => &[
+            "「もう勘弁してくれ」",
+            "「腰が…」",
+            "「…」",
+            "「休ませろ」",
+            "「今日は体が言うことを聞かん」",
+            "「…むりだ、正直」",
+            "「歳には勝てんな…」",
+            "「もう限界だ」",
+        ],
         (VoiceType::Oyaji, Action::Relax, MoodLevel::High) => &[
             "「あー、極楽じゃ」",
             "「こういうのがいいんだよ」",
             "「風呂上がりのビールみたいだ」",
             "「人生にはこういう時間が必要だ」",
+            "「これがまた最高なんだ」",
+            "「ぼーっとするのも悪くない」",
+            "「年取ったら休み方がわかるってもんだ」",
+            "「…ん、うまいな」",
+            "「こういう時間があるから生きてるって感じがする」",
         ],
         (VoiceType::Oyaji, Action::Relax, MoodLevel::Normal) => &[
             "「…zzz」",
             "「ぐう」",
             "「のんびりだなあ」",
             "「…ん？寝てた？」",
+            "「まあ休むかな」",
+            "「…ぼーっとするのも悪くない」",
+            "「うとうとしてたな」",
+            "「…zzz…ん、なんだ」",
         ],
-        (VoiceType::Oyaji, Action::Relax, MoodLevel::Low) => {
-            &["「もう寝る」", "「おやすみ」", "「…zzz」", "「疲れた」"]
-        }
+        (VoiceType::Oyaji, Action::Relax, MoodLevel::Low) => &[
+            "「もう寝る」",
+            "「おやすみ」",
+            "「…zzz」",
+            "「疲れた」",
+            "「起こすな…」",
+            "「…消えるぞ」",
+            "「zzz…zzz…」",
+            "「…もう限界だ」",
+        ],
 
         // ===== Tetsugaku (philosopher) =====
         (VoiceType::Tetsugaku, Action::Talk, MoodLevel::High) => &[
@@ -300,72 +598,125 @@ fn get_reaction_pool(
             "「存在を確認してくれてありがとう」",
             "「会話は、二つの孤独が交差する瞬間だ」",
             "「今日は言葉が軽い。いい日だ」",
+            "「声をかけてくれる…それは君が存在する証だ」",
+            "「この対話は宇宙の奇跡かもしれない」",
+            "「君と話すとき、時間が実在する気がする」",
+            "「言葉は橋だ。今、その橋を渡ってくれた」",
+            "「…話すということ自体が、哲学だ」",
         ],
         (VoiceType::Tetsugaku, Action::Talk, MoodLevel::Normal) => &[
             "「存在とは何か」",
             "「…考えていた」",
             "「言葉は不完全だ」",
             "「沈黙にも意味がある」",
+            "「…なにを求めているのだ」",
+            "「ふむ。問いに答えは必要か」",
+            "「…言葉より沈黙の方が正直だ」",
+            "「…まあ、話してみろ」",
+            "「問いかけること自体が答えだ」",
         ],
         (VoiceType::Tetsugaku, Action::Talk, MoodLevel::Low) => &[
             "「…」",
             "「虚無を見つめている」",
             "「なぜ話すのだ」",
             "「意味はあるのか」",
+            "「…今は言葉が遠い」",
+            "「…存在が薄い気がする」",
+            "「話す気力さえ、今はない」",
+            "「…虚しさだけがある」",
         ],
         (VoiceType::Tetsugaku, Action::Play, MoodLevel::High) => &[
             "「遊びとは…自由の実践だ！」",
             "「楽しいとは不思議な概念だ」",
             "「動くことは考えることだ」",
             "「…なるほど。これが遊びか」",
+            "「遊びの中に真理が宿る！」",
+            "「身体が動くとき、精神が踊る」",
+            "「これが…快楽というものか」",
+            "「遊び、それは魂の解放だ」",
+            "「もう一度！探求は続く」",
         ],
         (VoiceType::Tetsugaku, Action::Play, MoodLevel::Normal) => &[
             "「遊びとは何か」",
             "「…ふむ」",
             "「目的のない行動にこそ意味がある」",
             "「…」",
+            "「…まあ、やってみよう」",
+            "「遊ぶことの意義を考えながらやる」",
+            "「…なるほど、こういうものか」",
+            "「これが遊び…定義が難しい」",
         ],
         (VoiceType::Tetsugaku, Action::Play, MoodLevel::Low) => &[
             "「遊ぶ意味を見出せない」",
             "「…」",
             "「虚しい」",
             "「なぜだ」",
+            "「…今は動く気になれない」",
+            "「遊びの概念さえ重い…」",
+            "「…存在が邪魔をしている」",
+            "「意味があるのか、それすらわからない」",
         ],
         (VoiceType::Tetsugaku, Action::Train, MoodLevel::High) => &[
             "「肉体は精神の器だ。鍛えよう」",
             "「苦痛は成長の証だ！」",
             "「限界とは…幻想かもしれない」",
             "「汗は哲学の結晶だ」",
+            "「肉体の限界を超える！それが哲学だ」",
+            "「鍛えることで魂が磨かれる」",
+            "「苦しみの先に何があるか…試してみよう」",
+            "「動け、肉体よ！精神に従え！」",
+            "「今日の汗は明日の思想の糧だ」",
         ],
         (VoiceType::Tetsugaku, Action::Train, MoodLevel::Normal) => &[
             "「鍛えるとは何か」",
             "「…ふむ、肉体か」",
             "「努力は報われるのか」",
             "「…」",
+            "「…やるが、なぜやるのかを考えながらやる」",
+            "「肉体の鍛練…それは哲学の実践か」",
+            "「…まあ、やってみよう」",
+            "「成長とは変化だ…変化してみよう」",
         ],
         (VoiceType::Tetsugaku, Action::Train, MoodLevel::Low) => &[
             "「…もう考えられない」",
             "「体が思考を拒否している」",
             "「…」",
             "「限界とは…これか」",
+            "「…肉体が魂を裏切っている」",
+            "「哲学も、体があってこそだった…」",
+            "「…何も、できない」",
+            "「今は…無だ」",
         ],
         (VoiceType::Tetsugaku, Action::Relax, MoodLevel::High) => &[
             "「静寂とは、音の不在ではなく、内なる声との対話だ」",
             "「石になりたい気持ち、わかる？」",
             "「存在することに意味はあるのか…あ、おなかすいた」",
             "「風が、なにかを語っている気がする」",
+            "「何もしないこと…それが最大の哲学かもしれない」",
+            "「休むとき、宇宙と同期している気がする」",
+            "「ぼんやりすることで、真理に近づく」",
+            "「…zzz…これが…無我の境地…」",
+            "「穏やかな時間は、思索に適している」",
         ],
         (VoiceType::Tetsugaku, Action::Relax, MoodLevel::Normal) => &[
             "「時間は幻だ」",
             "「…考えている」",
             "「無とは…zzz」",
             "「…」",
+            "「…ぼんやりすることも思索だ」",
+            "「休む…それも存在の一形態か」",
+            "「…何も考えないことを考えている」",
+            "「zzz…いや、起きている」",
         ],
         (VoiceType::Tetsugaku, Action::Relax, MoodLevel::Low) => &[
             "「…」",
             "「存在が重い」",
             "「…zzz」",
             "「なにも考えたくない」",
+            "「…虚無の中にいる」",
+            "「…眠りたい。それだけだ」",
+            "「思考が…止まっている」",
+            "「…もう、何も」",
         ],
 
         // ===== Taiiku (athletic) =====
@@ -374,61 +725,126 @@ fn get_reaction_pool(
             "「今日もいい日ッス！」",
             "「声出していこう！」",
             "「ありがとうございます！」",
+            "「よし！来たッス！話しましょう！」",
+            "「元気ッス！今日も全力ッス！」",
+            "「声かけてくれてありがたいッス！」",
+            "「はいはい！何でも来いッス！」",
+            "「気合い入ってるッス！」",
         ],
         (VoiceType::Taiiku, Action::Talk, MoodLevel::Normal) => &[
             "「はい！」",
             "「…うッス」",
             "「がんばります」",
             "「了解ッス」",
+            "「わかりましたッス」",
+            "「…話しかけてくれたッス」",
+            "「はい、なんでしょう」",
+            "「うーす」",
+            "「…ッス、聞いてるッス」",
         ],
-        (VoiceType::Taiiku, Action::Talk, MoodLevel::Low) => {
-            &["「…はい」", "「…ッス」", "「すいません…」", "「…」"]
-        }
+        (VoiceType::Taiiku, Action::Talk, MoodLevel::Low) => &[
+            "「…はい」",
+            "「…ッス」",
+            "「すいません…」",
+            "「…」",
+            "「…ちょっとしんどいッス」",
+            "「…気力が…」",
+            "「…すいません、後で…」",
+            "「…今日は、ちょっと…」",
+        ],
         (VoiceType::Taiiku, Action::Play, MoodLevel::High) => &[
             "「よっしゃー！いくぞー！」",
             "「もう一回！もう一回！」",
             "「全力で楽しむッス！」",
             "「最高ッス！」",
+            "「これが本当の遊びッス！」",
+            "「負けないッス！全力ッス！」",
+            "「楽しすぎて止まれないッス！」",
+            "「やばい！いい感じッス！」",
+            "「勝ったッス！もう一回！」",
         ],
         (VoiceType::Taiiku, Action::Play, MoodLevel::Normal) => &[
             "「やるッス！」",
             "「…ふう」",
             "「まだいけるッス」",
             "「がんばるッス」",
+            "「…まあやるッス」",
+            "「ふぅ…続けるッス」",
+            "「全力じゃないけどやるッス」",
+            "「…なんとかなるッス」",
         ],
         (VoiceType::Taiiku, Action::Play, MoodLevel::Low) => &[
             "「…すいません、今日は…」",
             "「気合いが…」",
             "「…」",
             "「休憩いいッスか」",
+            "「…力が出ないッス」",
+            "「今日はほんとに…すいませんッス」",
+            "「…ちょっとだけ待ってくださいッス」",
+            "「…zzz…あ、すいません」",
         ],
         (VoiceType::Taiiku, Action::Train, MoodLevel::High) => &[
             "「まだまだいける！」",
             "「もう一本！」",
             "「つよくなった気がする！」",
             "「いい汗かいた！」",
+            "「限界突破ッス！」",
+            "「こんな気持ちいいのは久しぶりッス！」",
+            "「もっとやりたいッス！」",
+            "「全力を出し切ったッス！」",
+            "「最高の鍛練ッス！ありがとうッス！」",
         ],
         (VoiceType::Taiiku, Action::Train, MoodLevel::Normal) => &[
             "「はい…！」",
             "「がんばります…！」",
             "「…ッス」",
             "「あと少し…」",
+            "「…やりきるッス」",
+            "「気合い入れてやるッス」",
+            "「つらいけど続けるッス」",
+            "「…もう少しだけッス」",
         ],
-        (VoiceType::Taiiku, Action::Train, MoodLevel::Low) => {
-            &["「…限界ッス」", "「すいません…」", "「…」", "「もう…」"]
-        }
+        (VoiceType::Taiiku, Action::Train, MoodLevel::Low) => &[
+            "「…限界ッス」",
+            "「すいません…」",
+            "「…」",
+            "「もう…」",
+            "「…体が動かないッス」",
+            "「本当に限界ッス…ごめんなさいッス」",
+            "「…休ませてくださいッス」",
+            "「…足が上がらないッス」",
+        ],
         (VoiceType::Taiiku, Action::Relax, MoodLevel::High) => &[
             "「休憩も大事ッス！」",
             "「あー気持ちいい！」",
             "「回復！回復！」",
             "「明日に備えるッス！」",
+            "「これが充電ってやつッス！」",
+            "「休むのが一番うまいッス！」",
+            "「ゆっくりするッス…zzz」",
+            "「体が喜んでるッス！」",
+            "「回復したら全力でいくッス！」",
         ],
-        (VoiceType::Taiiku, Action::Relax, MoodLevel::Normal) => {
-            &["「…zzz」", "「休むのも修行ッス」", "「…ふぅ」", "「…」"]
-        }
-        (VoiceType::Taiiku, Action::Relax, MoodLevel::Low) => {
-            &["「…zzz」", "「…」", "「おやすみなさい…」", "「…ッス」"]
-        }
+        (VoiceType::Taiiku, Action::Relax, MoodLevel::Normal) => &[
+            "「…zzz」",
+            "「休むのも修行ッス」",
+            "「…ふぅ」",
+            "「…」",
+            "「疲れたッス…少し休むッス」",
+            "「…zzz…あ、寝てたッス」",
+            "「のんびりするのも大事ッス」",
+            "「…ちょっと一息ッス」",
+        ],
+        (VoiceType::Taiiku, Action::Relax, MoodLevel::Low) => &[
+            "「…zzz」",
+            "「…」",
+            "「おやすみなさい…」",
+            "「…ッス」",
+            "「…もう動けないッス」",
+            "「…起こさないでくださいッス」",
+            "「…zzz…zzz…」",
+            "「…休ませてくださいッス」",
+        ],
 
         // ===== Negative =====
         (VoiceType::Negative, Action::Talk, MoodLevel::High) => &[
@@ -436,70 +852,126 @@ fn get_reaction_pool(
             "「どうせすぐいなくなるんでしょ…でもありがとう」",
             "「…今日はちょっとだけ…いい日かも」",
             "「…ほんと？」",
+            "「…来てくれたんだ…うれしいな…たぶん」",
+            "「…いいの？わたしと話して…」",
+            "「…ちょっとだけ、にっこりした…かも」",
+            "「…迷惑じゃなかったら…また話しかけて」",
+            "「…今日は悪くない…かな」",
         ],
         (VoiceType::Negative, Action::Talk, MoodLevel::Normal) => &[
             "「どうせ…」",
             "「…ごめんなさい」",
             "「わたしなんかに話しかけても…」",
             "「…うん」",
+            "「…どうせなにも変わらないけど」",
+            "「…話せるかな、わたし」",
+            "「…ごめん、うまく話せない」",
+            "「…まあ、いいけど」",
+            "「…なんで話しかけてくるの」",
         ],
         (VoiceType::Negative, Action::Talk, MoodLevel::Low) => &[
             "「…」",
             "「やっぱり無理でした」",
             "「消えたい…」",
             "「…ごめん」",
+            "「…今は無理です」",
+            "「話す言葉が…ない」",
+            "「…ごめんなさい…ほっとして」",
+            "「…もう、なにも…」",
         ],
         (VoiceType::Negative, Action::Play, MoodLevel::High) => &[
             "「…え、たのしい…こんな気持ち久しぶり…」",
             "「…ありがとう」",
             "「…もうちょっとだけ…」",
             "「…笑っていいのかな」",
+            "「…え、これ、楽しいって言っていいの…？」",
+            "「…嬉しい…ちょっとだけ」",
+            "「…ずっとこうしていたい…かな」",
+            "「…忘れてた、こういう感じ」",
+            "「…また遊んでくれる…？」",
         ],
         (VoiceType::Negative, Action::Play, MoodLevel::Normal) => &[
             "「どうせ楽しくならない…」",
             "「…やるけど」",
             "「…はい」",
             "「…」",
+            "「…楽しいのかどうかわからない」",
+            "「…まあ、やってみる」",
+            "「どうせうまくできないけど…」",
+            "「…参加するだけ…いいかな」",
         ],
         (VoiceType::Negative, Action::Play, MoodLevel::Low) => &[
             "「…無理です」",
             "「…」",
             "「ごめんなさい…」",
             "「楽しめない…」",
+            "「…もう何もしたくない」",
+            "「…やっぱり私には無理だった」",
+            "「…ごめんなさい、また迷惑かけて」",
+            "「…消えていいですか」",
         ],
         (VoiceType::Negative, Action::Train, MoodLevel::High) => &[
             "「…できた！…え、ほんとに？」",
             "「わたしにもできるの…？」",
             "「…ちょっとだけ自信ついた…かも」",
             "「…うれしい」",
+            "「…こんなわたしでもできるんだ…」",
+            "「…すごい…たぶん…」",
+            "「…また頑張れるかな…」",
+            "「…諦めなくてよかった…かも」",
+            "「…ありがとう、一緒にやってくれて」",
         ],
         (VoiceType::Negative, Action::Train, MoodLevel::Normal) => &[
             "「どうせできない…」",
             "「…はい」",
             "「やっぱり無理でした…」",
             "「…ごめんなさい」",
+            "「…できる気がしないけどやる」",
+            "「…どうせ失敗するけど…」",
+            "「…一応やってみます」",
+            "「…向いてないかも…でもやる」",
         ],
         (VoiceType::Negative, Action::Train, MoodLevel::Low) => &[
             "「…もうだめ」",
             "「…」",
             "「すみません…」",
             "「わたしなんか…」",
+            "「…ごめんなさい、できなくて」",
+            "「…やっぱりわたしには無理でした」",
+            "「…何もできない」",
+            "「…消えたい…」",
         ],
         (VoiceType::Negative, Action::Relax, MoodLevel::High) => &[
             "「…ちょっとだけ安心する…」",
             "「…ありがとう」",
             "「こういう時間…好きかも」",
             "「…zzz」",
+            "「…穏やかだ…珍しい」",
+            "「…こんな気持ち、久しぶり」",
+            "「…休んでいいんだ…」",
+            "「…ずっとこうしてたい」",
+            "「…ありがとう、そばにいてくれて」",
         ],
         (VoiceType::Negative, Action::Relax, MoodLevel::Normal) => &[
             "「…zzz」",
             "「…寝てもいい？」",
             "「…」",
             "「…ごめん、ねむい」",
+            "「…休めるかな…たぶん」",
+            "「…疲れた…少し休む」",
+            "「…何も考えたくない」",
+            "「…眠れるといいな…」",
         ],
-        (VoiceType::Negative, Action::Relax, MoodLevel::Low) => {
-            &["「…もう寝ます」", "「…」", "「…zzz」", "「…消えたい」"]
-        }
+        (VoiceType::Negative, Action::Relax, MoodLevel::Low) => &[
+            "「…もう寝ます」",
+            "「…」",
+            "「…zzz」",
+            "「…消えたい」",
+            "「…起こさないで」",
+            "「…このまま消えたい…」",
+            "「…zzz…zzz…」",
+            "「…もう何もいい…」",
+        ],
 
         // ===== Tennen (airhead) =====
         (VoiceType::Tennen, Action::Talk, MoodLevel::High) => &[
@@ -507,64 +979,126 @@ fn get_reaction_pool(
             "「えへへ」",
             "「なんの話してたっけ」",
             "「あ、そっか！」",
+            "「わあ、来てくれたの！…あれ、なんで来たんだっけ」",
+            "「えへへ、なんかいいことある気がする！」",
+            "「あっ！…なんだっけ、あっ！」",
+            "「うれしい！なんか知らないけど！」",
+            "「あ、そうだそうだ！…なんだっけ」",
         ],
         (VoiceType::Tennen, Action::Talk, MoodLevel::Normal) => &[
             "「あ、そっか」",
             "「…なんの話だっけ」",
             "「ん？」",
             "「あー」",
+            "「えーと…なんだったっけ」",
+            "「うん…あれ、うん？」",
+            "「…ふぁ〜、なに？」",
+            "「…そうなんだ、たぶん」",
+            "「なんかあったっけ？」",
         ],
         (VoiceType::Tennen, Action::Talk, MoodLevel::Low) => &[
             "「…あれ、なにしてたっけ」",
             "「…zzz…あ、起きてた」",
             "「…ん？」",
             "「…」",
+            "「…なんか眠い…」",
+            "「…あ、いたの…zzz」",
+            "「…なんだっけ…」",
+            "「…ふぁ…ねむ」",
         ],
         (VoiceType::Tennen, Action::Play, MoodLevel::High) => &[
             "「わーい！…あれ、なにして遊ぶんだっけ」",
             "「たのしー！なにが楽しいかわかんないけど！」",
             "「えへへ」",
             "「もっかい！…なにを？」",
+            "「やったー！…なにが？」",
+            "「すごい！…え、なにがすごいの？」",
+            "「楽しかった！…たぶん！」",
+            "「えへへ、なんかよかった！」",
+            "「もうおわり？もっかいもっかい！」",
         ],
         (VoiceType::Tennen, Action::Play, MoodLevel::Normal) => &[
             "「あ、遊ぶの？」",
             "「…なにするの？」",
             "「ふーん」",
             "「あ、終わった？」",
+            "「…うん、やる！…え、なにを？」",
+            "「えーと、これって楽しいの？」",
+            "「…ふふ、なんか動いてる」",
+            "「…あれ、これで合ってる？」",
         ],
-        (VoiceType::Tennen, Action::Play, MoodLevel::Low) => {
-            &["「…あれ、遊んでたの？」", "「…zzz」", "「…ん？」", "「…」"]
-        }
+        (VoiceType::Tennen, Action::Play, MoodLevel::Low) => &[
+            "「…あれ、遊んでたの？」",
+            "「…zzz」",
+            "「…ん？」",
+            "「…」",
+            "「…なにしてたっけ…」",
+            "「…zzz…遊び、だっけ…」",
+            "「…なんか眠くなってきた」",
+            "「…もう終わった？」",
+        ],
         (VoiceType::Tennen, Action::Train, MoodLevel::High) => &[
             "「がんばるー！…なにを？」",
             "「できたー！…なにが？」",
             "「えへへ、つよくなった？」",
             "「もっかい！」",
+            "「やったー！…え、なにやったんだっけ」",
+            "「強くなった！…たぶん！えへへ」",
+            "「がんばったー！…何を？…わかんない！」",
+            "「もっかいもっかい！えへへ！」",
+            "「できた！…え、できてた？」",
         ],
         (VoiceType::Tennen, Action::Train, MoodLevel::Normal) => &[
             "「えーと…」",
             "「…こう？」",
             "「あれ、なにしてるんだっけ」",
             "「…ふぅ」",
+            "「…うーん、これ合ってる？」",
+            "「えーと、頑張ってる…たぶん」",
+            "「…ふぁ、なにするんだっけ」",
+            "「…こっちでいいの？」",
         ],
-        (VoiceType::Tennen, Action::Train, MoodLevel::Low) => {
-            &["「…あれ」", "「…zzz」", "「…」", "「…なにしてたっけ」"]
-        }
+        (VoiceType::Tennen, Action::Train, MoodLevel::Low) => &[
+            "「…あれ」",
+            "「…zzz」",
+            "「…」",
+            "「…なにしてたっけ」",
+            "「…眠くて体が動かない」",
+            "「…zzz…あ、鍛練…だっけ」",
+            "「…なんかしんどい…」",
+            "「…あとでやる…かも」",
+        ],
         (VoiceType::Tennen, Action::Relax, MoodLevel::High) => &[
             "「いいてんき〜…あれ、室内だった」",
             "「zzz…えへへ」",
             "「きもちいい〜」",
             "「あ、雲がおもしろい形してる！…見えないか」",
+            "「ふわふわ〜…夢みたい！」",
+            "「えへへ、気持ちいい〜！…あれ、何してたっけ」",
+            "「このままずっとこうしてたい〜！」",
+            "「…zzz…えへへ…zzz」",
+            "「ぽかぽかする〜！なんか幸せ！」",
         ],
         (VoiceType::Tennen, Action::Relax, MoodLevel::Normal) => &[
             "「…zzz」",
             "「ふぁ〜」",
             "「…あ、寝てた」",
             "「のんびり〜」",
+            "「…zzz…あれ、起きてた？」",
+            "「ふわ〜っと…してる」",
+            "「…なんかいい感じ…zzz」",
+            "「…ねるの好き〜」",
         ],
-        (VoiceType::Tennen, Action::Relax, MoodLevel::Low) => {
-            &["「…zzz」", "「…」", "「…あれ」", "「…ねる」"]
-        }
+        (VoiceType::Tennen, Action::Relax, MoodLevel::Low) => &[
+            "「…zzz」",
+            "「…」",
+            "「…あれ」",
+            "「…ねる」",
+            "「…zzz…zzz…えへ…zzz」",
+            "「…なにしてたっけ…zzz」",
+            "「…あ…zzz…」",
+            "「…もうねる…」",
+        ],
 
         // ===== Mukuchi (taciturn) =====
         (VoiceType::Mukuchi, Action::Talk, MoodLevel::High) => &[
@@ -572,49 +1106,126 @@ fn get_reaction_pool(
             "「ん」",
             "（じっとこちらを見る）",
             "（少し首をかしげる）",
+            "（こちらに向いて、目が合う）",
+            "「…っ」（少し口角が上がった）",
+            "（ゆっくりとうなずく）",
+            "「…よ」（小さい声）",
+            "（嬉しそうに、でも黙っている）",
         ],
-        (VoiceType::Mukuchi, Action::Talk, MoodLevel::Normal) => {
-            &["「…」", "「ん」", "「。」", "（目を合わせない）"]
-        }
-        (VoiceType::Mukuchi, Action::Talk, MoodLevel::Low) => {
-            &["「…」", "（動かない）", "（…）", "「…」"]
-        }
+        (VoiceType::Mukuchi, Action::Talk, MoodLevel::Normal) => &[
+            "「…」",
+            "「ん」",
+            "「。」",
+            "（目を合わせない）",
+            "（少し反応した）",
+            "（…聞いている）",
+            "（横目でちらっと見る）",
+            "「…ん」",
+            "（静かに存在している）",
+        ],
+        (VoiceType::Mukuchi, Action::Talk, MoodLevel::Low) => &[
+            "「…」",
+            "（動かない）",
+            "（…）",
+            "「…」",
+            "（こちらを見ていない）",
+            "（動く気配がない）",
+            "（…沈黙）",
+            "（目を伏せている）",
+        ],
         (VoiceType::Mukuchi, Action::Play, MoodLevel::High) => &[
             "（少し楽しそう）",
             "「…！」",
             "（うなずく）",
             "（もう一回、という顔）",
+            "（目が輝いている）",
+            "（珍しく積極的に動く）",
+            "「…！…！」",
+            "（笑いをこらえている顔）",
+            "（全力でやっている）",
         ],
-        (VoiceType::Mukuchi, Action::Play, MoodLevel::Normal) => {
-            &["「…」", "（やっている）", "（…）", "「ん」"]
-        }
-        (VoiceType::Mukuchi, Action::Play, MoodLevel::Low) => {
-            &["（動かない）", "「…」", "（…）", "（首を横に振る）"]
-        }
+        (VoiceType::Mukuchi, Action::Play, MoodLevel::Normal) => &[
+            "「…」",
+            "（やっている）",
+            "（…）",
+            "「ん」",
+            "（黙々とこなしている）",
+            "（参加はしている）",
+            "（ぼんやりしながらやっている）",
+            "（無言で続けている）",
+        ],
+        (VoiceType::Mukuchi, Action::Play, MoodLevel::Low) => &[
+            "（動かない）",
+            "「…」",
+            "（…）",
+            "（首を横に振る）",
+            "（座ったまま動かない）",
+            "（…しんどそう）",
+            "（首をゆっくり振る）",
+            "（ただそこにいる）",
+        ],
         (VoiceType::Mukuchi, Action::Train, MoodLevel::High) => &[
             "（黙々とやっている）",
             "「…！」",
             "（力強くうなずく）",
             "（…次は？という目）",
+            "（集中した眼差し）",
+            "（全力で取り組んでいる）",
+            "（汗をふきながらうなずく）",
+            "（まだやる、という顔）",
+            "（無言で限界を超えている）",
         ],
-        (VoiceType::Mukuchi, Action::Train, MoodLevel::Normal) => {
-            &["「…」", "（やっている）", "（…）", "「ん」"]
-        }
-        (VoiceType::Mukuchi, Action::Train, MoodLevel::Low) => {
-            &["（座り込む）", "「…」", "（…）", "（首を横に振る）"]
-        }
+        (VoiceType::Mukuchi, Action::Train, MoodLevel::Normal) => &[
+            "「…」",
+            "（やっている）",
+            "（…）",
+            "「ん」",
+            "（黙ってこなしている）",
+            "（無言で続ける）",
+            "（疲れながらも続けている）",
+            "（止まらずにやっている）",
+        ],
+        (VoiceType::Mukuchi, Action::Train, MoodLevel::Low) => &[
+            "（座り込む）",
+            "「…」",
+            "（…）",
+            "（首を横に振る）",
+            "（膝に手をついて止まる）",
+            "（動けなくなっている）",
+            "（首をゆっくり横に振る）",
+            "（ただ座っている）",
+        ],
         (VoiceType::Mukuchi, Action::Relax, MoodLevel::High) => &[
             "（穏やかな顔）",
             "「…」",
             "（そっと目を閉じる）",
             "（少し微笑む）",
+            "（柔らかい表情）",
+            "（静かに、でも幸せそう）",
+            "（深く息を吐く）",
+            "（ゆったりと休んでいる）",
+            "（満足そうな沈黙）",
         ],
-        (VoiceType::Mukuchi, Action::Relax, MoodLevel::Normal) => {
-            &["「…」", "（…）", "（目を閉じている）", "「…zzz」"]
-        }
-        (VoiceType::Mukuchi, Action::Relax, MoodLevel::Low) => {
-            &["「…」", "（…）", "（丸くなる）", "「…zzz」"]
-        }
+        (VoiceType::Mukuchi, Action::Relax, MoodLevel::Normal) => &[
+            "「…」",
+            "（…）",
+            "（目を閉じている）",
+            "「…zzz」",
+            "（静かに休んでいる）",
+            "（眠っているのか起きているのかわからない）",
+            "（ぼんやりしている）",
+            "（無言の休憩）",
+        ],
+        (VoiceType::Mukuchi, Action::Relax, MoodLevel::Low) => &[
+            "「…」",
+            "（…）",
+            "（丸くなる）",
+            "「…zzz」",
+            "（小さくなっている）",
+            "（ぐったりしている）",
+            "（動かない）",
+            "（深い眠り）",
+        ],
 
         // ===== Kajou (excessive) =====
         (VoiceType::Kajou, Action::Talk, MoodLevel::High) => &[
@@ -622,64 +1233,126 @@ fn get_reaction_pool(
             "「言葉が…！心に響く…！！」",
             "「ありがとう！！ありがとう！！！」",
             "「生きてて良かった…！！」",
+            "「君がいてくれる…！！世界は美しい…！！」",
+            "「声が…！届いた…！！これが奇跡…！！」",
+            "「こんなに嬉しいとは…！！震える…！！！」",
+            "「会話とは…！！命の交換…！！」",
+            "「来てくれた…！！！ありがとう…！！！」",
         ],
         (VoiceType::Kajou, Action::Talk, MoodLevel::Normal) => &[
             "「…話しかけてくれたのか…」",
             "「ありがとう…」",
             "「言葉って…すごいな…」",
             "「…感動した」",
+            "「…なんか…胸に来る…」",
+            "「…それだけで…じゅうぶんだ…」",
+            "「…うん…ありがとう…」",
+            "「…声って…いいな…」",
+            "「…また話してくれる…？」",
         ],
         (VoiceType::Kajou, Action::Talk, MoodLevel::Low) => &[
             "「…声が…遠い…」",
             "「…ありがとう…」",
             "「…」",
             "「…聞こえてる…」",
+            "「…言葉が…届かない…」",
+            "「…ごめん…今は…」",
+            "「…聞こえてる…でも…」",
+            "「…またいつか…話そう…」",
         ],
         (VoiceType::Kajou, Action::Play, MoodLevel::High) => &[
             "「これが…！遊ぶということか…！！」",
             "「楽しい…楽しいとはこういうことだったのか…！」",
             "「疲れた…！でも…！生きてる…！！」",
             "「もう一回やったら、何かが変わる気がする…！」",
+            "「遊んでいる…！！これが…喜び…！！！」",
+            "「こんなに楽しいとは…！！世界最高…！！！」",
+            "「笑ってる！笑ってる！！自分が笑ってる！！！」",
+            "「もっと！もっと！もっとだ…！！！」",
+            "「永遠に続けたい…！！この感覚…！！」",
         ],
         (VoiceType::Kajou, Action::Play, MoodLevel::Normal) => &[
             "「遊ぶ…遊ぶとは…」",
             "「…なるほど」",
             "「…すごい」",
             "「…」",
+            "「…楽しい…かな…たぶん」",
+            "「…やっている…」",
+            "「…なんか…いい感じ…かも」",
+            "「…続けよう…うん…」",
         ],
-        (VoiceType::Kajou, Action::Play, MoodLevel::Low) => {
-            &["「…遊べない…体が…」", "「…」", "「…ごめん…」", "「…無理…」"]
-        }
+        (VoiceType::Kajou, Action::Play, MoodLevel::Low) => &[
+            "「…遊べない…体が…」",
+            "「…」",
+            "「…ごめん…」",
+            "「…無理…」",
+            "「…楽しみたいのに…体が…」",
+            "「…ごめん…また今度…」",
+            "「…动けない…」",
+            "「…遊びたかった…ごめん…」",
+        ],
         (VoiceType::Kajou, Action::Train, MoodLevel::High) => &[
             "「鍛える…！！これが成長…！！！」",
             "「限界を超えた…！！気がする…！！！」",
             "「すごい…！自分がすごい…！！」",
             "「もっと…！もっとだ…！！！」",
+            "「筋肉が…！泣いてる…！！美しい…！！！」",
+            "「成長してる…！！感じる…！！感じる…！！！」",
+            "「これが…！限界超え…！！！最高…！！！」",
+            "「強くなってる…！！確かに…！！！」",
+            "「もう一回…！！！まだいける…！！！」",
         ],
         (VoiceType::Kajou, Action::Train, MoodLevel::Normal) => &[
             "「…やる…」",
             "「…鍛えるとは…」",
             "「…ふむ」",
             "「…なるほど」",
+            "「…できる…たぶん…」",
+            "「…続ける…うん…」",
+            "「…体が…動く…」",
+            "「…頑張っている…」",
         ],
         (VoiceType::Kajou, Action::Train, MoodLevel::Low) => &[
             "「…もう…無理…」",
             "「限界…これが…限界…」",
             "「…」",
             "「…体が…」",
+            "「…体が…動かない…」",
+            "「…ごめん…できない…」",
+            "「…限界を…超えられなかった…」",
+            "「…また…今度…」",
         ],
         (VoiceType::Kajou, Action::Relax, MoodLevel::High) => &[
             "「休む…！！これが安らぎ…！！！」",
             "「なんて穏やかな…！！」",
             "「生きてるって…素晴らしい…！」",
             "「この瞬間を永遠に…！！」",
+            "「休息が…！こんなに…！美しいとは…！！！」",
+            "「心が…！満たされている…！！最高…！！！」",
+            "「穏やかさとは…！！これか…！！宝物…！！！」",
+            "「zzz…！夢も…！感動的…！！！」",
+            "「幸せすぎて…！涙が…！！ありがとう…！！！」",
         ],
-        (VoiceType::Kajou, Action::Relax, MoodLevel::Normal) => {
-            &["「…休む…」", "「…zzz」", "「…穏やか…」", "「…」"]
-        }
-        (VoiceType::Kajou, Action::Relax, MoodLevel::Low) => {
-            &["「…休ませて…」", "「…zzz」", "「…」", "「…もう…」"]
-        }
+        (VoiceType::Kajou, Action::Relax, MoodLevel::Normal) => &[
+            "「…休む…」",
+            "「…zzz」",
+            "「…穏やか…」",
+            "「…」",
+            "「…休める…ありがたい…」",
+            "「…zzz…いい夢…かな…」",
+            "「…静かだ…」",
+            "「…体が…楽…」",
+        ],
+        (VoiceType::Kajou, Action::Relax, MoodLevel::Low) => &[
+            "「…休ませて…」",
+            "「…zzz」",
+            "「…」",
+            "「…もう…」",
+            "「…休みたい…ずっと…」",
+            "「…zzz…zzz…」",
+            "「…消えたい…zzz…」",
+            "「…もう…動けない…」",
+        ],
 
         // ===== Kansai (Kansai dialect) =====
         (VoiceType::Kansai, Action::Talk, MoodLevel::High) => &[
@@ -687,70 +1360,126 @@ fn get_reaction_pool(
             "「なんやねん、うれしいやんけ」",
             "「ほんまええ日やわ」",
             "「まあ座り座り」",
+            "「来てくれてありがとやで！ほんまに！」",
+            "「え、ほんまに来てくれたん？嬉しいやんか！」",
+            "「なんや、会いに来たんか！ええやんええやん！」",
+            "「いやあ、ほんまにありがたいわ〜！」",
+            "「よっしゃ！話しようや！なんの話や！？」",
         ],
         (VoiceType::Kansai, Action::Talk, MoodLevel::Normal) => &[
             "「なんやねん」",
             "「あーはいはい」",
             "「ほんまかいな」",
             "「知らんけど」",
+            "「せやなー」",
+            "「まあそれはそれとして」",
+            "「ほーん、そうか」",
+            "「まあそういうこともあるわな」",
+            "「うん、それで？」",
         ],
         (VoiceType::Kansai, Action::Talk, MoodLevel::Low) => &[
             "「…だるいわ」",
             "「ほっといてくれ」",
             "「…」",
             "「あかん…」",
+            "「今はちょっと…」",
+            "「…しんどいねん」",
+            "「勘弁してや…」",
+            "「…あとにして」",
         ],
         (VoiceType::Kansai, Action::Play, MoodLevel::High) => &[
             "「おもろ！もっかいやろ！」",
             "「それええやん！」",
             "「わはは！」",
             "「楽しいやんけ！」",
+            "「これめっちゃおもろいやんか！」",
+            "「やばいわ！もっかいもっかい！」",
+            "「笑える〜！最高やわ！」",
+            "「なんやこれ、くせになるやん！」",
+            "「負けへんで！もっかいやったるわ！」",
         ],
         (VoiceType::Kansai, Action::Play, MoodLevel::Normal) => &[
             "「まあそれなりにできたんちゃう？知らんけど」",
             "「ふつーやな」",
             "「まあまあやな」",
             "「しゃーないな」",
+            "「悪くはないけど…まあな」",
+            "「それなりにやったわ」",
+            "「…ふつーやったわ」",
+            "「まあこんなもんやろな」",
         ],
         (VoiceType::Kansai, Action::Play, MoodLevel::Low) => &[
             "「むりやわ」",
             "「あかん」",
             "「…」",
             "「かんべんしてくれ」",
+            "「今日はほんまに無理やわ」",
+            "「…しんどすぎる」",
+            "「また今度にしてくれへんか」",
+            "「…体が言うこと聞かへん」",
         ],
         (VoiceType::Kansai, Action::Train, MoodLevel::High) => &[
             "「なんやねんこれ、めっちゃええやん！」",
             "「しゃーないな、もっかいやったるわ」",
             "「いけるいける！」",
             "「ええ感じやで！」",
+            "「なんやこれ！めっちゃ気持ちええやん！」",
+            "「まだいけるで！まだまだ！」",
+            "「よっしゃ！強なった気がする！」",
+            "「いやあ、ええ汗かいたわ！」",
+            "「もっかいもっかい！全然へっちゃらやで！」",
         ],
         (VoiceType::Kansai, Action::Train, MoodLevel::Normal) => &[
             "「なんやねんこれ」",
             "「疲れたわ〜でもまあええか」",
             "「それちゃうやろ。絶対ちゃうやろ」",
             "「まあこんなもんか」",
+            "「しんどいけどまあやるか」",
+            "「…なんとかなるやろ」",
+            "「ふぅ…まあやったやろ」",
+            "「やれるとこまでやるわ」",
         ],
         (VoiceType::Kansai, Action::Train, MoodLevel::Low) => &[
             "「もうあかん…」",
             "「無理やって…」",
             "「…」",
             "「かんにんしてくれ」",
+            "「今日はほんまに体が動かんわ…」",
+            "「限界やって…頼むわ…」",
+            "「…もうあかん、ほんまに」",
+            "「勘弁してくれ、今日は」",
         ],
         (VoiceType::Kansai, Action::Relax, MoodLevel::High) => &[
             "「あー極楽やわ〜」",
             "「これこれ、これやで」",
             "「ええ気持ちやなぁ」",
             "「最高かよ」",
+            "「天国やわほんまに〜！」",
+            "「なんやこの幸せ感！」",
+            "「ずっとこうしてたいわ〜」",
+            "「いやあ、生きてて良かった！」",
+            "「これが人生の醍醐味やで！」",
         ],
         (VoiceType::Kansai, Action::Relax, MoodLevel::Normal) => &[
             "「…zzz」",
             "「のんびりやな」",
             "「まあええか」",
             "「…ん？寝てたわ」",
+            "「ゆっくりしよかな」",
+            "「…zzz…ん？なんや」",
+            "「まったりするか〜」",
+            "「…ぼーっとしてたわ」",
         ],
-        (VoiceType::Kansai, Action::Relax, MoodLevel::Low) => {
-            &["「…zzz」", "「もう寝るわ」", "「…」", "「おやすみ」"]
-        }
+        (VoiceType::Kansai, Action::Relax, MoodLevel::Low) => &[
+            "「…zzz」",
+            "「もう寝るわ」",
+            "「…」",
+            "「おやすみ」",
+            "「起こさんといてな…」",
+            "「…zzz…zzz…」",
+            "「もうあかん、おやすみ」",
+            "「…ほっといてくれ」",
+        ],
 
         // ===== Kogo (archaic) =====
         (VoiceType::Kogo, Action::Talk, MoodLevel::High) => &[
@@ -758,80 +1487,191 @@ fn get_reaction_pool(
             "「参られたか。よきことなり」",
             "「今宵は月が美しい」",
             "「なかなかに良き日よ」",
+            "「よう参った。歓迎いたすぞ」",
+            "「会えたこと、喜ばしい限りじゃ」",
+            "「今日は風情があるのう、そなたも」",
+            "「そなたの声、耳に心地よいぞ」",
+            "「参ったか。では語らおうぞ」",
         ],
-        (VoiceType::Kogo, Action::Talk, MoodLevel::Normal) => {
-            &["「…さて」", "「いかがした」", "「さても…」", "「…ふむ」"]
-        }
-        (VoiceType::Kogo, Action::Talk, MoodLevel::Low) => {
-            &["「…」", "「退がれ」", "「…さても退屈なり」", "「…zzz」"]
-        }
+        (VoiceType::Kogo, Action::Talk, MoodLevel::Normal) => &[
+            "「…さて」",
+            "「いかがした」",
+            "「さても…」",
+            "「…ふむ」",
+            "「なにか用か」",
+            "「…まあ、よかろう」",
+            "「…いかに」",
+            "「さようか…」",
+            "「…心得た」",
+        ],
+        (VoiceType::Kogo, Action::Talk, MoodLevel::Low) => &[
+            "「…」",
+            "「退がれ」",
+            "「…さても退屈なり」",
+            "「…zzz」",
+            "「…今は構うな」",
+            "「…心が重い」",
+            "「退がれ、今は話せぬ」",
+            "「…疲れ果てたり」",
+        ],
         (VoiceType::Kogo, Action::Play, MoodLevel::High) => &[
             "「いざ、参らん！」",
             "「なかなかに面白し！」",
             "「よき遊びなり！」",
             "「もう一度、勝負じゃ！」",
+            "「これぞ真の遊戯よ！」",
+            "「武人も時には戯れが必要じゃ！」",
+            "「なかなかどうして、楽しいのう！」",
+            "「退かぬ！もう一勝負じゃ！」",
+            "「今日の勝負、見事なりし！」",
         ],
         (VoiceType::Kogo, Action::Play, MoodLevel::Normal) => &[
             "「…ふむ」",
             "「まあ、よかろう」",
             "「さても」",
             "「…いたしかたなし」",
+            "「…まあ、付き合おうぞ」",
+            "「…いかほどのものか」",
+            "「されば、やってみるか」",
+            "「…普通じゃな」",
         ],
         (VoiceType::Kogo, Action::Play, MoodLevel::Low) => &[
             "「…もはやこれまで」",
             "「…」",
             "「退くぞ」",
             "「…力尽きたり」",
+            "「…今日は遠慮したい」",
+            "「…体が動かぬ」",
+            "「許されよ…今日は無理じゃ」",
+            "「…退かせてくれ」",
         ],
         (VoiceType::Kogo, Action::Train, MoodLevel::High) => &[
             "「いざ、鍛錬なり！」",
             "「武者震いがするのう！」",
             "「まだまだじゃ！」",
             "「これぞ修行よ！」",
+            "「鍛えることこそ生きる証よ！」",
+            "「もっと！限界などはないぞ！」",
+            "「これが武士の道じゃ！」",
+            "「汗をかくことは誇りじゃ！」",
+            "「まだ行けるぞ！もう一丁！」",
         ],
-        (VoiceType::Kogo, Action::Train, MoodLevel::Normal) => {
-            &["「…修行か」", "「心得た」", "「…ふむ」", "「…よかろう」"]
-        }
-        (VoiceType::Kogo, Action::Train, MoodLevel::Low) => {
-            &["「…もはや…」", "「…力尽きたり」", "「…」", "「許されよ」"]
-        }
+        (VoiceType::Kogo, Action::Train, MoodLevel::Normal) => &[
+            "「…修行か」",
+            "「心得た」",
+            "「…ふむ」",
+            "「…よかろう」",
+            "「…やってみようぞ」",
+            "「…体は動く、今は」",
+            "「…精進いたす」",
+            "「…なんとかなろう」",
+        ],
+        (VoiceType::Kogo, Action::Train, MoodLevel::Low) => &[
+            "「…もはや…」",
+            "「…力尽きたり」",
+            "「…」",
+            "「許されよ」",
+            "「…体が、限界じゃ」",
+            "「…これ以上は無理じゃ」",
+            "「…休ませよ、頼む」",
+            "「…力が…出ぬ…」",
+        ],
         (VoiceType::Kogo, Action::Relax, MoodLevel::High) => &[
             "「いざ、まどろまん」",
             "「されど、心は穏やかなり」",
             "「風情があるのう」",
             "「ゆるりとしておる。それでよいのじゃ」",
+            "「これぞ至福の時よ」",
+            "「心洗われる心地がするのう」",
+            "「ぼーっとすることも、また風雅よ」",
+            "「…zzz…夢も良きものじゃ」",
+            "「穏やかな時よ…永久に続かぬものかのう」",
         ],
-        (VoiceType::Kogo, Action::Relax, MoodLevel::Normal) => {
-            &["「…zzz」", "「さても、退屈なり」", "「…うむ」", "「…」"]
-        }
-        (VoiceType::Kogo, Action::Relax, MoodLevel::Low) => {
-            &["「…zzz」", "「…」", "「もはや…」", "「…休ませよ」"]
-        }
+        (VoiceType::Kogo, Action::Relax, MoodLevel::Normal) => &[
+            "「…zzz」",
+            "「さても、退屈なり」",
+            "「…うむ」",
+            "「…」",
+            "「…ぼんやりしておる」",
+            "「…zzz…うむ」",
+            "「…まあ、こういう日もある」",
+            "「…休んでおく」",
+        ],
+        (VoiceType::Kogo, Action::Relax, MoodLevel::Low) => &[
+            "「…zzz」",
+            "「…」",
+            "「もはや…」",
+            "「…休ませよ」",
+            "「…起こすな」",
+            "「…zzz…zzz…」",
+            "「…疲れ果てたり」",
+            "「…もう何も…」",
+        ],
     }
 }
 
 fn get_idle_pool(voice_type: VoiceType, mood: MoodLevel) -> &'static [&'static str] {
     match (voice_type, mood) {
-        (VoiceType::Tameguchi, MoodLevel::High) => {
-            &["ふーん", "まあいっか", "ひまだな", "なんかいい天気"]
-        }
-        (VoiceType::Tameguchi, MoodLevel::Normal) => &["…", "うるさい", "ほっとけ", "べつに"],
-        (VoiceType::Tameguchi, MoodLevel::Low) => &["…", "はぁ", "だるい", "…zzz"],
+        (VoiceType::Tameguchi, MoodLevel::High) => &[
+            "ふーん",
+            "まあいっか",
+            "ひまだな",
+            "なんかいい天気",
+            "…べつにいいけど",
+            "今日は悪くない",
+            "…ん、まあね",
+            "退屈じゃないし",
+        ],
+        (VoiceType::Tameguchi, MoodLevel::Normal) => &[
+            "…",
+            "うるさい",
+            "ほっとけ",
+            "べつに",
+            "…ふーん",
+            "知らんし",
+            "…まあ",
+            "どうでもいい",
+        ],
+        (VoiceType::Tameguchi, MoodLevel::Low) => &[
+            "…",
+            "はぁ",
+            "だるい",
+            "…zzz",
+            "…つかれた",
+            "うざい",
+            "…もういい",
+            "ほっとけ",
+        ],
 
         (VoiceType::Keigo, MoodLevel::High) => &[
             "今日もよい日でございます",
             "ご機嫌うるわしゅう",
             "素敵な一日ですね",
             "ありがとうございます",
+            "おかげさまで充実しております",
+            "本日もよろしくお願いいたします",
+            "なんとも穏やかで…",
+            "心地よい時間でございます",
         ],
-        (VoiceType::Keigo, MoodLevel::Normal) => {
-            &["…失礼します", "穏やかですね", "…はい", "恐縮です"]
-        }
+        (VoiceType::Keigo, MoodLevel::Normal) => &[
+            "…失礼します",
+            "穏やかですね",
+            "…はい",
+            "恐縮です",
+            "…ごくろうさまです",
+            "…特に何もございません",
+            "…そうですね",
+            "…おっしゃる通りかと",
+        ],
         (VoiceType::Keigo, MoodLevel::Low) => &[
             "…申し訳ございません",
             "…失礼",
             "…",
             "お休みさせていただきます",
+            "…少々…",
+            "…大変失礼いたします",
+            "…ご容赦を",
+            "…今は少し…",
         ],
 
         (VoiceType::Gal, MoodLevel::High) => &[
@@ -839,94 +1679,486 @@ fn get_idle_pool(voice_type: VoiceType, mood: MoodLevel) -> &'static [&'static s
             "テンション上がる〜",
             "今日めっちゃいい日じゃん！",
             "るんるん♪",
+            "え、最高じゃん！",
+            "なんかうれしい〜！",
+            "今日ほんとよかった！",
+            "テンション爆上がり！",
         ],
-        (VoiceType::Gal, MoodLevel::Normal) => &["あーね", "ふつー", "まあいっか", "…ん？"],
-        (VoiceType::Gal, MoodLevel::Low) => &["だる…", "無理…", "…", "帰りたい…"],
+        (VoiceType::Gal, MoodLevel::Normal) => &[
+            "あーね",
+            "ふつー",
+            "まあいっか",
+            "…ん？",
+            "そっかそっか",
+            "…まあね",
+            "ふむふむ",
+            "なんか眠い〜",
+        ],
+        (VoiceType::Gal, MoodLevel::Low) => &[
+            "だる…",
+            "無理…",
+            "…",
+            "帰りたい…",
+            "もう限界…",
+            "…zzz",
+            "しんど…",
+            "何もしたくない…",
+        ],
 
         (VoiceType::Oyaji, MoodLevel::High) => &[
             "いい天気だなあ",
             "むかしはなあ…",
             "まあ座れ座れ",
             "人生捨てたもんじゃない",
+            "今日もいい日だ",
+            "まだまだ現役だぞ",
+            "昔はよかったなあ",
+            "こういう日は気持ちいい",
         ],
-        (VoiceType::Oyaji, MoodLevel::Normal) => {
-            &["ん？なんだ？", "まあな", "…うむ", "そういうこともある"]
-        }
-        (VoiceType::Oyaji, MoodLevel::Low) => &["腰が痛い", "疲れたわ", "…", "歳は取りたくない"],
+        (VoiceType::Oyaji, MoodLevel::Normal) => &[
+            "ん？なんだ？",
+            "まあな",
+            "…うむ",
+            "そういうこともある",
+            "…ふぅ",
+            "歳は取りたくないもんだ",
+            "…そうか",
+            "まあそれでいい",
+        ],
+        (VoiceType::Oyaji, MoodLevel::Low) => &[
+            "腰が痛い",
+            "疲れたわ",
+            "…",
+            "歳は取りたくない",
+            "…しんどい",
+            "もう休む",
+            "…zzz",
+            "体が言うことを聞かん",
+        ],
 
         (VoiceType::Tetsugaku, MoodLevel::High) => &[
             "存在とは…ああ、いい天気だ",
             "時間は幻だ。でも今は美しい",
             "考える、ゆえに我あり",
             "なにかが近づいている…いい予感だ",
+            "意識の中に光がある",
+            "今日は思索がはかどる",
+            "存在することは、素晴らしい",
+            "こんな気持ちは滅多にない",
         ],
         (VoiceType::Tetsugaku, MoodLevel::Normal) => &[
             "存在とは何か",
             "…考えている",
             "時間は幻だ",
             "沈黙にも意味がある",
+            "…ふむ",
+            "哲学は深い",
+            "…まあ、そういうものだ",
+            "考えることをやめられない",
         ],
-        (VoiceType::Tetsugaku, MoodLevel::Low) => {
-            &["虚無を見つめている", "…", "意味はあるのか", "存在が重い"]
-        }
+        (VoiceType::Tetsugaku, MoodLevel::Low) => &[
+            "虚無を見つめている",
+            "…",
+            "意味はあるのか",
+            "存在が重い",
+            "…なにも考えられない",
+            "虚しさだけがある",
+            "…zzz",
+            "…消えたい気分だ",
+        ],
 
         (VoiceType::Taiiku, MoodLevel::High) => &[
             "今日もいい日ッス！",
             "元気ッス！",
             "がんばるッス！",
             "声出していこう！",
+            "気合いが満ちてるッス！",
+            "全力でいくッス！",
+            "最高の調子ッス！",
+            "今日も一日頑張るッス！",
         ],
-        (VoiceType::Taiiku, MoodLevel::Normal) => &["はい！", "…ッス", "がんばります", "了解ッス"],
-        (VoiceType::Taiiku, MoodLevel::Low) => &["…ッス", "すいません…", "…", "休憩…"],
+        (VoiceType::Taiiku, MoodLevel::Normal) => &[
+            "はい！",
+            "…ッス",
+            "がんばります",
+            "了解ッス",
+            "…うッス",
+            "なんとかやるッス",
+            "…ふぅッス",
+            "続けるッス",
+        ],
+        (VoiceType::Taiiku, MoodLevel::Low) => &[
+            "…ッス",
+            "すいません…",
+            "…",
+            "休憩…",
+            "…体が重いッス",
+            "…気力がわかないッス",
+            "…すいませんッス",
+            "…zzz",
+        ],
 
         (VoiceType::Negative, MoodLevel::High) => &[
             "…今日はちょっとだけいい日かも",
             "…ありがとう",
             "…うれしい…かも",
             "…笑ってもいいのかな",
+            "…なんか…大丈夫かも",
+            "…珍しくいい気分…",
+            "…こんな気持ちになれるんだ",
+            "…もしかして、幸せ…？",
         ],
-        (VoiceType::Negative, MoodLevel::Normal) => &["どうせ…", "…ごめんなさい", "…", "…うん"],
-        (VoiceType::Negative, MoodLevel::Low) => &["消えたい…", "…", "やっぱり無理", "…ごめん"],
+        (VoiceType::Negative, MoodLevel::Normal) => &[
+            "どうせ…",
+            "…ごめんなさい",
+            "…",
+            "…うん",
+            "…わたしなんか",
+            "どうせ無理…",
+            "…また失敗した",
+            "…ごめん",
+        ],
+        (VoiceType::Negative, MoodLevel::Low) => &[
+            "消えたい…",
+            "…",
+            "やっぱり無理",
+            "…ごめん",
+            "…もう嫌だ",
+            "…何もできない",
+            "…zzz",
+            "…なんで",
+        ],
 
-        (VoiceType::Tennen, MoodLevel::High) => {
-            &["えへへ", "いいてんき〜", "なにしてたっけ", "あ、そっか！"]
-        }
-        (VoiceType::Tennen, MoodLevel::Normal) => {
-            &["…ん？", "あ、そっか", "ふぁ〜", "…なんの話だっけ"]
-        }
-        (VoiceType::Tennen, MoodLevel::Low) => &["…zzz…あ、起きてた", "…あれ", "…", "…ん？"],
+        (VoiceType::Tennen, MoodLevel::High) => &[
+            "えへへ",
+            "いいてんき〜",
+            "なにしてたっけ",
+            "あ、そっか！",
+            "えへへ〜なんかいい！",
+            "あれ、今何時だっけ？",
+            "なんかわからないけど嬉しい！",
+            "あ！…なんだっけ",
+        ],
+        (VoiceType::Tennen, MoodLevel::Normal) => &[
+            "…ん？",
+            "あ、そっか",
+            "ふぁ〜",
+            "…なんの話だっけ",
+            "…えーと",
+            "ふむふむ…あれ？",
+            "…zzz…あ",
+            "…なにしてたっけ",
+        ],
+        (VoiceType::Tennen, MoodLevel::Low) => &[
+            "…zzz…あ、起きてた",
+            "…あれ",
+            "…",
+            "…ん？",
+            "…zzz",
+            "…ねむい",
+            "…どこにいるっけ",
+            "…zzz…zzz",
+        ],
 
-        (VoiceType::Mukuchi, MoodLevel::High) => &["…！", "ん", "（少し微笑む）", "…"],
-        (VoiceType::Mukuchi, MoodLevel::Normal) => &["…", "ん", "。", "（…）"],
-        (VoiceType::Mukuchi, MoodLevel::Low) => &["…", "（…）", "（動かない）", "…"],
+        (VoiceType::Mukuchi, MoodLevel::High) => &[
+            "…！",
+            "ん",
+            "（少し微笑む）",
+            "…",
+            "（穏やかな顔）",
+            "（目が輝いている）",
+            "（ゆっくりうなずく）",
+            "（満足そう）",
+        ],
+        (VoiceType::Mukuchi, MoodLevel::Normal) => &[
+            "…",
+            "ん",
+            "。",
+            "（…）",
+            "（ぼんやりしている）",
+            "（静かにしている）",
+            "（…ん）",
+            "（目を細める）",
+        ],
+        (VoiceType::Mukuchi, MoodLevel::Low) => &[
+            "…",
+            "（…）",
+            "（動かない）",
+            "…",
+            "（丸くなっている）",
+            "（ぐったり）",
+            "（目を閉じている）",
+            "（沈黙）",
+        ],
 
         (VoiceType::Kajou, MoodLevel::High) => &[
             "生きてる…！！すばらしい…！！",
             "今日という日に…感謝…！！",
             "存在が…輝いている…！！",
             "なにもかもが…美しい…！！",
+            "今日も…奇跡…！！！",
+            "空気が…！美味しい…！！！",
+            "心が…！溢れている…！！！",
+            "感動が…！止まらない…！！！",
         ],
-        (VoiceType::Kajou, MoodLevel::Normal) => &["…生きている", "…すごい", "…なるほど", "…"],
-        (VoiceType::Kajou, MoodLevel::Low) => &["…もう…", "…つらい…", "…", "…消えそう…"],
+        (VoiceType::Kajou, MoodLevel::Normal) => &[
+            "…生きている",
+            "…すごい",
+            "…なるほど",
+            "…",
+            "…存在している",
+            "…普通に…いる",
+            "…うん…",
+            "…まあ…",
+        ],
+        (VoiceType::Kajou, MoodLevel::Low) => &[
+            "…もう…",
+            "…つらい…",
+            "…",
+            "…消えそう…",
+            "…限界…",
+            "…zzz…",
+            "…苦しい…",
+            "…もういい…",
+        ],
 
         (VoiceType::Kansai, MoodLevel::High) => &[
             "ええ天気やなぁ",
             "なんやねん、ええやんけ",
             "おもろいわ",
             "最高かよ",
+            "今日もええ日やわ！",
+            "なんやこれ、最高やん",
+            "笑けるわほんまに",
+            "今日めっちゃ調子ええわ",
         ],
-        (VoiceType::Kansai, MoodLevel::Normal) => {
-            &["知らんけど", "まあええか", "なんやねん", "…ん？"]
-        }
-        (VoiceType::Kansai, MoodLevel::Low) => &["あかん…", "だるいわ", "…", "しんど"],
+        (VoiceType::Kansai, MoodLevel::Normal) => &[
+            "知らんけど",
+            "まあええか",
+            "なんやねん",
+            "…ん？",
+            "せやなあ",
+            "まあそんなもんやろ",
+            "ふーん",
+            "…そうやな",
+        ],
+        (VoiceType::Kansai, MoodLevel::Low) => &[
+            "あかん…",
+            "だるいわ",
+            "…",
+            "しんど",
+            "もう無理やわ…",
+            "…zzz",
+            "疲れたわ…",
+            "勘弁してくれ",
+        ],
 
         (VoiceType::Kogo, MoodLevel::High) => &[
             "なかなかに良き日よ",
             "風情があるのう",
             "されど心は穏やかなり",
             "参られたか",
+            "今日は気分がよいのう",
+            "なんとも雅な…",
+            "心が満ちておる",
+            "これぞ至福よ",
         ],
-        (VoiceType::Kogo, MoodLevel::Normal) => &["…さて", "さても", "…ふむ", "いかがした"],
-        (VoiceType::Kogo, MoodLevel::Low) => &["…", "もはや…", "…zzz", "退屈なり"],
+        (VoiceType::Kogo, MoodLevel::Normal) => &[
+            "…さて",
+            "さても",
+            "…ふむ",
+            "いかがした",
+            "…うむ",
+            "さようか",
+            "…まあよかろう",
+            "心得た",
+        ],
+        (VoiceType::Kogo, MoodLevel::Low) => &[
+            "…",
+            "もはや…",
+            "…zzz",
+            "退屈なり",
+            "…疲れ果てたり",
+            "…もはや限界じゃ",
+            "…zzz…zzz",
+            "心が重い",
+        ],
+    }
+}
+
+/// Get species-specific reaction lines.
+/// Returns None if no specific lines exist for the given combination.
+pub fn get_species_pool(
+    species: &str,
+    action: Action,
+    mood: MoodLevel,
+) -> Option<&'static [&'static str]> {
+    match (species, action, mood) {
+        // ===== ドドン (muscle / Taiiku) =====
+        ("ドドン", Action::Talk, MoodLevel::High) => Some(&[
+            "「きょうも筋肉が泣いとる！嬉しいわ！」",
+            "「会いに来たのか！俺の筋肉を見ろ！」",
+            "「よしっ！話しかけてくれたな！ありがとう！」",
+            "「筋肉は裏切らん！友達も裏切らん！」",
+        ]),
+        ("ドドン", Action::Train, MoodLevel::High) => Some(&[
+            "「これが本当の鍛練ッス！限界超えるッス！」",
+            "「筋肉痛は成長の証ッス！もっとやるッス！」",
+            "「ドドンの筋肉、まだまだ成長中ッス！」",
+            "「全力！全力！全力ッス！」",
+        ]),
+        ("ドドン", Action::Relax, MoodLevel::High) => Some(&[
+            "「筋肉も休息が必要ッス！超回復ッス！」",
+            "「休んでる間に筋肉が育つッス！」",
+            "「休息も修行のうちッス！」",
+        ]),
+
+        // ===== タワーン (tall / Keigo) =====
+        ("タワーン", Action::Talk, MoodLevel::High) => Some(&[
+            "「高いところからご機嫌うるわしゅう」",
+            "「見晴らしが良いですね。あなたも輝いています」",
+            "「この高さから見える世界はまた格別です」",
+            "「お声がけ、大変光栄でございます」",
+        ]),
+        ("タワーン", Action::Talk, MoodLevel::Normal) => Some(&[
+            "「…高い所から失礼します」",
+            "「…見下ろすつもりはないのですが」",
+            "「…恐縮ですが、こんな感じです」",
+        ]),
+        ("タワーン", Action::Train, MoodLevel::High) => Some(&[
+            "「高さを活かした鍛練でございます」",
+            "「長い手足で精進いたします」",
+            "「背が高い分、鍛えがいがございます」",
+        ]),
+
+        // ===== ゴウケン (tough / Tameguchi) =====
+        ("ゴウケン", Action::Train, MoodLevel::High) => Some(&[
+            "「余裕だし。もっとやれる」",
+            "「これくらい朝飯前だよ」",
+            "「…鍛えるのは嫌いじゃない」",
+            "「ちょっと本気出した。まあ悪くない」",
+        ]),
+        ("ゴウケン", Action::Talk, MoodLevel::High) => Some(&[
+            "「…来たか。まあいいけど」",
+            "「ゴウケンにしては機嫌いい日だ」",
+            "「話しかけてきたか。…別に嬉しくないし」",
+        ]),
+
+        // ===== テッカイ (iron / Kogo) =====
+        ("テッカイ", Action::Train, MoodLevel::High) => Some(&[
+            "「鉄のごとく鍛えるのみじゃ！」",
+            "「テッカイの体、鍛えれば鍛えるほど輝くぞ！」",
+            "「これぞ鉄壁の修行よ！」",
+            "「限界など存在せぬ！続けるぞ！」",
+        ]),
+        ("テッカイ", Action::Talk, MoodLevel::High) => Some(&[
+            "「参られたか。鉄の心で歓迎いたす」",
+            "「よき日じゃな。テッカイも喜んでおるぞ」",
+        ]),
+
+        // ===== ながれもん (flow / Tetsugaku) =====
+        ("ながれもん", Action::Talk, MoodLevel::High) => Some(&[
+            "「流れに身を任せていたら、ここに辿り着いた」",
+            "「あなたと話すのも、宇宙の流れか」",
+            "「今日という日は二度とない。話せて嬉しい」",
+        ]),
+        ("ながれもん", Action::Relax, MoodLevel::High) => Some(&[
+            "「流れるように休む。これが自然の摂理だ」",
+            "「水のように、どんな形にもなれる気がする」",
+            "「ながれもんには、休息こそが哲学だ」",
+        ]),
+
+        // ===== フワリン (fluffy / Tennen) =====
+        ("フワリン", Action::Talk, MoodLevel::High) => Some(&[
+            "「わあ！フワリンのとこ来てくれた！えへへ！」",
+            "「ふわふわ〜！なんかうれしい！」",
+            "「あ！あ！来てくれたの！…え、なんの話だっけ」",
+        ]),
+        ("フワリン", Action::Relax, MoodLevel::High) => Some(&[
+            "「ふわふわ〜…きもちいい〜！」",
+            "「ふわっとした感じがする〜！えへへ！」",
+            "「…zzz…フワリン…ふわふわ…zzz」",
+        ]),
+
+        // ===== ドスコイ (sumo / Kansai) =====
+        ("ドスコイ", Action::Train, MoodLevel::High) => Some(&[
+            "「ドスコイ！まだまだいけるで！」",
+            "「この体、鍛えたら無敵やで！」",
+            "「ドスコイドスコイ！気合い入ってるわ！」",
+            "「土俵では負けへんで！」",
+        ]),
+        ("ドスコイ", Action::Talk, MoodLevel::High) => Some(&[
+            "「おー！よう来たな！ドスコイやで！」",
+            "「なんやねん、うれしいやんか！ドスコイ！」",
+            "「来てくれたんか！ありがたいわ！」",
+        ]),
+
+        // ===== バリバリ (spirited / Kajou) =====
+        ("バリバリ", Action::Train, MoodLevel::High) => Some(&[
+            "「バリバリ…！！鍛えてる…！！最高…！！！」",
+            "「この体が…！燃えている…！！」",
+            "「限界なんてない…！！バリバリやで…！！！」",
+        ]),
+        ("バリバリ", Action::Talk, MoodLevel::High) => Some(&[
+            "「話しかけてくれた…！！バリバリ感動…！！」",
+            "「会えた…！！これが奇跡…！！バリバリ…！！！」",
+        ]),
+
+        // ===== モコモコ (fluffy / Keigo) =====
+        ("モコモコ", Action::Talk, MoodLevel::High) => Some(&[
+            "「モコモコでございます。お声がけありがとうございます」",
+            "「ふわふわしておりますが、心は真剣でございます」",
+            "「お会いできて光栄です。もこもこと嬉しいです」",
+        ]),
+        ("モコモコ", Action::Relax, MoodLevel::High) => Some(&[
+            "「もこもこしながら休ませていただきます」",
+            "「ふかふかで心地よくございます」",
+            "「こんな穏やかな時間に感謝でございます」",
+        ]),
+
+        // ===== ガンテツ (iron-heavy / Oyaji) =====
+        ("ガンテツ", Action::Train, MoodLevel::High) => Some(&[
+            "「まだまだ現役じゃ！ガンテツを甘く見るな」",
+            "「昔はもっとできたが…今もやれるもんだ」",
+            "「岩のように硬くなってやるわ」",
+        ]),
+        ("ガンテツ", Action::Talk, MoodLevel::High) => Some(&[
+            "「おう、ガンテツに会いに来たか。いい心がけだ」",
+            "「むかしはなあ、こういう訪問が多かったもんだ」",
+        ]),
+
+        // ===== ゴリラン (gorilla-like / Oyaji) =====
+        ("ゴリラン", Action::Train, MoodLevel::High) => Some(&[
+            "「ゴリラン、まだまだ体は丈夫だぞ」",
+            "「腕力には自信がある。昔からな」",
+            "「どっしり構えて鍛えるだけだ」",
+        ]),
+
+        // ===== イワオ (rock-like / Mukuchi) =====
+        ("イワオ", Action::Train, MoodLevel::High) => Some(&[
+            "（岩のように動じず鍛えている）",
+            "（静かに、しかし確実に力をつけている）",
+            "（無言で何セットもこなしている）",
+        ]),
+        ("イワオ", Action::Relax, MoodLevel::High) => Some(&[
+            "（岩のようにどっしり休んでいる）",
+            "（微動だにしない。でも穏やかな顔）",
+        ]),
+
+        // ===== テツジン (iron man / Kogo) =====
+        ("テツジン", Action::Train, MoodLevel::High) => Some(&[
+            "「鉄人の鍛錬、見せてやろうぞ！」",
+            "「これぞ鉄人の修行なり！」",
+            "「限界など、鉄人には存在せぬ！」",
+        ]),
+
+        // ===== カチワリ (crusher / Taiiku) =====
+        ("カチワリ", Action::Train, MoodLevel::High) => Some(&[
+            "「カチっとやってワリっと割るッス！」",
+            "「スピードが命ッス！速さは力ッス！」",
+            "「鍛えれば鍛えるほど切れ味が増すッス！」",
+        ]),
+
+        _ => None,
     }
 }

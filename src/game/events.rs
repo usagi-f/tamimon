@@ -67,6 +67,25 @@ const POSITIVE_EVENTS: &[PositiveEvent] = &[
             pet.nakayoshi = (pet.nakayoshi + 25.0).min(100.0);
         },
     },
+    PositiveEvent {
+        probability: 0.07,
+        message: "🍖 好物を見つけてたくさん食べたみたい！",
+        apply: |pet, rng| {
+            let gain = rng.gen_range(1.0_f64..=3.0);
+            pet.weight = (pet.weight + gain).max(0.1);
+            pet.kimochi = (pet.kimochi + 5.0).min(100.0);
+        },
+    },
+    PositiveEvent {
+        probability: 0.06,
+        message: "🏃 走り回っていたみたい！",
+        apply: |pet, rng| {
+            let loss = rng.gen_range(1.0_f64..=2.0);
+            pet.weight = (pet.weight - loss).max(0.1);
+            pet.genki = (pet.genki + 10.0).min(100.0);
+            pet.type_scores.chikara += 1;
+        },
+    },
 ];
 
 /// Accident messages (cause of death)
@@ -151,7 +170,7 @@ pub fn process_offline_events(
 /// Accident check
 /// Accident probability per tick = day_age × 0.00347%
 fn check_accident(pet: &mut PetData, rng: &mut impl Rng) -> Option<EventResult> {
-    let day_age = (pet.age_ticks as f64 / 1440.0).max(1.0);
+    let day_age = pet.age_ticks as f64 / 1440.0;
     let accident_prob_per_tick = day_age * 0.0000347;
     // Aggregate accident probability over 1 hour (60 ticks)
     let accident_prob = 1.0 - (1.0 - accident_prob_per_tick).powi(60);

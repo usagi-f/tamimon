@@ -8,9 +8,33 @@ use ratatui::{
 };
 
 use crate::app::AppState;
+use crate::game::evolution::{get_body_type, BodyType};
 use crate::game::pet::{mood_level, weight_label};
 use crate::game::time::format_elapsed;
 use crate::ui::ascii_art;
+
+/// Returns the horizontal sway offset (in extra leading spaces) for a species
+/// based on its body type and the current animation frame.
+/// Floaty types (Nagare, Fuwafuwa) gently sway ±1 char; others stay still.
+fn sway_offset(body_type: BodyType, frame: usize) -> usize {
+    match body_type {
+        BodyType::Nagare | BodyType::Fuwafuwa => [0, 1, 2, 1][frame % 4],
+        _ => 0,
+    }
+}
+
+/// Apply blink to art lines: replace eye chars when blinking.
+/// Blink triggers for 1 frame every ~4 seconds (every 8 frames at 2fps).
+fn apply_blink(lines: Vec<String>, blink_tick: u32) -> Vec<String> {
+    // Active for 1 frame every 8 frames (once per ~4s at 2fps)
+    if !blink_tick.is_multiple_of(8) {
+        return lines;
+    }
+    lines
+        .into_iter()
+        .map(|l| l.replace('ω', "－").replace('ᵕ', "＿").replace("◉", "ー"))
+        .collect()
+}
 
 pub fn render_main(f: &mut Frame, state: &AppState) {
     let pet = match &state.save_data.pet {
@@ -64,7 +88,14 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
 
     // --- Body ---
     let mood = mood_level(pet.kimochi);
-    let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
+    let raw_art = ascii_art::get_art(&pet.species, mood, state.animation_frame);
+
+    // Apply blink (eye substitution) and horizontal sway by body type
+    let art_lines = apply_blink(raw_art, state.blink_tick);
+    let sway = get_body_type(&pet.species)
+        .map(|bt| sway_offset(bt, state.animation_frame))
+        .unwrap_or(0);
+    let pad = " ".repeat(sway);
 
     let speech = &state.speech_text;
     let speech_line = format!("「 {} 」", speech);
@@ -73,7 +104,7 @@ pub fn render_main(f: &mut Frame, state: &AppState) {
     body_lines.push(Line::from(""));
 
     for art_line in art_lines {
-        body_lines.push(Line::from(art_line.to_string()));
+        body_lines.push(Line::from(format!("{}{}", pad, art_line)));
     }
 
     body_lines.push(Line::from(""));

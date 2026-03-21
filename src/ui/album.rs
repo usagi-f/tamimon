@@ -119,6 +119,12 @@ pub fn render_album(f: &mut Frame, save_data: &SaveData, album_state: &AlbumStat
                     info,
                     Style::default().fg(Color::White),
                 )));
+                if !entry.cause_of_death.is_empty() {
+                    lines.push(Line::from(Span::styled(
+                        format!("       {}", entry.cause_of_death),
+                        Style::default().fg(Color::DarkGray),
+                    )));
+                }
             } else if is_current {
                 let info = format!("  {} {}  ★ 育成中！", num, species_name);
                 lines.push(Line::from(Span::styled(
