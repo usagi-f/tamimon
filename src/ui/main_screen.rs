@@ -356,17 +356,10 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
             }
             lines.push(Line::from(""));
             lines.push(Line::from(""));
-            if current_line + 1 < reaction_lines.len() {
-                lines.push(Line::from(Span::styled(
-                    "  → [any key] 次の話題へ",
-                    Style::default().fg(Color::DarkGray),
-                )));
-            } else {
-                lines.push(Line::from(Span::styled(
-                    "  Press any key...",
-                    Style::default().fg(Color::DarkGray),
-                )));
-            }
+            lines.push(Line::from(Span::styled(
+                "  Press any key...",
+                Style::default().fg(Color::DarkGray),
+            )));
         }
         Action::Play => {
             let elapsed = state

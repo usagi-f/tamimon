@@ -40,19 +40,7 @@ pub struct ActionResult {
     pub current_line: usize,
 }
 
-/// Number of Talk conversation turns based on bond level.
-pub fn talk_line_count(nakayoshi: f64) -> usize {
-    if nakayoshi >= 70.0 {
-        3
-    } else if nakayoshi >= 40.0 {
-        2
-    } else {
-        1
-    }
-}
-
-/// Player lines for each Talk turn.
-/// count=1 → [opening]; count=2 → [opening, closing]; count=3 → [opening, middle, closing]
+/// Player lines shown before the pet's Talk response.
 pub fn select_talk_player_lines(count: usize, rng: &mut impl Rng) -> Vec<String> {
     let opening: &[&str] = &[
         "「ねえ！」",
@@ -62,60 +50,9 @@ pub fn select_talk_player_lines(count: usize, rng: &mut impl Rng) -> Vec<String>
         "「あのさ」",
         "「いたいた！」",
     ];
-    let middle: &[&str] = &[
-        "「最近どう？」",
-        "「なにしてた？」",
-        "「たのしい？」",
-        "「ちゃんとねてる？」",
-        "「おなかへった？」",
-    ];
-    let closing: &[&str] = &[
-        "「またね！」",
-        "「じゃあね」",
-        "「またはなそうね」",
-        "「またくるよ！」",
-        "「ばいばい！」",
-    ];
-    match count {
-        1 => vec![opening.choose(rng).unwrap().to_string()],
-        2 => vec![
-            opening.choose(rng).unwrap().to_string(),
-            closing.choose(rng).unwrap().to_string(),
-        ],
-        _ => vec![
-            opening.choose(rng).unwrap().to_string(),
-            middle.choose(rng).unwrap().to_string(),
-            closing.choose(rng).unwrap().to_string(),
-        ],
-    }
-}
-
-/// Multiple distinct generic reactions for Talk (no repeats).
-pub fn select_generic_reactions_distinct(
-    action: Action,
-    mood: MoodLevel,
-    count: usize,
-    rng: &mut impl Rng,
-) -> Vec<String> {
-    let pool: &[&str] = match (action, mood) {
-        (Action::Talk, MoodLevel::High) => &[
-            "「あ、きた！きた！」",
-            "「うれしい！話そ話そ！」",
-            "「まってたよ！」",
-            "「なんか楽しいね！」",
-        ],
-        (Action::Talk, MoodLevel::Normal) => &[
-            "「…ん？」",
-            "「あ、いたの」",
-            "「…ぼーっとしてた」",
-            "「なに？」",
-        ],
-        (Action::Talk, MoodLevel::Low) => {
-            &["「…」", "「……ねむい」", "「べつに」", "（こちらを見ない）"]
-        }
-        _ => return vec![select_generic_reaction(action, mood, rng)],
-    };
-    pick_distinct(pool, count, rng)
+    (0..count)
+        .map(|_| opening.choose(rng).unwrap().to_string())
+        .collect()
 }
 
 fn pick_distinct(pool: &[&str], n: usize, rng: &mut impl Rng) -> Vec<String> {

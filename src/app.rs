@@ -732,30 +732,20 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
 
         let (reaction_lines, player_lines): (Vec<String>, Vec<String>) = match action {
             Action::Talk => {
-                let count = crate::game::actions::talk_line_count(pet_data.nakayoshi);
-                let pet_lines = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
-                    (0..count)
-                        .map(|_| {
-                            voice::get_reaction(
-                                vt,
-                                action,
-                                mood,
-                                pet_data.nakayoshi,
-                                &pet_data.species,
-                                &mut state.rng,
-                            )
-                        })
-                        .collect()
-                } else {
-                    crate::game::actions::select_generic_reactions_distinct(
+                let pet_line = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+                    voice::get_reaction(
+                        vt,
                         action,
                         mood,
-                        count,
+                        pet_data.nakayoshi,
+                        &pet_data.species,
                         &mut state.rng,
                     )
+                } else {
+                    crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
                 };
-                let pl = crate::game::actions::select_talk_player_lines(count, &mut state.rng);
-                (pet_lines, pl)
+                let pl = crate::game::actions::select_talk_player_lines(1, &mut state.rng);
+                (vec![pet_line], pl)
             }
             Action::Play => (
                 crate::game::actions::select_play_exclamations(mood, &mut state.rng),
