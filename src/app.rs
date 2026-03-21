@@ -58,6 +58,7 @@ pub struct AppState {
     pub mode: AppMode,
     pub save_data: SaveData,
     pub animation_frame: usize,
+    pub blink_tick: u32,
     pub last_frame_time: Instant,
     pub speech_text: String,
     pub startup_info: Option<StartupInfo>,
@@ -179,6 +180,7 @@ pub async fn run() -> Result<()> {
         mode,
         save_data,
         animation_frame: 0,
+        blink_tick: 0,
         last_frame_time: Instant::now(),
         speech_text,
         startup_info,
@@ -249,9 +251,10 @@ async fn run_loop(
             }
         }
 
-        // Update animation frame (~2fps)
+        // Update animation frame (~2fps) and blink tick
         if state.last_frame_time.elapsed() >= Duration::from_millis(500) {
             state.animation_frame = state.animation_frame.wrapping_add(1);
+            state.blink_tick = state.blink_tick.wrapping_add(1);
             state.last_frame_time = Instant::now();
         }
     }
