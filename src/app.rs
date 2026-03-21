@@ -13,7 +13,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-use crate::game::actions::{Action, ActionResult};
+use crate::game::actions::{Action, ActionResult, TRAIN_REPS};
 use crate::game::events;
 use crate::game::evolution;
 use crate::game::pet;
@@ -64,6 +64,7 @@ pub struct AppState {
     pub startup_info: Option<StartupInfo>,
     pub action_result: Option<ActionResult>,
     pub action_animation_start: Option<Instant>,
+    pub reaction_anim_start: Option<Instant>,
     pub death_message: Option<String>,
     pub death_pet_name: Option<String>,
     pub new_longest_record: bool,
@@ -186,6 +187,7 @@ pub async fn run() -> Result<()> {
         startup_info,
         action_result: None,
         action_animation_start: None,
+        reaction_anim_start: None,
         death_message: None,
         death_pet_name: startup_death_pet_name,
         new_longest_record: false,
@@ -241,11 +243,22 @@ async fn run_loop(
             }
         }
 
-        // Auto-transition: ActionAnimation → ActionReaction after 2.5s
+        // Auto-transition: ActionAnimation → ActionReaction
+        // Relax takes 5s (non-skippable), others take 2.5s
         if matches!(state.mode, AppMode::ActionAnimation) {
             if let Some(start) = state.action_animation_start {
-                if start.elapsed() >= Duration::from_millis(2500) {
+                let duration = match state.action_result.as_ref().map(|r| r.action) {
+                    Some(Action::Relax) => Duration::from_millis(5000),
+                    _ => Duration::from_millis(2500),
+                };
+                if start.elapsed() >= duration {
                     state.action_animation_start = None;
+                    if matches!(
+                        state.action_result.as_ref().map(|r| r.action),
+                        Some(Action::Play)
+                    ) {
+                        state.reaction_anim_start = Some(Instant::now());
+                    }
                     state.mode = AppMode::ActionReaction;
                 }
             }
@@ -503,15 +516,47 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
             _ => {}
         },
         AppMode::ActionAnimation => {
-            // Any key → skip animation, go straight to result
-            state.action_animation_start = None;
-            state.mode = AppMode::ActionReaction;
+            // Relax cannot be skipped; any key skips other actions
+            let action = state.action_result.as_ref().map(|r| r.action);
+            if !matches!(action, Some(Action::Relax)) {
+                state.action_animation_start = None;
+                if matches!(action, Some(Action::Play)) {
+                    state.reaction_anim_start = Some(Instant::now());
+                }
+                state.mode = AppMode::ActionReaction;
+            }
         }
         AppMode::ActionReaction => {
-            // Any key → back to Main
-            state.action_result = None;
-            state.mode = AppMode::Main;
-            state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+            let (action, lines_count, current_line) = match &state.action_result {
+                Some(r) => (r.action, r.reaction_lines.len(), r.current_line),
+                None => {
+                    state.mode = AppMode::Main;
+                    return Ok(InputResult::Continue);
+                }
+            };
+            match action {
+                Action::Talk | Action::Relax => finish_action(state),
+                Action::Play => {
+                    let elapsed = state
+                        .reaction_anim_start
+                        .map(|s| s.elapsed().as_millis())
+                        .unwrap_or(u128::MAX);
+                    let revealed = ((elapsed / 600 + 1) as usize).min(lines_count);
+                    if revealed >= lines_count {
+                        finish_action(state);
+                    }
+                    // else: key press during reveal is ignored
+                }
+                Action::Train => {
+                    if current_line < TRAIN_REPS {
+                        if let Some(ref mut r) = state.action_result {
+                            r.current_line += 1;
+                        }
+                    } else {
+                        finish_action(state);
+                    }
+                }
+            }
         }
         AppMode::Album => match key {
             KeyCode::Up => {
@@ -612,6 +657,28 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
     Ok(InputResult::Continue)
 }
 
+/// Clear action state and return to the Main screen.
+fn finish_action(state: &mut AppState) {
+    state.action_result = None;
+    state.reaction_anim_start = None;
+    state.mode = AppMode::Main;
+    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+}
+
+/// Get a single reaction line, using voice type when available.
+fn get_reaction_line(
+    action: Action,
+    mood: pet::MoodLevel,
+    pet_data: &crate::save::schema::PetData,
+    rng: &mut impl Rng,
+) -> String {
+    if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+        voice::get_reaction(vt, action, mood, pet_data.nakayoshi, &pet_data.species, rng)
+    } else {
+        crate::game::actions::select_generic_reaction(action, mood, rng)
+    }
+}
+
 fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     if let Some(ref mut pet_data) = state.save_data.pet {
         // Pull-based time check: calculate elapsed since last check
@@ -639,34 +706,42 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
         if pet_data.stage == 0 {
             state.action_result = Some(ActionResult {
                 action,
-                reaction_text: "（たまごは静かに揺れている…）".to_string(),
+                reaction_lines: vec!["（たまごは静かに揺れている…）".to_string()],
+                player_line: None,
+                current_line: 0,
             });
             state.action_animation_start = Some(Instant::now());
             state.mode = AppMode::ActionAnimation;
             return Ok(());
         }
 
-        // Perform the action with voice-type-aware reactions
         let mood = pet::mood_level(pet_data.kimochi);
         crate::game::actions::apply_action_effects(action, pet_data, &mut state.rng);
 
-        let reaction_text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
-            voice::get_reaction(
-                vt,
-                action,
-                mood,
-                pet_data.nakayoshi,
-                &pet_data.species,
-                &mut state.rng,
-            )
-        } else {
-            // Stage1 fallback: use Phase1 generic reactions
-            crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
+        let (reaction_lines, player_line) = match action {
+            Action::Talk => (
+                vec![get_reaction_line(action, mood, pet_data, &mut state.rng)],
+                Some(crate::game::actions::random_player_line(&mut state.rng)),
+            ),
+            Action::Play => (
+                crate::game::actions::select_play_exclamations(mood, &mut state.rng),
+                None,
+            ),
+            Action::Train => (
+                crate::game::actions::select_train_lines(mood, &mut state.rng),
+                None,
+            ),
+            Action::Relax => (
+                vec![get_reaction_line(action, mood, pet_data, &mut state.rng)],
+                None,
+            ),
         };
 
         state.action_result = Some(ActionResult {
             action,
-            reaction_text,
+            reaction_lines,
+            player_line,
+            current_line: 0,
         });
         state.action_animation_start = Some(Instant::now());
         state.mode = AppMode::ActionAnimation;

@@ -32,9 +32,117 @@ impl Action {
     }
 }
 
+/// Number of training reps before the completion screen.
+pub const TRAIN_REPS: usize = 3;
+
 pub struct ActionResult {
     pub action: Action,
-    pub reaction_text: String,
+    pub reaction_lines: Vec<String>,
+    /// The player line shown before the pet's Talk response, if any.
+    pub player_line: Option<String>,
+    pub current_line: usize,
+}
+
+/// Pick a random player greeting line for the Talk screen.
+pub fn random_player_line(rng: &mut impl Rng) -> String {
+    let pool: &[&str] = &[
+        "「ねえ！」",
+        "「やほー！」",
+        "「ちょっといい？」",
+        "「げんきー？」",
+        "「あのさ」",
+        "「いたいた！」",
+    ];
+    pool.choose(rng).unwrap().to_string()
+}
+
+fn pick_distinct(pool: &[&str], n: usize, rng: &mut impl Rng) -> Vec<String> {
+    pool.choose_multiple(rng, n.min(pool.len()))
+        .map(|s| s.to_string())
+        .collect()
+}
+
+/// Short exclamations for Play コマ送り (Stage 1 generic).
+pub fn select_play_exclamations(mood: MoodLevel, rng: &mut impl Rng) -> Vec<String> {
+    let pool: &[&str] = match mood {
+        MoodLevel::High => &[
+            "「わーい！」",
+            "「きゃー！」",
+            "「もっかい！」",
+            "「たのしい！」",
+            "「えへへ！」",
+            "「さいこう！」",
+        ],
+        MoodLevel::Normal => &[
+            "「まあ、いっか」",
+            "「ふーん…」",
+            "「…お？」",
+            "「おもしろいかも」",
+            "「もうちょい」",
+        ],
+        MoodLevel::Low => &[
+            "「…やるか」",
+            "「だるい…」",
+            "「ふぅ…」",
+            "「つかれた」",
+            "「…まあ」",
+        ],
+    };
+    pick_distinct(pool, 3, rng)
+}
+
+/// Training rep lines: 3 effort texts + 1 completion text (index 3).
+/// Player presses a key to advance each rep; completion shown after 3 reps.
+pub fn select_train_lines(mood: MoodLevel, rng: &mut impl Rng) -> Vec<String> {
+    let effort: &[&str] = match mood {
+        MoodLevel::High => &[
+            "「ふんっ！」",
+            "「はっ！！」",
+            "「えいっ！」",
+            "「もっとだ！」",
+            "「うりゃ！」",
+            "「ぐぐぐ…！」",
+        ],
+        MoodLevel::Normal => &[
+            "「んっ！」",
+            "「ふぅ！」",
+            "「よっ！」",
+            "「はっ」",
+            "「んー！」",
+            "「ふんっ」",
+        ],
+        MoodLevel::Low => &[
+            "「…っ」",
+            "「ぐぬ…」",
+            "「うぅ…」",
+            "「むっ…」",
+            "「は…」",
+            "「…ふぅ」",
+        ],
+    };
+    let completion: &[&str] = match mood {
+        MoodLevel::High => &[
+            "「よっしゃ！やりきった！」",
+            "「まだいける！」",
+            "「いい汗かいた！」",
+            "「さいこう！」",
+        ],
+        MoodLevel::Normal => &[
+            "「ふぅ…やった」",
+            "「こんなもんか」",
+            "「まあまあかな」",
+            "「…がんばった」",
+        ],
+        MoodLevel::Low => &[
+            "「…もうだめ」",
+            "「やっと終わり…」",
+            "「ぜーはー…」",
+            "「つかれた…」",
+        ],
+    };
+    let mut lines = pick_distinct(effort, 3, rng);
+    lines.push(completion.choose(rng).unwrap().to_string());
+    lines
 }
 
 /// Apply only action stat effects (reaction text handled separately)

@@ -8,6 +8,7 @@ use ratatui::{
 };
 
 use crate::app::AppState;
+use crate::game::actions::{Action, TRAIN_REPS};
 use crate::game::evolution::{get_body_type, BodyType};
 use crate::game::pet::{mood_level, weight_label};
 use crate::game::time::format_elapsed;
@@ -256,19 +257,27 @@ pub fn render_action_animation(f: &mut Frame, state: &AppState) {
     let nickname = pet.display_name();
 
     let art_lines = ascii_art::get_action_art(&pet.species, action, state.animation_frame);
-    let effect = ascii_art::get_action_effect(action, state.animation_frame);
 
-    // Progress dots based on elapsed time
     let elapsed_ms = state
         .action_animation_start
         .map(|s| s.elapsed().as_millis() as u64)
         .unwrap_or(0);
-    let progress = if elapsed_ms < 800 {
-        "."
-    } else if elapsed_ms < 1600 {
-        ".."
+
+    // For Relax: grow ～ slowly over 5s (no progress dots, non-skippable)
+    // For others: use frame-based effect + progress dots
+    let (effect, progress) = if action == Action::Relax {
+        let count = ((elapsed_ms * 22 / 5000) as usize + 1).min(22);
+        ("～".repeat(count), "")
     } else {
-        "..."
+        let e = ascii_art::get_action_effect(action, state.animation_frame).to_string();
+        let p = if elapsed_ms < 800 {
+            "."
+        } else if elapsed_ms < 1600 {
+            ".."
+        } else {
+            "..."
+        };
+        (e, p)
     };
 
     let mut lines: Vec<Line> = Vec::new();
@@ -296,10 +305,13 @@ pub fn render_action_animation(f: &mut Frame, state: &AppState) {
 }
 
 pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
-    let (action, reaction_text) = match &state.action_result {
-        Some(r) => (r.action, &r.reaction_text),
+    let result = match &state.action_result {
+        Some(r) => r,
         None => return,
     };
+    let action = result.action;
+    let reaction_lines = &result.reaction_lines;
+    let current_line = result.current_line;
 
     let pet = match &state.save_data.pet {
         Some(p) => p,
@@ -307,7 +319,6 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     };
 
     let nickname = pet.display_name();
-
     let mood = mood_level(pet.kimochi);
     let art_lines = ascii_art::get_art(&pet.species, mood, state.animation_frame);
 
@@ -318,7 +329,11 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
         Style::default().add_modifier(Modifier::BOLD),
     )));
     lines.push(Line::from(""));
-    lines.push(Line::from(format!("  {}がこちらを向いた。", nickname)));
+    let facing = match action {
+        Action::Train => format!("  {}が構えた。", nickname),
+        _ => format!("  {}がこちらを向いた。", nickname),
+    };
+    lines.push(Line::from(facing));
     lines.push(Line::from(""));
 
     for art_line in art_lines {
@@ -326,16 +341,105 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
     }
 
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(
-        format!("  {}", reaction_text),
-        Style::default().fg(Color::Yellow),
-    )));
-    lines.push(Line::from(""));
-    lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(
-        "  Press any key...",
-        Style::default().fg(Color::DarkGray),
-    )));
+
+    match action {
+        Action::Talk => {
+            if let Some(pl) = &result.player_line {
+                lines.push(Line::from(Span::styled(
+                    format!("  あなた: {}", pl),
+                    Style::default().fg(Color::Cyan),
+                )));
+            }
+            if let Some(text) = reaction_lines.first() {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}: {}", nickname, text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(
+                "  Press any key...",
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+        Action::Play => {
+            let elapsed = state
+                .reaction_anim_start
+                .map(|s| s.elapsed().as_millis())
+                .unwrap_or(u128::MAX);
+            let revealed = ((elapsed / 600 + 1) as usize).min(reaction_lines.len());
+            for text in reaction_lines.iter().take(revealed) {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            if revealed >= reaction_lines.len() {
+                lines.push(Line::from(Span::styled(
+                    "  Press any key...",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            }
+        }
+        Action::Train => {
+            if current_line < TRAIN_REPS {
+                // Effort phase: show current rep text and counter
+                if let Some(text) = reaction_lines.get(current_line) {
+                    lines.push(Line::from(Span::styled(
+                        format!("  {}", text),
+                        Style::default().fg(Color::Yellow),
+                    )));
+                }
+                lines.push(Line::from(""));
+                lines.push(Line::from(Span::styled(
+                    format!("  × {} / {}", current_line + 1, TRAIN_REPS),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
+                )));
+                lines.push(Line::from(""));
+                lines.push(Line::from(Span::styled(
+                    "  → [any key] もう一回！",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            } else {
+                // Completion phase: show completion text
+                if let Some(text) = reaction_lines.get(TRAIN_REPS) {
+                    lines.push(Line::from(Span::styled(
+                        format!("  {}", text),
+                        Style::default().fg(Color::Yellow),
+                    )));
+                }
+                lines.push(Line::from(""));
+                lines.push(Line::from(Span::styled(
+                    format!("  ✓ {} / {} 完了", TRAIN_REPS, TRAIN_REPS),
+                    Style::default().fg(Color::Green),
+                )));
+                lines.push(Line::from(""));
+                lines.push(Line::from(Span::styled(
+                    "  Press any key...",
+                    Style::default().fg(Color::DarkGray),
+                )));
+            }
+        }
+        Action::Relax => {
+            if let Some(text) = reaction_lines.first() {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", text),
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+            lines.push(Line::from(""));
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(
+                "  Press any key...",
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+    }
 
     let paragraph = Paragraph::new(lines);
     f.render_widget(paragraph, f.area());
