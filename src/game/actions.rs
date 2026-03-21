@@ -32,17 +32,20 @@ impl Action {
     }
 }
 
+/// Number of training reps before the completion screen.
+pub const TRAIN_REPS: usize = 3;
+
 pub struct ActionResult {
     pub action: Action,
     pub reaction_lines: Vec<String>,
-    /// For Talk: what the player "says" before each pet response.
-    pub player_lines: Vec<String>,
+    /// The player line shown before the pet's Talk response, if any.
+    pub player_line: Option<String>,
     pub current_line: usize,
 }
 
-/// Player lines shown before the pet's Talk response.
-pub fn select_talk_player_lines(count: usize, rng: &mut impl Rng) -> Vec<String> {
-    let opening: &[&str] = &[
+/// Pick a random player greeting line for the Talk screen.
+pub fn random_player_line(rng: &mut impl Rng) -> String {
+    let pool: &[&str] = &[
         "「ねえ！」",
         "「やほー！」",
         "「ちょっといい？」",
@@ -50,17 +53,13 @@ pub fn select_talk_player_lines(count: usize, rng: &mut impl Rng) -> Vec<String>
         "「あのさ」",
         "「いたいた！」",
     ];
-    (0..count)
-        .map(|_| opening.choose(rng).unwrap().to_string())
-        .collect()
+    pool.choose(rng).unwrap().to_string()
 }
 
 fn pick_distinct(pool: &[&str], n: usize, rng: &mut impl Rng) -> Vec<String> {
-    use rand::seq::SliceRandom;
-    let n = n.min(pool.len());
-    let mut indices: Vec<usize> = (0..pool.len()).collect();
-    indices.shuffle(rng);
-    indices[..n].iter().map(|&i| pool[i].to_string()).collect()
+    pool.choose_multiple(rng, n.min(pool.len()))
+        .map(|s| s.to_string())
+        .collect()
 }
 
 /// Short exclamations for Play コマ送り (Stage 1 generic).

@@ -13,7 +13,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-use crate::game::actions::{Action, ActionResult};
+use crate::game::actions::{Action, ActionResult, TRAIN_REPS};
 use crate::game::events;
 use crate::game::evolution;
 use crate::game::pet;
@@ -535,17 +535,7 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                 }
             };
             match action {
-                Action::Talk => {
-                    if current_line + 1 < lines_count {
-                        if let Some(ref mut r) = state.action_result {
-                            r.current_line += 1;
-                        }
-                        return Ok(InputResult::Continue);
-                    }
-                    state.action_result = None;
-                    state.mode = AppMode::Main;
-                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
-                }
+                Action::Talk | Action::Relax => finish_action(state),
                 Action::Play => {
                     let elapsed = state
                         .reaction_anim_start
@@ -553,32 +543,18 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
                         .unwrap_or(u128::MAX);
                     let revealed = ((elapsed / 600 + 1) as usize).min(lines_count);
                     if revealed >= lines_count {
-                        state.action_result = None;
-                        state.reaction_anim_start = None;
-                        state.mode = AppMode::Main;
-                        state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                        finish_action(state);
                     }
                     // else: key press during reveal is ignored
                 }
                 Action::Train => {
-                    // Rep 0-2: each key press advances one rep.
-                    // current_line 3 = completion screen; next key returns to Main.
-                    const TRAIN_REPS: usize = 3;
                     if current_line < TRAIN_REPS {
                         if let Some(ref mut r) = state.action_result {
                             r.current_line += 1;
                         }
                     } else {
-                        state.action_result = None;
-                        state.mode = AppMode::Main;
-                        state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+                        finish_action(state);
                     }
-                }
-                Action::Relax => {
-                    state.action_result = None;
-                    state.reaction_anim_start = None;
-                    state.mode = AppMode::Main;
-                    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
                 }
             }
         }
@@ -681,6 +657,28 @@ fn handle_input(key: KeyCode, state: &mut AppState) -> Result<InputResult> {
     Ok(InputResult::Continue)
 }
 
+/// Clear action state and return to the Main screen.
+fn finish_action(state: &mut AppState) {
+    state.action_result = None;
+    state.reaction_anim_start = None;
+    state.mode = AppMode::Main;
+    state.speech_text = pick_idle_speech(&state.save_data, &mut state.rng);
+}
+
+/// Get a single reaction line, using voice type when available.
+fn get_reaction_line(
+    action: Action,
+    mood: pet::MoodLevel,
+    pet_data: &crate::save::schema::PetData,
+    rng: &mut impl Rng,
+) -> String {
+    if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
+        voice::get_reaction(vt, action, mood, pet_data.nakayoshi, &pet_data.species, rng)
+    } else {
+        crate::game::actions::select_generic_reaction(action, mood, rng)
+    }
+}
+
 fn do_action(action: Action, state: &mut AppState) -> Result<()> {
     if let Some(ref mut pet_data) = state.save_data.pet {
         // Pull-based time check: calculate elapsed since last check
@@ -709,7 +707,7 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             state.action_result = Some(ActionResult {
                 action,
                 reaction_lines: vec!["（たまごは静かに揺れている…）".to_string()],
-                player_lines: vec![],
+                player_line: None,
                 current_line: 0,
             });
             state.action_animation_start = Some(Instant::now());
@@ -717,56 +715,32 @@ fn do_action(action: Action, state: &mut AppState) -> Result<()> {
             return Ok(());
         }
 
-        // Perform the action with voice-type-aware reactions
         let mood = pet::mood_level(pet_data.kimochi);
         crate::game::actions::apply_action_effects(action, pet_data, &mut state.rng);
 
-        let (reaction_lines, player_lines): (Vec<String>, Vec<String>) = match action {
-            Action::Talk => {
-                let pet_line = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
-                    voice::get_reaction(
-                        vt,
-                        action,
-                        mood,
-                        pet_data.nakayoshi,
-                        &pet_data.species,
-                        &mut state.rng,
-                    )
-                } else {
-                    crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
-                };
-                let pl = crate::game::actions::select_talk_player_lines(1, &mut state.rng);
-                (vec![pet_line], pl)
-            }
+        let (reaction_lines, player_line) = match action {
+            Action::Talk => (
+                vec![get_reaction_line(action, mood, pet_data, &mut state.rng)],
+                Some(crate::game::actions::random_player_line(&mut state.rng)),
+            ),
             Action::Play => (
                 crate::game::actions::select_play_exclamations(mood, &mut state.rng),
-                vec![],
+                None,
             ),
             Action::Train => (
                 crate::game::actions::select_train_lines(mood, &mut state.rng),
-                vec![],
+                None,
             ),
-            Action::Relax => {
-                let text = if let Some(vt) = evolution::get_voice_type(&pet_data.species) {
-                    voice::get_reaction(
-                        vt,
-                        action,
-                        mood,
-                        pet_data.nakayoshi,
-                        &pet_data.species,
-                        &mut state.rng,
-                    )
-                } else {
-                    crate::game::actions::select_generic_reaction(action, mood, &mut state.rng)
-                };
-                (vec![text], vec![])
-            }
+            Action::Relax => (
+                vec![get_reaction_line(action, mood, pet_data, &mut state.rng)],
+                None,
+            ),
         };
 
         state.action_result = Some(ActionResult {
             action,
             reaction_lines,
-            player_lines,
+            player_line,
             current_line: 0,
         });
         state.action_animation_start = Some(Instant::now());

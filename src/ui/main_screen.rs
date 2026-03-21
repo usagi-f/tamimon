@@ -8,7 +8,7 @@ use ratatui::{
 };
 
 use crate::app::AppState;
-use crate::game::actions::Action;
+use crate::game::actions::{Action, TRAIN_REPS};
 use crate::game::evolution::{get_body_type, BodyType};
 use crate::game::pet::{mood_level, weight_label};
 use crate::game::time::format_elapsed;
@@ -344,15 +344,13 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
 
     match action {
         Action::Talk => {
-            let player_line = result.player_lines.get(current_line);
-            let pet_line = reaction_lines.get(current_line);
-            if let Some(pl) = player_line {
+            if let Some(pl) = &result.player_line {
                 lines.push(Line::from(Span::styled(
                     format!("  あなた: {}", pl),
                     Style::default().fg(Color::Cyan),
                 )));
             }
-            if let Some(text) = pet_line {
+            if let Some(text) = reaction_lines.first() {
                 lines.push(Line::from(Span::styled(
                     format!("  {}: {}", nickname, text),
                     Style::default().fg(Color::Yellow),
@@ -387,7 +385,6 @@ pub fn render_action_reaction(f: &mut Frame, state: &AppState) {
             }
         }
         Action::Train => {
-            const TRAIN_REPS: usize = 3;
             if current_line < TRAIN_REPS {
                 // Effort phase: show current rep text and counter
                 if let Some(text) = reaction_lines.get(current_line) {
